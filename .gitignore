@@ -1,0 +1,39 @@
+# CMake
+/build*/
+/cmake-build-*/
+/CMakeFiles/
+/CMakeCache.txt
+/CTestTestfile.cmake
+/cmake_install.cmake
+/install_manifest.txt
+/compile_commands.json
+
+# Generated plugin and app artifacts
+*.app
+*.component
+*.vst3
+*.pkg
+*.dmg
+
+# IDEs
+/.idea/
+/.vscode/
+*.xcodeproj/
+*.xcworkspace/
+*.sln
+*.vcxproj*
+*.opensdf
+*.sdf
+*.suo
+*.user
+*.userprefs
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp

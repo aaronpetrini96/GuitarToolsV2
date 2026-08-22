@@ -39,6 +39,10 @@ private:
 
     HeaderPanel headerPanel{};
     MainPanel mainPanel {audioProcessor};
+    const float headerHeightFraction {0.05f};
+    const float footerHeightFraction {0.15f};
+
+
     FooterPanel footerPanel {audioProcessor};
     std::unique_ptr<juce::Drawable> metalBackground =  juce::Drawable::createFromImageData(BinaryData::chassisV2_png, BinaryData::chassisV2_pngSize);
     std::unique_ptr<juce::Drawable> screw =  juce::Drawable::createFromImageData(BinaryData::screw_png, BinaryData::screw_pngSize);

@@ -13,7 +13,12 @@ GuitarToolsAudioProcessorEditor::GuitarToolsAudioProcessorEditor (GuitarToolsAud
     addAndMakeVisible(headerPanel);
     addAndMakeVisible(mainPanel);
     addAndMakeVisible(footerPanel);
-    setSize (640, 520);
+
+    setResizable(false, true);
+    setResizeLimits(minUIWidth, minUIHeight, 2 * minUIWidth, 2 * minUIHeight);
+    getConstrainer()->setFixedAspectRatio (960.0 / 780.0);
+    setSize (800, 650);
+
     startTimerHz(30);
 }
 
@@ -26,8 +31,24 @@ GuitarToolsAudioProcessorEditor::~GuitarToolsAudioProcessorEditor()
 void GuitarToolsAudioProcessorEditor::paint (juce::Graphics& g)
 {
     const auto boundsF = getLocalBounds().toFloat();
-    if (metalBackground != nullptr)
-        metalBackground->drawWithin (g, boundsF, juce::RectanglePlacement::stretchToFit, 1.f);
+    const auto boundsFHeight = boundsF.getHeight();
+    const auto boundsFWidth = boundsF.getWidth();
+
+    g.setGradientFill (juce::ColourGradient::vertical (GTColors::mainPanelTop, boundsFHeight * 0.075f, GTColors::mainPanelBottom, boundsFHeight - boundsFHeight * 0.15f));
+    g.fillRect (boundsF);
+    g.fillAll(juce::Colours::black.withAlpha(0.35f));
+
+    g.setColour(GTColors::dividerLines);
+    const auto lineThickness = boundsFWidth * 0.003f;
+    g.drawHorizontalLine(headerPanel.getBottom(), 0.0f, boundsFWidth);
+    g.drawLine (0.f, boundsFHeight * 0.05f, boundsFWidth, boundsFHeight * 0.05f, lineThickness);
+    g.drawLine (0.f, boundsFHeight * 0.85f, boundsFWidth, boundsFHeight * 0.85f, lineThickness);
+    const auto vertLineTop = boundsFHeight * 0.05f;
+    const auto vertLineBottom = boundsFHeight * 0.85f;
+    const auto firstVertLineX = boundsFWidth * 0.315f;
+    const auto secondVertLineX = boundsFWidth - firstVertLineX;
+    g.fillRect (firstVertLineX, vertLineTop, lineThickness, vertLineBottom - vertLineTop);
+    g.fillRect (secondVertLineX, vertLineTop, lineThickness, vertLineBottom - vertLineTop);
 }
 
 void GuitarToolsAudioProcessorEditor::resized()
@@ -36,13 +57,11 @@ void GuitarToolsAudioProcessorEditor::resized()
     const auto boundsFWidth = boundsF.getWidth();
     const auto boundsFHeight= boundsF.getHeight();
 
-    headerPanel.setBounds(boundsF.withHeight(boundsFHeight * 0.0375f).toNearestInt());
-    footerPanel.setBounds(boundsF.withHeight(boundsFHeight * 0.15f).withBottomY(boundsF.getBottom()).toNearestInt());
 
-    auto mainPanelBounds = boundsF;
-    mainPanelBounds.setY(headerPanel.getBottom());
-    mainPanelBounds.setBottom(footerPanel.getY());
-    mainPanel.setBounds(mainPanelBounds.toNearestInt());
+
+    headerPanel.setBounds(boundsF.withHeight(boundsFHeight * headerHeightFraction).toNearestInt());
+    footerPanel.setBounds(boundsF.withHeight(boundsFHeight * footerHeightFraction).withBottomY(boundsF.getBottom()).toNearestInt());
+    mainPanel.setBounds(boundsF.withSizeKeepingCentre(boundsFWidth, boundsFHeight * (1.f - headerHeightFraction - footerHeightFraction)).toNearestInt());
 }
 
 //==============================================================================
@@ -100,9 +119,7 @@ void GuitarToolsAudioProcessorEditor::clipLight(juce::Graphics& g)
 //==============================================================================
 void GuitarToolsAudioProcessorEditor::paintOverChildren (juce::Graphics& g)
 {
-    g.setColour(GTColors::dividerLines);
-    g.drawHorizontalLine(headerPanel.getBottom(), 0.0f, static_cast<float>(getWidth()));
-    g.drawHorizontalLine(footerPanel.getY(), 0.0f, static_cast<float>(getWidth()));
+
 
    #if JUCE_DEBUG
     if (drawDraft <= 0.0f || draft == nullptr)
@@ -110,6 +127,7 @@ void GuitarToolsAudioProcessorEditor::paintOverChildren (juce::Graphics& g)
 
     draft->drawWithin (g, getLocalBounds().toFloat(), juce::RectanglePlacement::centred, drawDraft);
    #endif
+    g.fillAll(juce::Colours::black.withAlpha(0.35f));
 }
 
 bool GuitarToolsAudioProcessorEditor::keyPressed (const juce::KeyPress& key)

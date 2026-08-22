@@ -34,6 +34,9 @@ public:
 private:
     GuitarToolsAudioProcessor& audioProcessor;
 
+    const int minUIWidth = 640;
+    const int minUIHeight = 480;
+
     HeaderPanel headerPanel{};
     MainPanel mainPanel {audioProcessor};
     FooterPanel footerPanel {audioProcessor};

@@ -6,7 +6,6 @@
 
 #include "GTLook.h"
 #include "PluginProcessor.h"
-#include "GUI/Components/RotaryKnob.h"
 #include "GUI/Components/ImgKnob.h"
 #include "GUI/Components/OptionBox.h"
 #include "GUI/Components/CustomButton.h"
@@ -25,14 +24,15 @@ public:
 private:
     GuitarToolsAudioProcessor& audioProcessor;
 
-    RotaryKnob lowCutFreqKnob {"Low Cut", audioProcessor.treeState, juce::ParameterID("LowCut Freq", 1)," Hz"};
-    RotaryKnob highCutFreqKnob {"High Cut", audioProcessor.treeState, juce::ParameterID("HighCut Freq", 1)," Hz"};
+    juce::Label cutFiltersGroupLabel {{}, "CUT FILTERS"}, magicButtonsGroupLabel {{}, "MAGIC BUTTONS"}, shelfFiltersGroupLabel {{}, "SHELF FILTERS"};
 
-    RotaryKnob lowShelfGainKnob {"Depth", audioProcessor.treeState, juce::ParameterID("Depth Gain", 1), " dB", true};
-    RotaryKnob highShelfGainKnob {"Presence", audioProcessor.treeState, juce::ParameterID("Presence Gain", 1), " dB", true};
+    ImgKnob lowCutFreqKnob {audioProcessor.treeState, juce::ParameterID("LowCut Freq", 1), " Hz"};
+    ImgKnob highCutFreqKnob {audioProcessor.treeState, juce::ParameterID("HighCut Freq", 1), " Hz"};
 
-    // Not linked to its own parameter yet — piggybacking on LowCut Freq just to preview the image knob in place.
-    ImgKnob imgKnobPreview {audioProcessor.treeState, juce::ParameterID("LowCut Freq", 1), " Hz"};
+    ImgKnob lowShelfGainKnob {audioProcessor.treeState, juce::ParameterID("Depth Gain", 1), " dB", true};
+    ImgKnob highShelfGainKnob {audioProcessor.treeState, juce::ParameterID("Presence Gain", 1), " dB", true};
+
+    juce::Label lowCutFreqLabel, highCutFreqLabel, lowShelfGainLabel, highShelfGainLabel;
 
     juce::TextButton presence1 {"1"}, presence2 {"2"}, presence3 {"3"}, depth1 {"1"}, depth2 {"2"}, depth3 {"3"};
     std::vector<juce::TextButton*> shelfFiltersButtons = {&presence1, &presence2, &presence3, &depth1, &depth2, &depth3};

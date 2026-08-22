@@ -18,39 +18,50 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
     int indexDepth = static_cast<int>(audioProcessor.treeState.getRawParameterValue("Depth Freq")->load());
     updateDepthButtons(indexDepth);
 
-//    OVERSAMPLING
-//    oversamplingBox.setColour(juce::ComboBox::ColourIds::backgroundColourId, juce::Colour(100, 100, 110).darker(0.5f));
-//    oversamplingBox.setColour(juce::ComboBox::ColourIds::outlineColourId, juce::Colours::transparentBlack);
-//    oversamplingBox.setLookAndFeel(ComboBoxLookAndFeel::get());
-//    oversamplingBox.setSize(60, 25);
-//    addAndMakeVisible(oversamplingBox);
+//   GROUP TITLES
+    for (auto* groupLabel : { &cutFiltersGroupLabel, &magicButtonsGroupLabel, &shelfFiltersGroupLabel })
+    {
+        groupLabel->setJustificationType (juce::Justification::centred);
+        groupLabel->setColour (juce::Label::textColourId, GTColors::sectionTitleText);
+        groupLabel->setFont (GTFonts::chivoBold (16.0f).withExtraKerningFactor (0.15f));
+        addAndMakeVisible (*groupLabel);
+    }
 
 //   CUT FILTERS
-    // addAndMakeVisible(lowCutFreqKnob);
-    addAndMakeVisible(highCutFreqKnob);
+    lowCutFreqLabel.setText ("Low Cut", juce::dontSendNotification);
+    lowCutFreqLabel.setJustificationType (juce::Justification::centred);
+    lowCutFreqLabel.attachToComponent (&lowCutFreqKnob, false);
+    addAndMakeVisible (lowCutFreqKnob);
+    addAndMakeVisible (lowCutFreqLabel);
+
+    highCutFreqLabel.setText ("High Cut", juce::dontSendNotification);
+    highCutFreqLabel.setJustificationType (juce::Justification::centred);
+    highCutFreqLabel.attachToComponent (&highCutFreqKnob, false);
+    addAndMakeVisible (highCutFreqKnob);
+    addAndMakeVisible (highCutFreqLabel);
+
     addAndMakeVisible(lowCutSlopeBox);
     addAndMakeVisible(highCutSlopeBox);
-    addAndMakeVisible(imgKnobPreview);
 
 //    BUTTONS
-    addAndMakeVisible(resoButton);
-    addAndMakeVisible(resoFreqSlider);
+//    addAndMakeVisible(resoButton);
+//    addAndMakeVisible(resoFreqSlider);
     resoFreqSlider.setVisible(resoButton.getToggleState());
     resoButton.onClick = [this](){resoFreqSlider.setVisible(resoButton.getToggleState());};
 
-    addAndMakeVisible(mudButton);
-    addAndMakeVisible(mudFreqSlider);
+//    addAndMakeVisible(mudButton);
+//    addAndMakeVisible(mudFreqSlider);
     mudFreqSlider.setVisible(mudButton.getToggleState());
     mudButton.onClick = [this](){mudFreqSlider.setVisible(mudButton.getToggleState());};
 
-    addAndMakeVisible(compBypassButton);
-    addAndMakeVisible(compThresholdSlider);
+//    addAndMakeVisible(compBypassButton);
+//    addAndMakeVisible(compThresholdSlider);
 
     compThresholdSlider.setVisible(compBypassButton.getToggleState());
     compRatioBox.setColour(juce::ComboBox::ColourIds::backgroundColourId, juce::Colour(100, 100, 110).darker(0.5f));
     compRatioBox.setColour(juce::ComboBox::ColourIds::outlineColourId, juce::Colours::transparentBlack);
     compRatioBox.setLookAndFeel(ComboBoxLookAndFeel::get());
-    addAndMakeVisible(compRatioBox);
+//    addAndMakeVisible(compRatioBox);
     compRatioBox.setVisible(compBypassButton.getToggleState());
     compBypassButton.onClick = [this]()
     {
@@ -60,8 +71,17 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
     };
 
 //    SHELF FILTERS
+    highShelfGainLabel.setText ("Presence", juce::dontSendNotification);
+    highShelfGainLabel.setJustificationType (juce::Justification::centred);
+    highShelfGainLabel.attachToComponent (&highShelfGainKnob, false);
     addAndMakeVisible(highShelfGainKnob);
+    addAndMakeVisible(highShelfGainLabel);
+
+    lowShelfGainLabel.setText ("Depth", juce::dontSendNotification);
+    lowShelfGainLabel.setJustificationType (juce::Justification::centred);
+    lowShelfGainLabel.attachToComponent (&lowShelfGainKnob, false);
     addAndMakeVisible(lowShelfGainKnob);
+    addAndMakeVisible(lowShelfGainLabel);
     for (int i {0}; i < shelfFiltersButtons.size(); ++i)
     {
         setShelfFilterButtonStyle(*shelfFiltersButtons[i]);
@@ -76,16 +96,11 @@ MainPanel::~MainPanel()
 
 void MainPanel::paint (juce::Graphics& g)
 {
-    const auto boundsF = getLocalBounds().toFloat();
-    const auto boundsFHeight = boundsF.getHeight();
-
-    g.setGradientFill(juce::ColourGradient::vertical(GTColors::mainPanelTop.withAlpha(0.5f), boundsFHeight * 0.075f, GTColors::mainPanelBottom.withAlpha(0.5f), boundsFHeight - boundsFHeight * 0.15f));
-    g.fillRect(boundsF);
 }
 
 void MainPanel::paintOverChildren(Graphics& g)
 {
-    g.fillAll(juce::Colours::black.withAlpha(0.25f));
+
 }
 
 void MainPanel::resized()
@@ -93,125 +108,55 @@ void MainPanel::resized()
     const auto boundsF = getLocalBounds().toFloat();
     const auto boundsFWidth = boundsF.getWidth();
     const auto boundsFHeight = boundsF.getHeight();
+    const auto cutFiltersArea = boundsF.withSize (boundsFWidth * 0.315f, boundsFHeight);
+    const auto shelfFiltersArea = cutFiltersArea.withRightX(boundsFWidth);
+    const auto buttonsArea = boundsF.withSizeKeepingCentre (boundsFWidth - boundsFWidth * 0.315f * 2.f, boundsFHeight);
 
-    auto y = boundsFHeight * 0.015f;
-    auto height = boundsFHeight * 0.84f;
-    auto leftMargin = boundsFWidth * 0.02f;
-    auto presenceButtonsSize = leftMargin * 2.5f;
-    auto groupWidth = boundsFWidth * 0.245f;
+    //    GROUP TITLES
+    const auto groupTitleHeight = boundsFHeight * 0.06f;
+    const auto groupTitleY = boundsFHeight * JUCE_LIVE_CONSTANT (0.0f);
+    cutFiltersGroupLabel.setBounds (cutFiltersArea          .withHeight (groupTitleHeight)        .withY (groupTitleY).toNearestInt());
+    magicButtonsGroupLabel.setBounds (buttonsArea           .withHeight (groupTitleHeight)         .withY (groupTitleY).toNearestInt());
+    shelfFiltersGroupLabel.setBounds (shelfFiltersArea      .withHeight (groupTitleHeight)    .withY (groupTitleY).toNearestInt());
 
-//    AREAS (formerly GroupComponents — no longer drawn, just layout anchors)
-    juce::Rectangle<float> cutFiltersArea (leftMargin, y, groupWidth, height);
-    juce::Rectangle<float> shelfFiltersArea (boundsFWidth * 0.74f, y, groupWidth, height);
-    juce::Rectangle<float> buttonsArea (cutFiltersArea.getRight() + leftMargin, y,
-                                       shelfFiltersArea.getX() - cutFiltersArea.getRight() - leftMargin * 2.0f, height);
+
+
 
 //    CUT FILTERS
-    auto lowCutFreqKnobLocalX = (cutFiltersArea.getWidth() - lowCutFreqKnob.getWidth()) * 0.5f;
-    auto lowCutFreqKnobLocalY = leftMargin * 1.5f;
-    lowCutFreqKnob.setBounds (juce::Rectangle<float> ((float) lowCutFreqKnob.getWidth(), (float) lowCutFreqKnob.getHeight())
-        .withPosition (cutFiltersArea.getX() + lowCutFreqKnobLocalX, cutFiltersArea.getY() + lowCutFreqKnobLocalY)
-        .toNearestInt());
+    const auto knobSize = cutFiltersArea.getWidth() * 0.7f;
+    const auto cutKnobsBounds = cutFiltersArea.withSizeKeepingCentre (knobSize, knobSize);
+    lowCutFreqKnob.setBounds (cutKnobsBounds.withY (boundsFHeight * 0.125f).toNearestInt());
+    highCutFreqKnob.setBounds (cutKnobsBounds.withY (boundsFHeight * 0.525f).toNearestInt());
+    highShelfGainKnob.setBounds (cutKnobsBounds.withCentre ({shelfFiltersArea.getCentreX(), lowCutFreqKnob.getBounds().toFloat().getCentreY()}).toNearestInt());
+    lowShelfGainKnob.setBounds (cutKnobsBounds.withCentre ({shelfFiltersArea.getCentreX(), highCutFreqKnob.getBounds().toFloat().getCentreY()}).toNearestInt());
 
+    const auto knobLabelYOffset = boundsFHeight * JUCE_LIVE_CONSTANT (0.0f);
+    for (auto* label : { &lowCutFreqLabel, &highCutFreqLabel, &highShelfGainLabel, &lowShelfGainLabel })
+        label->setBounds (label->getBounds().withY (label->getY() + juce::roundToInt (knobLabelYOffset)));
 
-    auto knobSize = groupWidth;
-    imgKnobPreview.setBounds (cutFiltersArea.withSizeKeepingCentre(knobSize, knobSize).withY(boundsFHeight * 0.f).toNearestInt());
-
-
-    auto highCutFreqKnobLocalY = lowCutFreqKnob.getHeight() * 1.5f;
-    highCutFreqKnob.setBounds (juce::Rectangle<float> ((float) lowCutFreqKnob.getWidth(), (float) lowCutFreqKnob.getHeight())
-        .withPosition (cutFiltersArea.getX() + lowCutFreqKnobLocalX, cutFiltersArea.getY() + highCutFreqKnobLocalY)
-        .toNearestInt());
-
-    lowCutSlopeBox.setBounds (juce::Rectangle<float> ((float) lowCutSlopeBox.getWidth(), (float) lowCutSlopeBox.getHeight())
-        .withPosition (cutFiltersArea.getX() + (cutFiltersArea.getWidth() - lowCutSlopeBox.getWidth()) * 0.5f, cutFiltersArea.getY() + lowCutFreqKnob.getHeight() * 1.2f)
-        .toNearestInt());
-
-    auto highCutSlopeBoxLocalY = lowCutFreqKnob.getHeight() * 2.6f;
-    highCutSlopeBox.setBounds (juce::Rectangle<float> ((float) highCutSlopeBox.getWidth(), (float) highCutSlopeBox.getHeight())
-        .withPosition (cutFiltersArea.getX() + (cutFiltersArea.getWidth() - highCutSlopeBox.getWidth()) * 0.5f, cutFiltersArea.getY() + highCutSlopeBoxLocalY)
-        .toNearestInt());
-
-//    IMG KNOB PREVIEW
-
-//    BUTTONS
-    auto middleButtonsGroup = (buttonsArea.getWidth() - resoButton.getWidth()) * 0.53f;
-    auto resoButtonLocalY = leftMargin * 2.1f;
-    resoButton.setBounds (juce::Rectangle<float> ((float) resoButton.getWidth(), (float) resoButton.getHeight())
-        .withPosition (buttonsArea.getX() + middleButtonsGroup, buttonsArea.getY() + resoButtonLocalY)
-        .toNearestInt());
-
-    auto resoButtonLocalBottom = resoButtonLocalY + resoButton.getHeight();
-    auto resoFreqSliderLocalX = middleButtonsGroup * 0.6f;
-    resoFreqSlider.setBounds (juce::Rectangle<float> (150.0f, 30.0f)
-        .withPosition (buttonsArea.getX() + resoFreqSliderLocalX, buttonsArea.getY() + resoButtonLocalBottom * 0.89f)
-        .toNearestInt());
-
-    auto mudButtonLocalY = resoButtonLocalBottom * 1.35f;
-    mudButton.setBounds (juce::Rectangle<float> ((float) mudButton.getWidth(), (float) mudButton.getHeight())
-        .withPosition (buttonsArea.getX() + middleButtonsGroup, buttonsArea.getY() + mudButtonLocalY)
-        .toNearestInt());
-
-    auto mudButtonLocalBottom = mudButtonLocalY + mudButton.getHeight();
-    mudFreqSlider.setBounds (juce::Rectangle<float> (mudButton.getWidth() * 1.5f, (float) mudButton.getHeight())
-        .withPosition (buttonsArea.getX() + resoFreqSliderLocalX, buttonsArea.getY() + mudButtonLocalBottom * 0.95f)
-        .toNearestInt());
-
-    auto compBypassButtonLocalY = mudButtonLocalBottom * 1.18f;
-    compBypassButton.setBounds (juce::Rectangle<float> ((float) compBypassButton.getWidth(), (float) compBypassButton.getHeight())
-        .withPosition (buttonsArea.getX() + middleButtonsGroup, buttonsArea.getY() + compBypassButtonLocalY)
-        .toNearestInt());
-
-    auto compBypassButtonLocalBottom = compBypassButtonLocalY + compBypassButton.getHeight();
-    compThresholdSlider.setBounds (juce::Rectangle<float> ((float) compThresholdSlider.getWidth(), (float) compThresholdSlider.getHeight())
-        .withPosition (buttonsArea.getX() + resoFreqSliderLocalX, buttonsArea.getY() + compBypassButtonLocalBottom * 0.965f)
-        .toNearestInt());
-
-    compRatioBox.setBounds (juce::Rectangle<float> ((float) lowCutSlopeBox.getWidth(), (float) lowCutSlopeBox.getHeight())
-        .withPosition (buttonsArea.getX() + middleButtonsGroup * 1.5f, cutFiltersArea.getY() + highCutSlopeBoxLocalY)
-        .toNearestInt());
+    const auto slopeBoxY = boundsFHeight * JUCE_LIVE_CONSTANT (0.0f);
+    lowCutSlopeBox.setBounds (cutFiltersArea.withSizeKeepingCentre ((float) lowCutSlopeBox.getWidth(), (float) lowCutSlopeBox.getHeight()).withY ((float) lowCutFreqKnob.getBottom() + slopeBoxY).toNearestInt());
+    highCutSlopeBox.setBounds (cutFiltersArea.withSizeKeepingCentre ((float) highCutSlopeBox.getWidth(), (float) highCutSlopeBox.getHeight()).withY ((float) highCutFreqKnob.getBottom() + slopeBoxY).toNearestInt());
 
 //    SHELF FILTERS
-    auto highShelfGainKnobLocalX = (shelfFiltersArea.getWidth() - highShelfGainKnob.getWidth()) * 0.5f;
-    highShelfGainKnob.setBounds (juce::Rectangle<float> ((float) highShelfGainKnob.getWidth(), (float) highShelfGainKnob.getHeight())
-        .withPosition (shelfFiltersArea.getX() + highShelfGainKnobLocalX, shelfFiltersArea.getY() + leftMargin * 1.5f)
-        .toNearestInt());
+    const auto shelfButtonGap = 0.f;
+    const auto shelfButtonSize = (float) presence1.getWidth();
+    const auto shelfButtonsRowWidth = shelfButtonSize * 3.0f + shelfButtonGap * 2.0f;
+    const auto shelfButtonsY = boundsFHeight * JUCE_LIVE_CONSTANT (0.0f);
 
-    auto presenceLocalY = highShelfGainKnob.getHeight() * 1.2f;
-    auto presence1LocalX = highShelfGainKnobLocalX * 0.52f;
-    presence1.setBounds (juce::Rectangle<float> (presenceButtonsSize, presenceButtonsSize)
-        .withPosition (shelfFiltersArea.getX() + presence1LocalX, shelfFiltersArea.getY() + presenceLocalY)
-        .toNearestInt());
+    auto presenceButtonsBounds = shelfFiltersArea.withSizeKeepingCentre (shelfButtonsRowWidth, shelfButtonSize).withY ((float) highShelfGainKnob.getBottom() + shelfButtonsY);
+    presence1.setBounds (presenceButtonsBounds.removeFromLeft (shelfButtonSize).toNearestInt());
+    presenceButtonsBounds.removeFromLeft (shelfButtonGap);
+    presence2.setBounds (presenceButtonsBounds.removeFromLeft (shelfButtonSize).toNearestInt());
+    presenceButtonsBounds.removeFromLeft (shelfButtonGap);
+    presence3.setBounds (presenceButtonsBounds.removeFromLeft (shelfButtonSize).toNearestInt());
 
-    auto presence2LocalX = (presence1LocalX + presenceButtonsSize) + leftMargin;
-    presence2.setBounds (juce::Rectangle<float> (presenceButtonsSize, presenceButtonsSize)
-        .withPosition (shelfFiltersArea.getX() + presence2LocalX, shelfFiltersArea.getY() + presenceLocalY)
-        .toNearestInt());
-
-    auto presence3LocalX = (presence2LocalX + presenceButtonsSize) + leftMargin;
-    presence3.setBounds (juce::Rectangle<float> (presenceButtonsSize, presenceButtonsSize)
-        .withPosition (shelfFiltersArea.getX() + presence3LocalX, shelfFiltersArea.getY() + presenceLocalY)
-        .toNearestInt());
-
-    lowShelfGainKnob.setBounds (juce::Rectangle<float> ((float) highShelfGainKnob.getWidth(), (float) highShelfGainKnob.getHeight())
-        .withPosition (shelfFiltersArea.getX() + highShelfGainKnobLocalX, cutFiltersArea.getY() + highCutFreqKnobLocalY)
-        .toNearestInt());
-
-    auto depthLocalY = lowShelfGainKnob.getHeight() * 2.59f;
-    auto depth1LocalX = highShelfGainKnobLocalX * 0.52f;
-    depth1.setBounds (juce::Rectangle<float> (presenceButtonsSize, presenceButtonsSize)
-        .withPosition (shelfFiltersArea.getX() + depth1LocalX, shelfFiltersArea.getY() + depthLocalY)
-        .toNearestInt());
-
-    auto depth2LocalX = (depth1LocalX + presenceButtonsSize) + leftMargin;
-    depth2.setBounds (juce::Rectangle<float> (presenceButtonsSize, presenceButtonsSize)
-        .withPosition (shelfFiltersArea.getX() + depth2LocalX, shelfFiltersArea.getY() + depthLocalY)
-        .toNearestInt());
-
-    auto depth3LocalX = (depth2LocalX + presenceButtonsSize) + leftMargin;
-    depth3.setBounds (juce::Rectangle<float> (presenceButtonsSize, presenceButtonsSize)
-        .withPosition (shelfFiltersArea.getX() + depth3LocalX, shelfFiltersArea.getY() + depthLocalY)
-        .toNearestInt());
+    auto depthButtonsBounds = shelfFiltersArea.withSizeKeepingCentre (shelfButtonsRowWidth, shelfButtonSize).withY ((float) lowShelfGainKnob.getBottom() + shelfButtonsY);
+    depth1.setBounds (depthButtonsBounds.removeFromLeft (shelfButtonSize).toNearestInt());
+    depthButtonsBounds.removeFromLeft (shelfButtonGap);
+    depth2.setBounds (depthButtonsBounds.removeFromLeft (shelfButtonSize).toNearestInt());
+    depthButtonsBounds.removeFromLeft (shelfButtonGap);
+    depth3.setBounds (depthButtonsBounds.removeFromLeft (shelfButtonSize).toNearestInt());
 }
 
 void MainPanel::setShelfFilterButtonStyle(juce::TextButton& button)

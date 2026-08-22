@@ -51,7 +51,7 @@ void ImgKnob::paint (juce::Graphics& g)
 
     const auto text = juce::String (juce::roundToInt (getValue())) + unit;
     g.setColour (juce::Colours::white);
-    g.setFont (Fonts::getFont (boundsF.getWidth() * 0.0975f));
+    g.setFont (GTFonts::jetBrainsMonoMedium (boundsF.getWidth() * 0.0975f));
     g.drawText (text, boundsF.translated (0.0f, boundsF.getHeight() * JUCE_LIVE_CONSTANT (0.0f)).toNearestInt(), juce::Justification::centredBottom, true);
 }
 

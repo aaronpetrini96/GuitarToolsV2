@@ -21,7 +21,6 @@ public:
 
     juce::ComboBox presetBox;
     juce::TextButton savePresetButton {"Save"};
-    ImgButton bypassButton;
     GainSlider inputGainSlider;
     GainSlider outputGainSlider;
 

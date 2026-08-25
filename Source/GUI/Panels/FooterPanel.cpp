@@ -2,15 +2,13 @@
 #include "GUI/LAF/LookAndFeel.h"
 
 FooterPanel::FooterPanel (GuitarToolsAudioProcessor& processor)
-    : bypassButton ("Bypass Button", processor.treeState, juce::ParameterID("Plugin Bypass", 1)),
-      inputGainSlider ("Input Gain", processor.treeState, juce::ParameterID("Comp Gain In", 1), " dB [IN]", juce::Slider::TextEntryBoxPosition::TextBoxRight),
+    : inputGainSlider ("Input Gain", processor.treeState, juce::ParameterID("Comp Gain In", 1), " dB [IN]", juce::Slider::TextEntryBoxPosition::TextBoxRight),
       outputGainSlider ("Output Gain", processor.treeState, juce::ParameterID("Comp Gain Out", 1), " dB [OUT]", juce::Slider::TextEntryBoxPosition::TextBoxLeft),
       audioProcessor (processor),
       presetManager (processor, presetBox)
 {
     addAndMakeVisible(presetBox);
     addAndMakeVisible(savePresetButton);
-    addAndMakeVisible(bypassButton);
     addAndMakeVisible(inputGainSlider);
     addAndMakeVisible(outputGainSlider);
 
@@ -48,8 +46,6 @@ void FooterPanel::resized()
     auto boundsHeight = bounds.getHeight();
 
     auto centreY = [boundsHeight] (int componentHeight) { return (boundsHeight - componentHeight) / 2; };
-
-    bypassButton.setBounds(boundsWidth * 0.93f, centreY(bypassButton.getHeight()), bypassButton.getWidth(), bypassButton.getHeight());
 
     presetBox.setBounds(boundsWidth * 0.31f, centreY(20), 150 * 0.8f, 20);
     savePresetButton.setBounds(presetBox.getRight() * 1.05f, centreY(presetBox.getHeight()), presetBox.getWidth() * 0.5f, presetBox.getHeight());

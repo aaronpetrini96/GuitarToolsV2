@@ -5,11 +5,17 @@
 #pragma once
 
 #include "GTLook.h"
+#include "PluginProcessor.h"
+#include "GUI/Components/ImgButton.h"
 
 class HeaderPanel : public juce::Component
 {
 public:
-    HeaderPanel() = default;
+    explicit HeaderPanel (GuitarToolsAudioProcessor& processor)
+        : bypassButton ("Bypass Button", processor.treeState, juce::ParameterID("Plugin Bypass", 1))
+    {
+        addAndMakeVisible (bypassButton);
+    }
 
     void paint(Graphics& g) override
     {
@@ -22,8 +28,16 @@ public:
     }
     void resized() override
     {
+        const auto boundsF = getLocalBounds().toFloat();
+        const auto boundsFWidth = boundsF.getWidth();
+        const auto boundsFHeight = boundsF.getHeight();
 
+        const auto buttonSize = (float) bypassButton.getWidth();
+        bypassButton.setBounds (boundsF.withSize (buttonSize, buttonSize)
+                                       .withCentre ({boundsFWidth * 0.95f, boundsFHeight * 0.5f}).toNearestInt());
     }
+
+    ImgButton bypassButton;
 
 private:
 

@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include <juce_gui_basics/juce_gui_basics.h>
-
 #include "GTLook.h"
 #include "ParamIDs.h"
 #include "PluginProcessor.h"
@@ -15,12 +13,12 @@ class HeaderPanel : public juce::Component
 {
 public:
     explicit HeaderPanel (GuitarToolsAudioProcessor& processor)
-        : bypassButton ("Bypass Button", processor.treeState, juce::ParameterID("Plugin Bypass", 1))
+        : bypassButton ("Bypass Button", processor.treeState, juce::ParameterID(ParamIDs::getPluginBypassName(), 1))
     {
         addAndMakeVisible (bypassButton);
     }
 
-    void paint(Graphics& g) override
+    void paint(juce::Graphics& g) override
     {
         const auto boundsF = getLocalBounds().toFloat();
         const auto boundsFWidth = boundsF.getWidth();

@@ -32,7 +32,6 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
-    void clipLight(juce::Graphics& g);
     void paintOverChildren (juce::Graphics& g) override;
     bool keyPressed (const juce::KeyPress& key) override;
 
@@ -42,15 +41,10 @@ private:
     const int minUIWidth = 640;
     const int minUIHeight = 480;
 
-    HeaderPanel headerPanel{};
+    HeaderPanel headerPanel {audioProcessor};
     MainPanel mainPanel {audioProcessor};
-    const float headerHeightFraction {0.05f};
-    const float footerHeightFraction {0.15f};
-
-
     FooterPanel footerPanel {audioProcessor};
     std::unique_ptr<juce::Drawable> metalBackground =  juce::Drawable::createFromImageData(BinaryData::chassisV2_png, BinaryData::chassisV2_pngSize);
-    std::unique_ptr<juce::Drawable> screw =  juce::Drawable::createFromImageData(BinaryData::screw_png, BinaryData::screw_pngSize);
 
    #if JUCE_DEBUG
     std::unique_ptr<juce::Drawable> draft = juce::Drawable::createFromImageData (BinaryData::draftUI_png, BinaryData::draftUI_pngSize);
@@ -61,9 +55,8 @@ private:
 
     MainLookAndFeel mainLF;
 
-    bool isClippingLightOn = false;
     int clipLightHoldCounter = 0; // counts down in timer ticks
-    float clipPopScale = 1.0f; 
-        
+
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuitarToolsAudioProcessorEditor)
 };

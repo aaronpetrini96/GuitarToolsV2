@@ -1,4 +1,7 @@
 #include "LookAndFeel.h"
+#include "BinaryData.h"
+
+#include <memory>
 
 const juce::Typeface::Ptr Fonts::typeface = juce::Typeface::createSystemTypefaceFor(BinaryData::LatoMedium_ttf, BinaryData::LatoMedium_ttfSize);
 
@@ -28,59 +31,59 @@ juce::Font RotaryKnobLookAndFeel::getLabelFont([[maybe_unused]] juce::Label& lab
     return Fonts::getFont();
 }
 
-void RotaryKnobLookAndFeel::drawRotarySlider(juce::Graphics &g, int x, int y, int width, int height, float sliderPos, float rotaryStartAngle, float rotaryEndAngle, juce::Slider &slider)
-{
-    auto bounds = juce::Rectangle<int>(x, y, width, width).toFloat();
-    auto knobRect = bounds.reduced(10.f, 10.f);
-    
-    auto path = juce::Path();
-    path.addEllipse(knobRect);
-    dropShadow.drawForPath(g, path);
-    
-    g.setColour(Colors::Knob::outline);
-    g.fillEllipse(knobRect);
-    
-    auto innerRect = knobRect.reduced(2.f, 2.f);
-    auto gradient = juce::ColourGradient(Colors::Knob::gradientTop, 0.f, innerRect.getY(),
-                                         Colors::Knob::gradientBottom, 0.f, innerRect.getBottom(), false);
-    g.setGradientFill(gradient);
-    g.fillEllipse(innerRect);
-    
-    auto center = bounds.getCentre();
-    auto radius = bounds.getWidth()/2.f;
-    auto lineWidth = 3.f;
-    auto arcRadius = radius - lineWidth/2.f;
-    
-    juce::Path backgroundArc;
-    backgroundArc.addCentredArc(center.x, center.y, arcRadius, arcRadius, 0.f, rotaryStartAngle, rotaryEndAngle, true);
-    auto strokeType = juce::PathStrokeType(lineWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded);
-    g.setColour(Colors::Knob::trackBackground);
-    g.strokePath(backgroundArc, strokeType);
-    
-    auto dialRadius = innerRect.getHeight() / 2.f - lineWidth;
-    auto toAngle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
-    
-    juce::Point<float> dialStart (center.x + 10.f * std::sin(toAngle), center.y - 10 * std::cos(toAngle));
-    juce::Point<float> dialEnd(center.x + dialRadius * std::sin(toAngle),
-                               center.y - dialRadius*std::cos(toAngle));
-    juce::Path dialPath; //creating path for line between dial start and end points
-    dialPath.startNewSubPath(dialStart);
-    dialPath.lineTo(dialEnd);
-    g.setColour(Colors::Knob::dial);
-    g.strokePath(dialPath, strokeType);
-    
-    //Adding the fill as the knob moves
-    if (slider.isEnabled())
-    {
-        float fromAngle = rotaryStartAngle;
-        if (slider.getProperties()["drawFromMiddle"])
-            fromAngle += (rotaryEndAngle - rotaryStartAngle)/2.0f;
-        juce::Path valueArc;
-        valueArc.addCentredArc(center.x, center.y, arcRadius, arcRadius, 0.f, fromAngle, toAngle,true);
-        g.setColour(slider.findColour(juce::Slider::rotarySliderFillColourId));
-        g.strokePath(valueArc, strokeType);
-    }
-}
+//void RotaryKnobLookAndFeel::drawRotarySlider(juce::Graphics &g, int x, int y, int width, int height, float sliderPos, float rotaryStartAngle, float rotaryEndAngle, juce::Slider &slider)
+//{
+//    auto bounds = juce::Rectangle<int>(x, y, width, width).toFloat();
+//    auto knobRect = bounds.reduced(10.f, 10.f);
+//    
+//    auto path = juce::Path();
+//    path.addEllipse(knobRect);
+//    dropShadow.drawForPath(g, path);
+//    
+//    g.setColour(Colors::Knob::outline);
+//    g.fillEllipse(knobRect);
+//    
+//    auto innerRect = knobRect.reduced(2.f, 2.f);
+//    auto gradient = juce::ColourGradient(Colors::Knob::gradientTop, 0.f, innerRect.getY(),
+//                                         Colors::Knob::gradientBottom, 0.f, innerRect.getBottom(), false);
+//    g.setGradientFill(gradient);
+//    g.fillEllipse(innerRect);
+//    
+//    auto center = bounds.getCentre();
+//    auto radius = bounds.getWidth()/2.f;
+//    auto lineWidth = 3.f;
+//    auto arcRadius = radius - lineWidth/2.f;
+//    
+//    juce::Path backgroundArc;
+//    backgroundArc.addCentredArc(center.x, center.y, arcRadius, arcRadius, 0.f, rotaryStartAngle, rotaryEndAngle, true);
+//    auto strokeType = juce::PathStrokeType(lineWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded);
+//    g.setColour(Colors::Knob::trackBackground);
+//    g.strokePath(backgroundArc, strokeType);
+//    
+//    auto dialRadius = innerRect.getHeight() / 2.f - lineWidth;
+//    auto toAngle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
+//    
+//    juce::Point<float> dialStart (center.x + 10.f * std::sin(toAngle), center.y - 10 * std::cos(toAngle));
+//    juce::Point<float> dialEnd(center.x + dialRadius * std::sin(toAngle),
+//                               center.y - dialRadius*std::cos(toAngle));
+//    juce::Path dialPath; //creating path for line between dial start and end points
+//    dialPath.startNewSubPath(dialStart);
+//    dialPath.lineTo(dialEnd);
+//    g.setColour(Colors::Knob::dial);
+//    g.strokePath(dialPath, strokeType);
+//    
+//    //Adding the fill as the knob moves
+//    if (slider.isEnabled())
+//    {
+//        float fromAngle = rotaryStartAngle;
+//        if (slider.getProperties()["drawFromMiddle"])
+//            fromAngle += (rotaryEndAngle - rotaryStartAngle)/2.0f;
+//        juce::Path valueArc;
+//        valueArc.addCentredArc(center.x, center.y, arcRadius, arcRadius, 0.f, fromAngle, toAngle,true);
+//        g.setColour(slider.findColour(juce::Slider::rotarySliderFillColourId));
+//        g.strokePath(valueArc, strokeType);
+//    }
+//}
 
 void RotaryKnobLookAndFeel::fillTextEditorBackground(juce::Graphics& g,[[maybe_unused]] int width, [[maybe_unused]] int height, juce::TextEditor& textEditor)
 {
@@ -137,63 +140,63 @@ MainLookAndFeel::MainLookAndFeel()
     setColour(juce::GroupComponent::outlineColourId, Colors::Group::outline);
 }
 
-juce::Font MainLookAndFeel::getLabelFont([[maybe_unused]] juce::Label& label)
+juce::Font MainLookAndFeel::getLabelFont (juce::Label& label)
 {
-    return Fonts::getFont();
+    return label.getFont();
 }
 
-ButtonLookAndFeel::ButtonLookAndFeel()
-{
-    setColour(juce::TextButton::textColourOffId, Colors::Button::text);
-    setColour(juce::TextButton::textColourOnId, Colors::Button::textToggled);
-    setColour(juce::TextButton::buttonColourId, Colors::Button::background);
-    setColour(juce::TextButton::buttonOnColourId, juce::Colours::lightyellow);
-    
-}
-
-void ButtonLookAndFeel::drawButtonBackground(juce::Graphics &g, juce::Button &button, const juce::Colour &backgroundColour,
-                                             [[maybe_unused]] bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
-{
-    auto bounds = button.getLocalBounds().toFloat();
-    auto cornersize = bounds.getHeight() * 0.25f;
-    auto buttonRect = bounds.reduced(1.f, 1.f).withTrimmedBottom(1.f);
-
-
-    if (shouldDrawButtonAsDown)
-        buttonRect.translate(0.f, 1.f);
-
-    
-    // Background color 
-    g.setColour(backgroundColour);
-    g.fillRoundedRectangle(buttonRect, cornersize);
-    
-    // Button border
-    g.setColour(juce::Colour(169, 105, 134));
-    g.drawRoundedRectangle(buttonRect, cornersize, 2.f);
-}
-
-void ButtonLookAndFeel::drawButtonText(juce::Graphics &g, juce::TextButton &button, [[maybe_unused]] bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
-{
-    auto bounds = button.getLocalBounds().toFloat();
-    auto buttonRect = bounds.reduced(1.f, 1.f).withTrimmedBottom(1.f);
-    
-    // Ignore hover effect; only account for "down" state
-    if (shouldDrawButtonAsDown)
-        buttonRect.translate(0.f, 1.f);
-    
-    // Set text color based on toggle state
-    if (button.getToggleState())
-    {
-        g.setColour(button.findColour(juce::TextButton::textColourOnId));
-    }
-    else
-    {
-        g.setColour(button.findColour(juce::TextButton::textColourOffId));
-    }
-    
-    g.setFont(Fonts::getFont());
-    g.drawText(button.getButtonText(), buttonRect, juce::Justification::centred);
-}
+//ButtonLookAndFeel::ButtonLookAndFeel()
+//{
+//    setColour(juce::TextButton::textColourOffId, Colors::Button::text);
+//    setColour(juce::TextButton::textColourOnId, Colors::Button::textToggled);
+//    setColour(juce::TextButton::buttonColourId, Colors::Button::background);
+//    setColour(juce::TextButton::buttonOnColourId, juce::Colours::lightyellow);
+//    
+//}
+//
+//void ButtonLookAndFeel::drawButtonBackground(juce::Graphics &g, juce::Button &button, const juce::Colour &backgroundColour,
+//                                             [[maybe_unused]] bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
+//{
+//    auto bounds = button.getLocalBounds().toFloat();
+//    auto cornersize = bounds.getHeight() * 0.25f;
+//    auto buttonRect = bounds.reduced(1.f, 1.f).withTrimmedBottom(1.f);
+//
+//
+//    if (shouldDrawButtonAsDown)
+//        buttonRect.translate(0.f, 1.f);
+//
+//    
+//    // Background color 
+//    g.setColour(backgroundColour);
+//    g.fillRoundedRectangle(buttonRect, cornersize);
+//    
+//    // Button border
+//    g.setColour(juce::Colour(169, 105, 134));
+//    g.drawRoundedRectangle(buttonRect, cornersize, 2.f);
+//}
+//
+//void ButtonLookAndFeel::drawButtonText(juce::Graphics &g, juce::TextButton &button, [[maybe_unused]] bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
+//{
+//    auto bounds = button.getLocalBounds().toFloat();
+//    auto buttonRect = bounds.reduced(1.f, 1.f).withTrimmedBottom(1.f);
+//    
+//    // Ignore hover effect; only account for "down" state
+//    if (shouldDrawButtonAsDown)
+//        buttonRect.translate(0.f, 1.f);
+//    
+//    // Set text color based on toggle state
+//    if (button.getToggleState())
+//    {
+//        g.setColour(button.findColour(juce::TextButton::textColourOnId));
+//    }
+//    else
+//    {
+//        g.setColour(button.findColour(juce::TextButton::textColourOffId));
+//    }
+//    
+//    g.setFont(Fonts::getFont());
+//    g.drawText(button.getButtonText(), buttonRect, juce::Justification::centred);
+//}
 
 ComboBoxLookAndFeel::ComboBoxLookAndFeel()
 {

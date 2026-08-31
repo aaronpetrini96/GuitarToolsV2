@@ -9,7 +9,8 @@
 */
 
 #include "ImgButton.h"
-#include <JuceHeader.h>
+#include "GTLook.h"
+#include "BinaryData.h"
 
 
 

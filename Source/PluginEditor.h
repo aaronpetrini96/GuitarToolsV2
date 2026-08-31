@@ -8,7 +8,12 @@
 
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_gui_basics/juce_gui_basics.h>
+
+#include <memory>
+
+#include "BinaryData.h"
 #include "PluginProcessor.h"
 #include "GUI/LAF/LookAndFeel.h"
 #include "GUI/Panels/FooterPanel.h"

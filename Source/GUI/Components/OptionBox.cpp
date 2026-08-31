@@ -8,8 +8,8 @@
   ==============================================================================
 */
 
-#include <JuceHeader.h>
 #include "OptionBox.h"
+#include "GTLook.h"
 #include "../LAF/LookAndFeel.h"
 
 OptionBox::OptionBox(const std::vector<juce::String>& options, juce::AudioProcessorValueTreeState& apvts, const juce::ParameterID& parameterID)
@@ -25,6 +25,7 @@ OptionBox::OptionBox(const std::vector<juce::String>& options, juce::AudioProces
 //    comboBox.setColour(juce::ComboBox::ColourIds::backgroundColourId, juce::Colours::black.withAlpha(0.1f));
     comboBox.setColour(juce::ComboBox::ColourIds::backgroundColourId, juce::Colour(100, 100, 110).darker(0.5f));
     comboBox.setColour(juce::ComboBox::ColourIds::outlineColourId, juce::Colours::transparentBlack);
+    comboBox.setColour(juce::ComboBox::ColourIds::textColourId, GTColors::clearGrey);
     comboBox.setBounds(0, 0, 80, 20);
     setSize(80, 20);
     setLookAndFeel(ComboBoxLookAndFeel::get());

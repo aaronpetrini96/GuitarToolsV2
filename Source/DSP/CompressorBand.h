@@ -1,8 +1,9 @@
 #pragma once
-#include <JuceHeader.h>
+#include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_dsp/juce_dsp.h>
 //#include "../Utilities.h"
-#define MIN_FREQ 20.f
-#define MAX_FREQ 20000.f
+// #define MIN_FREQ 20.f
+// #define MAX_FREQ 20000.f
 #define MAX_DECIBELS 12.f
 #define MIN_THRESHOLD -60.f
 

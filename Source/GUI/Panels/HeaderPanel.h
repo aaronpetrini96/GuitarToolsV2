@@ -4,7 +4,10 @@
 
 #pragma once
 
+#include <juce_gui_basics/juce_gui_basics.h>
+
 #include "GTLook.h"
+#include "ParamIDs.h"
 #include "PluginProcessor.h"
 #include "GUI/Components/ImgButton.h"
 

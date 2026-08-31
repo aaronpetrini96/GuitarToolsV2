@@ -1,16 +1,17 @@
 #include "FooterPanel.h"
 #include "GUI/LAF/LookAndFeel.h"
+#include "ParamIDs.h"
 
 FooterPanel::FooterPanel (GuitarToolsAudioProcessor& processor)
-    : inputGainSlider ("Input Gain", processor.treeState, juce::ParameterID("Comp Gain In", 1), " dB [IN]", juce::Slider::TextEntryBoxPosition::TextBoxRight),
-      outputGainSlider ("Output Gain", processor.treeState, juce::ParameterID("Comp Gain Out", 1), " dB [OUT]", juce::Slider::TextEntryBoxPosition::TextBoxLeft),
+    : inputGainSlider ("Input Gain", processor.treeState, juce::ParameterID(ParamIDs::getCompGainInName(), 1), " dB [IN]", juce::Slider::TextEntryBoxPosition::TextBoxRight),
+      outputGainSlider ("Output Gain", processor.treeState, juce::ParameterID(ParamIDs::getCompGainOutName(), 1), " dB [OUT]", juce::Slider::TextEntryBoxPosition::TextBoxLeft),
       audioProcessor (processor),
       presetManager (processor, presetBox)
 {
-    addAndMakeVisible(presetBox);
-    addAndMakeVisible(savePresetButton);
-    addAndMakeVisible(inputGainSlider);
-    addAndMakeVisible(outputGainSlider);
+    // addAndMakeVisible(presetBox);
+    // addAndMakeVisible(savePresetButton);
+    // addAndMakeVisible(inputGainSlider);
+    // addAndMakeVisible(outputGainSlider);
 
     savePresetButton.setClickingTogglesState(true);
     savePresetButton.setColour(juce::TextButton::ColourIds::buttonColourId, GTColors::controlBackground);
@@ -36,7 +37,13 @@ FooterPanel::~FooterPanel()
 
 void FooterPanel::paint (juce::Graphics& g)
 {
-    g.fillAll(GTColors::footerBackground);
+    const auto boundsF = getLocalBounds().toFloat();
+    const auto boundsFWidth = boundsF.getWidth();
+    g.fillAll(juce::Colours::black.withAlpha(0.12f));
+
+    const auto lineThickness = boundsFWidth * 0.002f;
+    g.setGradientFill (juce::ColourGradient::horizontal (GTColors::dividerLinesStart, 0.0f, GTColors::dividerLinesEnd, boundsFWidth));
+    g.fillRect (0.0f, 0.0f, boundsFWidth, lineThickness);
 }
 
 void FooterPanel::resized()

@@ -10,16 +10,24 @@ namespace  GTColors
 {
     inline juce::Colour transparent { juce::Colours::transparentBlack };
     inline juce::Colour controlBackground { juce::Colour(100, 100, 110).darker(0.5f) };
-    inline juce::Colour footerBackground {juce::Colour(15, 15, 15).withAlpha(0.8f)};
+    inline juce::Colour footerBackground {juce::Colour(15, 15, 15).withAlpha(0.9f)};
 
-    inline juce::Colour sectionTitleText {122, 122, 122};
+    inline juce::Colour sectionTitleText {215, 215, 215};
+    inline juce::Colour buttonsNameText {200, 200, 200};
+    inline juce::Colour clearGrey {180, 180, 180};
+    inline juce::Colour darkGrey {90, 90, 90};
 
-    inline juce::Colour dividerLines {19, 19, 19};
+    // inline juce::Colour dividerLinesStart{12, 12, 12};
+    inline juce::Colour dividerLinesEnd{12, 12, 12};
+    // inline juce::Colour dividerLinesEnd {5, 5, 5};
+    inline juce::Colour dividerLinesStart {5, 5, 5};
     inline juce::Colour mainPanelTop {58, 60,65};
-    inline juce::Colour mainPanelBottom {36, 39,43};
+    // inline juce::Colour mainPanelBottom {36, 39,43};
+    inline juce::Colour mainPanelBottom {42, 45,49};
 
 
-    inline juce::Colour accentActive { juce::Colour(64, 196, 255) };
+    // inline juce::Colour accentActive { juce::Colour(64, 196, 255) };
+    inline juce::Colour accentActive { juce::Colour(95, 200, 255) };
 
     inline juce::Colour clipWarning { juce::Colours::red.withAlpha(0.9f) };
     inline juce::Colour levelOk { juce::Colours::green.withAlpha(0.75f) };

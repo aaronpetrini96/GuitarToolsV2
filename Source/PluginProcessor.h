@@ -194,8 +194,8 @@ private:
     using CompFilter = juce::dsp::LinkwitzRileyFilter<float>;
     CompFilter LP1, HP1, AP2, LP2, HP2;
 
-    juce::AudioParameterFloat* lowMidCrossover {nullptr};
-    juce::AudioParameterFloat* midHighCrossover {nullptr};
+//    juce::AudioParameterFloat* compRangeStartParameter {nullptr};
+//    juce::AudioParameterFloat* compRangeEndParameter {nullptr};
     
     std::array<juce::AudioBuffer<float>, 3> filterBuffers;
     

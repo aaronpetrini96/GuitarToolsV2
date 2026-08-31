@@ -9,6 +9,7 @@
 */
 
 #include "HorizontalSlider.h"
+#include "GTLook.h"
 
 //==============================================================================
 HorizontalSlider::HorizontalSlider(const juce::String& text,
@@ -19,16 +20,16 @@ HorizontalSlider::HorizontalSlider(const juce::String& text,
 : attachment(apvts, parameterID.getParamID(), slider)
 
 {
-    slider.setSliderStyle(juce::Slider::SliderStyle::LinearHorizontal);
+    slider.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
     slider.setColour(juce::Slider::ColourIds::thumbColourId, juce::Colours::red.withAlpha(0.8f));
     slider.setColour(juce::Slider::ColourIds::trackColourId, juce::Colours::grey.withAlpha(0.3f));
     slider.setColour(juce::Slider::ColourIds::textBoxOutlineColourId, juce::Colours::transparentBlack);
+    slider.setColour(juce::Slider::ColourIds::textBoxTextColourId, GTColors::clearGrey);
     
-    slider.setTextBoxStyle(juce::Slider::TextBoxLeft, false, 60, 20);
+    slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 18);
     if (suffix != "") {
         slider.setTextValueSuffix(suffix);
     }
-    slider.setBounds(0, 0, 150, 30);
     addAndMakeVisible(slider);
      
 //    label.setText(text, juce::NotificationType::dontSendNotification);
@@ -38,7 +39,7 @@ HorizontalSlider::HorizontalSlider(const juce::String& text,
 //    label.attachToComponent(&slider, false);
 //    addAndMakeVisible(label);
     
-    setSize(150, 30);
+    setSize(60, 170);
 //    setLookAndFeel(RotaryKnobLookAndFeel::get());
 
     
@@ -58,7 +59,7 @@ void HorizontalSlider::paint (juce::Graphics& g)
 
 void HorizontalSlider::resized()
 {
-
+    slider.setBounds (getLocalBounds());
 }
 
 void HorizontalSlider::drawLinearSliderOutline (juce::Graphics& g, int, int, int, int,

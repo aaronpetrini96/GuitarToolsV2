@@ -520,45 +520,6 @@ void GuitarToolsAudioProcessor::updateHighCutFilters(const ChainSettings& chainS
     updateCutFilter(rightHighCut, highCutCoefficients, chainSettings.highCutSlope);
 }
 
-
-void GuitarToolsAudioProcessor::updateOversampling(const ChainSettings &chainSettings)
-{
-    auto factor = chainSettings.oversamplingFactor;
-    int newFactor = 1;
-
-    switch (factor) {
-        case Off: newFactor = 1; break;
-        case x2:  newFactor = 2; break;
-        case x4:  newFactor = 4; break;
-        case x8:  newFactor = 8; break;
-    }
-
-    // Only recreate oversampling object if factor has changed
-    if (newFactor != oversamplingFactor)
-    {
-        oversamplingFactor = newFactor;
-        std::cout << "New Oversampling Factor: " << oversamplingFactor << "x" << std::endl;
-
-        // Calculate number of stages (each stage doubles the rate)
-        int numStages = 0;
-        if (oversamplingFactor == 2) numStages = 1;
-        else if (oversamplingFactor == 4) numStages = 2;
-        else if (oversamplingFactor == 8) numStages = 3;
-        else numStages = 0; // Off or 1x
-
-        // Recreate oversampling object
-        oversampling = std::make_unique<juce::dsp::Oversampling<float>>(
-            2, // 2 channels (stereo)
-            numStages, // number of stages
-            juce::dsp::Oversampling<float>::filterHalfBandPolyphaseIIR
-        );
-
-        // Initialize buffers with expected block size (use safe default)
-        oversampling->reset();
-        oversampling->initProcessing((size_t) getBlockSize());
-    }
-}
-
 //==============================================================================
 void GuitarToolsAudioProcessor::updateFilters()
 {

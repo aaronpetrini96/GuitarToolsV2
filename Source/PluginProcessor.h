@@ -26,14 +26,6 @@ enum Slope
     Slope_48,
 };
 
-enum OversamplingFactor
-{
-    Off,
-    x2,
-    x4,
-    x8,
-};
-
 
 struct ChainSettings
 {
@@ -44,7 +36,6 @@ struct ChainSettings
     
     bool resoBypass {false}, mudBypass {false}, pluginBypass {false}, compBypass {false};
 
-    OversamplingFactor oversamplingFactor {OversamplingFactor::Off};
     Slope lowCutSlope {Slope::Slope_12}, highCutSlope {Slope::Slope_12};
 };
 
@@ -122,12 +113,6 @@ private:
     //==============================================================================
 //    EQ PART
     //==============================================================================
-    size_t oversamplingFactor{1};
-    
-    void updateOversampling(const ChainSettings& chainSettings);
-    
-//    juce::dsp::Oversampling<float> oversampling {oversamplingFactor, 2, juce::dsp::Oversampling<float>::filterHalfBandPolyphaseIIR};
-    std::unique_ptr<juce::dsp::Oversampling<float>> oversampling;
     
 //    Declare Filter types and Process Chains
     using EQFilter = juce::dsp::IIR::Filter<float>;

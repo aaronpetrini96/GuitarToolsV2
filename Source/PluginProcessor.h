@@ -102,9 +102,6 @@ public:
     CompressorBand& midBandComp = compressors[1];
     CompressorBand& highBandComp = compressors[2];
 
-    std::atomic<bool> clipFlagIn { false };
-    std::atomic<bool> clipFlagOut { false };
-    
     juce::String currentPresetName;
     
 private:

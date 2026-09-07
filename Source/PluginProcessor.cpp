@@ -8,7 +8,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "ParamIDs.h"
+#include "Utils/ParamIDs.h"
 
 #include <cmath>
 #include <memory>
@@ -187,27 +187,6 @@ bool GuitarToolsAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
 #endif
 
 
-bool clipDetection(juce::AudioBuffer<float>& buffer)
-{
-// CLIP DETECTION
-    bool isClipping = false;
-    for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
-    {
-        auto* samples = buffer.getReadPointer(channel);
-        for (int i = 0; i < buffer.getNumSamples(); ++i)
-        {
-            auto sampleAbs = std::abs(samples[i]);
-            if (sampleAbs > 1.0f)
-            {
-                isClipping = true;
-                break; // you can also break out of both loops early if you want
-            }
-        }
-    }
-    
-    return isClipping;
-}
-
 void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ignoreUnused(midiMessages);
@@ -232,10 +211,6 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
         rightChannelFifo.update(buffer);
     
     applyGain(buffer, inputGain);
-    
-//    INPUT CLIP DETECTION
-    if (clipDetection(buffer))
-        clipFlagIn.store(true); // atomic flag to be safe for GUI thread
     
     splitBands(buffer);
     compressors[1].process(filterBuffers[1]); //only process midband
@@ -293,10 +268,6 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
             wet[sample] = wet[sample] * mix + dry[sample] * (1.0f - mix);
         }
     }
-    
-//    OUTPUT CLIP DETECTION
-    if (clipDetection(buffer))
-        clipFlagOut.store(true); // atomic flag to be safe for GUI thread
 }
 
 //==============================================================================
@@ -363,12 +334,21 @@ juce::AudioProcessorValueTreeState::ParameterLayout GuitarToolsAudioProcessor::c
     constexpr auto frequencyIntervalValue {0.01f};
     constexpr auto decibelIntervalValue {0.001f};
 
+    const auto frequencyStringFromValue = [] (float value, int) { return juce::String (juce::roundToInt (value)); };
+    const auto decibelStringFromValue = [] (float value, int) { return juce::String (value, 1); };
+
+    auto lowCutFrequencyRange = juce::NormalisableRange<float> (20.f, 20000.f, frequencyIntervalValue);
+    lowCutFrequencyRange.setSkewForCentre (150.0f);
+
+    auto highCutFrequencyRange = juce::NormalisableRange<float> (20.f, 20000.f, frequencyIntervalValue);
+    highCutFrequencyRange.setSkewForCentre (3000.0f);
+
 //    ========== HICUT LOW CUT ===========
     auto name = ParamIDs::getLowCutFreqName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, juce::NormalisableRange<float> (20.f, 4000.f, frequencyIntervalValue, 1.f),20.f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, lowCutFrequencyRange, 20.f, juce::AudioParameterFloatAttributes().withLabel ("Hz").withStringFromValueFunction (frequencyStringFromValue)));
 
     name = ParamIDs::getHighCutFreqName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name,juce::NormalisableRange<float>(4000.f, 20000.f, frequencyIntervalValue, 1.f),20000.f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name,highCutFrequencyRange, 20000.f, juce::AudioParameterFloatAttributes().withLabel ("Hz").withStringFromValueFunction (frequencyStringFromValue)));
     
     
     juce::StringArray stringArray;
@@ -387,31 +367,31 @@ juce::AudioProcessorValueTreeState::ParameterLayout GuitarToolsAudioProcessor::c
     layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID(name, versionHint), name, stringArray, 0));
 
 //    ========== HIGH/LOW SHELVE  ===========
-    juce::StringArray presenceFreqArray {"4.5 kHz", "6 kHz", "8 kHz"};
+    juce::StringArray presenceFreqArray {"4.5 kHz", "6 kHz", "8 kHz", "12 kHz"};
     name = ParamIDs::getPresenceFreqName();
     layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID(name, versionHint), name, presenceFreqArray, 1));
 
     name = ParamIDs::getPresenceGainName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, juce::NormalisableRange<float>(-12.f, 12.f, decibelIntervalValue, 1.f),0.f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, juce::NormalisableRange<float>(-12.f, 12.f, decibelIntervalValue, 1.f),0.f, juce::AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (decibelStringFromValue)));
     
 
-    juce::StringArray depthFreqArray {"60 Hz", "100 Hz", "170 Hz"};
+    juce::StringArray depthFreqArray {"60 Hz", "100 Hz", "170 Hz", "250 Hz"};
     name = ParamIDs::getDepthFreqName();
     layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID(name, versionHint), name, depthFreqArray, 1));
 
     name = ParamIDs::getDepthGainName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, juce::NormalisableRange<float>(-12.f, 12.f, decibelIntervalValue, 1.f),0.f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, juce::NormalisableRange<float>(-12.f, 12.f, decibelIntervalValue, 1.f),0.f, juce::AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (decibelStringFromValue)));
     
 //    ========== RESONANCE TAMER ===========
     name = ParamIDs::getResoFreqName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name,juce::NormalisableRange<float>(2000.f, 6000.f, frequencyIntervalValue, 1.f),3850.f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name,juce::NormalisableRange<float>(2000.f, 6000.f, frequencyIntervalValue, 1.f),3850.f, juce::AudioParameterFloatAttributes().withLabel ("Hz").withStringFromValueFunction (frequencyStringFromValue)));
 
     name = ParamIDs::getResoBypassName();
     layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, false));
     
 //    ========== MUD KILLER TAMER ===========
     name = ParamIDs::getMudFreqName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name,juce::NormalisableRange<float>(40.f, 500.f, frequencyIntervalValue, 1.f),120.f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name,juce::NormalisableRange<float>(40.f, 500.f, frequencyIntervalValue, 1.f),120.f, juce::AudioParameterFloatAttributes().withLabel ("Hz").withStringFromValueFunction (frequencyStringFromValue)));
 
     name = ParamIDs::getMudBypassName();
     layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, false));
@@ -424,16 +404,16 @@ juce::AudioProcessorValueTreeState::ParameterLayout GuitarToolsAudioProcessor::c
     //==============================================================================
 //    COMPRESSOR
     
-    auto gainRange = juce::NormalisableRange<float>(-60.f, 12.f, decibelIntervalValue, 1.f);
+    auto gainRange = juce::NormalisableRange<float>(-12.f, 12.f, decibelIntervalValue, 1.f);
     name = ParamIDs::getCompGainInName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name, gainRange, 0.f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name, gainRange, 0.f, juce::AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (decibelStringFromValue)));
 
     name = ParamIDs::getCompGainOutName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name, gainRange, 0.f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name, gainRange, 0.f, juce::AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (decibelStringFromValue)));
     
     auto thresholdRange = juce::NormalisableRange<float>(MIN_THRESHOLD, MAX_DECIBELS, decibelIntervalValue, 1.f);
     name = ParamIDs::getThresholdName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name, thresholdRange, 0.f));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name, thresholdRange, 0.f, juce::AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (decibelStringFromValue)));
     
     auto attackReleaseRange = juce::NormalisableRange<float> (5.f, 500.f, 0.1f, 1.f);
     name = ParamIDs::getAttackName();
@@ -488,11 +468,13 @@ ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& treeState)
     if (settings.presenceIndex == 0) {settings.presenceFreq = 4500.f;}
     else if (settings.presenceIndex == 1) { settings.presenceFreq = 6000.f;}
     else if (settings.presenceIndex == 2) {settings.presenceFreq = 8000.f;}
+    else if (settings.presenceIndex == 3) {settings.presenceFreq = 12000.f;}
 
 //    Depth
     if (settings.depthIndex == 0) {settings.depthFreq = 60.f;}
     else if (settings.depthIndex == 1) {settings.depthFreq = 100.f;}
     else if (settings.depthIndex == 2) {settings.depthFreq = 170.f;}
+    else if (settings.depthIndex == 3) {settings.depthFreq = 250.f;}
 
     return settings;
 }

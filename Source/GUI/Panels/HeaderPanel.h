@@ -4,43 +4,28 @@
 
 #pragma once
 
-#include "GTLook.h"
-#include "ParamIDs.h"
 #include "PluginProcessor.h"
-#include "GUI/Components/ImgButton.h"
+#include "Utils/PresetManager.h"
 
 class HeaderPanel : public juce::Component
 {
 public:
-    explicit HeaderPanel (GuitarToolsAudioProcessor& processor)
-        : bypassButton ("Bypass Button", processor.treeState, juce::ParameterID(ParamIDs::getPluginBypassName(), 1))
-    {
-        addAndMakeVisible (bypassButton);
-    }
+    explicit HeaderPanel (GuitarToolsAudioProcessor& processor);
+    ~HeaderPanel() override;
 
-    void paint(juce::Graphics& g) override
-    {
-        const auto boundsF = getLocalBounds().toFloat();
-        const auto boundsFWidth = boundsF.getWidth();
-        const auto boundsFHeight= boundsF.getHeight();
+    void paint (juce::Graphics& g) override;
+    void resized() override;
 
-        g.setColour(GTColors::footerBackground);
-        g.fillRect(boundsF);
-    }
-    void resized() override
-    {
-        const auto boundsF = getLocalBounds().toFloat();
-        const auto boundsFWidth = boundsF.getWidth();
-        const auto boundsFHeight = boundsF.getHeight();
-
-        const auto buttonSize = (float) bypassButton.getWidth();
-        bypassButton.setBounds (boundsF.withSize (buttonSize, buttonSize)
-                                       .withCentre ({boundsFWidth * 0.95f, boundsFHeight * 0.5f}).toNearestInt());
-    }
-
-    ImgButton bypassButton;
+    juce::ComboBox presetBox;
 
 private:
+    juce::DrawableButton logoButton {"Logo", juce::DrawableButton::ImageFitted};
+    juce::DrawableButton savePresetButton {"Save", juce::DrawableButton::ImageFitted};
+    juce::DrawableButton settingsButton {"Settings", juce::DrawableButton::ImageFitted};
+    juce::DrawableButton infoButton {"Info", juce::DrawableButton::ImageFitted};
+    PresetManager presetManager;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(HeaderPanel)
+    float logoAspectRatio {1.5f};
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HeaderPanel)
 };

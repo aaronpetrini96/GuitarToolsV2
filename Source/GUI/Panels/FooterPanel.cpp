@@ -1,6 +1,7 @@
 #include "FooterPanel.h"
-#include "GUI/LAF/LookAndFeel.h"
-#include "ParamIDs.h"
+#include "BinaryData.h"
+#include "GUI/LAF/PresetBrowserLAF.h"
+
 
 FooterPanel::FooterPanel (GuitarToolsAudioProcessor& processor)
     : inputGainSlider ("Input Gain", processor.treeState, juce::ParameterID(ParamIDs::getCompGainInName(), 1), " dB [IN]", juce::Slider::TextEntryBoxPosition::TextBoxRight),
@@ -8,55 +9,85 @@ FooterPanel::FooterPanel (GuitarToolsAudioProcessor& processor)
       audioProcessor (processor),
       presetManager (processor, presetBox)
 {
-    // addAndMakeVisible(presetBox);
-    // addAndMakeVisible(savePresetButton);
+    // addAndMakeVisible(inputGainKnob);
+    // outputGainFader.setSliderStyle (juce::Slider::LinearHorizontal);
+    // addAndMakeVisible(outputGainFader);
+    addAndMakeVisible(settingsButton);
+    addAndMakeVisible(infoButton);
+    addAndMakeVisible(presetBox);
+    addAndMakeVisible(savePresetButton);
     // addAndMakeVisible(inputGainSlider);
     // addAndMakeVisible(outputGainSlider);
 
-    savePresetButton.setClickingTogglesState(true);
-    savePresetButton.setColour(juce::TextButton::ColourIds::buttonColourId, GTColors::controlBackground);
-    savePresetButton.setColour(juce::TextButton::ColourIds::buttonOnColourId, GTColors::controlBackground);
-    savePresetButton.setColour(juce::ComboBox::outlineColourId, GTColors::transparent);
-    savePresetButton.setColour(juce::TextButton::ColourIds::textColourOnId, juce::Colours::white);
-    savePresetButton.setColour(juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
+    if (auto settingsIcon = juce::Drawable::createFromImageData (BinaryData::settings_svg, BinaryData::settings_svgSize))
+    {
+        settingsIcon->replaceColour (juce::Colours::black, GTColors::clearGrey);
+        settingsButton.setImages (settingsIcon.get());
+    }
+
+    if (auto infoIcon = juce::Drawable::createFromImageData (BinaryData::info_svg, BinaryData::info_svgSize))
+    {
+        infoIcon->replaceColour (juce::Colours::black, GTColors::clearGrey);
+        infoButton.setImages (infoIcon.get());
+    }
+
+    if (auto saveIcon = juce::Drawable::createFromImageData (BinaryData::saveIcon_svg, BinaryData::saveIcon_svgSize))
+    {
+        saveIcon->replaceColour (juce::Colours::black, GTColors::clearGrey);
+        savePresetButton.setImages (saveIcon.get());
+    }
+
     savePresetButton.onClick = [this] { presetManager.savePreset(); };
 
-    presetBox.setTextWhenNothingSelected("Select Preset");
-    presetBox.setColour(juce::ComboBox::ColourIds::backgroundColourId, GTColors::controlBackground);
-    presetBox.setColour(juce::ComboBox::ColourIds::outlineColourId, GTColors::transparent);
-    presetBox.setLookAndFeel(ComboBoxLookAndFeel::get());
+    presetBox.setTextWhenNothingSelected ("DEFAULT");
+    presetBox.setColour (juce::ComboBox::backgroundColourId, GTColors::controlBackground);
+    presetBox.setColour (juce::ComboBox::textColourId, GTColors::clearGrey);
+    presetBox.setColour (juce::ComboBox::arrowColourId, GTColors::clearGrey);
+    presetBox.setColour (juce::ComboBox::outlineColourId, GTColors::transparent);
+    presetBox.setLookAndFeel (PresetBrowserLAF::get());
     presetBox.onChange = [this] { presetManager.presetSelected(); };
+
     presetManager.refreshPresetList();
     presetManager.displayCurrentPresetName();
 }
 
 FooterPanel::~FooterPanel()
 {
-    presetBox.setLookAndFeel(nullptr);
+    presetBox.setLookAndFeel (nullptr);
 }
 
 void FooterPanel::paint (juce::Graphics& g)
 {
     const auto boundsF = getLocalBounds().toFloat();
+    g.fillAll(juce::Colours::black.withAlpha(0.2f));
     const auto boundsFWidth = boundsF.getWidth();
-    g.fillAll(juce::Colours::black.withAlpha(0.12f));
-
-    const auto lineThickness = boundsFWidth * 0.002f;
-    g.setGradientFill (juce::ColourGradient::horizontal (GTColors::dividerLinesStart, 0.0f, GTColors::dividerLinesEnd, boundsFWidth));
-    g.fillRect (0.0f, 0.0f, boundsFWidth, lineThickness);
+    const auto lineThickness = boundsFWidth * 0.004f;
+    g.setColour (GTColors::dividerLinesEnd);
+    g.fillRect (0.0f, 0.f, boundsFWidth, lineThickness);
 }
 
 void FooterPanel::resized()
 {
-    auto bounds = getLocalBounds();
-    auto boundsWidth = bounds.getWidth();
-    auto boundsHeight = bounds.getHeight();
+    const auto boundsF = getLocalBounds().toFloat();
+    const auto boundsFWidth = boundsF.getWidth();
+    const auto boundsFHeight = boundsF.getHeight();
+    const auto controlHeight = boundsFHeight * 0.5f;
+    const auto controlGap = boundsFWidth * 0.012f;
 
-    auto centreY = [boundsHeight] (int componentHeight) { return (boundsHeight - componentHeight) / 2; };
+    const auto iconButtonBounds = boundsF.withSizeKeepingCentre (controlHeight, controlHeight);
+    const auto infoButtonBounds = iconButtonBounds.withRightX (boundsFWidth - controlGap);
+    const auto settingsButtonBounds = iconButtonBounds.withRightX (infoButtonBounds.getX() - controlGap);
 
-    presetBox.setBounds(boundsWidth * 0.31f, centreY(20), 150 * 0.8f, 20);
-    savePresetButton.setBounds(presetBox.getRight() * 1.05f, centreY(presetBox.getHeight()), presetBox.getWidth() * 0.5f, presetBox.getHeight());
+    settingsButton.setBounds (settingsButtonBounds.toNearestInt());
+    infoButton.setBounds (infoButtonBounds.toNearestInt());
 
-    inputGainSlider.setBounds(8, centreY(inputGainSlider.getHeight()), inputGainSlider.getWidth(), inputGainSlider.getHeight());
-    outputGainSlider.setBounds(boundsWidth * 0.585f, centreY(outputGainSlider.getHeight()), outputGainSlider.getWidth(), outputGainSlider.getHeight());
+    const auto presetBoxBounds = boundsF.withSizeKeepingCentre (boundsFWidth * 0.3f, boundsFHeight * 0.425f);
+    presetBox.setBounds (presetBoxBounds.toNearestInt());
+    savePresetButton.setBounds (iconButtonBounds.withX (presetBoxBounds.getRight() + controlGap).toNearestInt());
+
+    // outputGainFader.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.3f, boundsFHeight * 0.6f).toNearestInt());
+
+    // const auto gainKnobSize = boundsFHeight;
+    // inputGainKnob.setBounds (boundsF.withSizeKeepingCentre (gainKnobSize, gainKnobSize)
+    //                                 .withX (controlGap).toNearestInt());
 }

@@ -24,7 +24,6 @@ public:
 
             button->setImages (buttonOff.get(), nullptr, nullptr, nullptr, buttonOn.get());
             button->setClickingTogglesState (true);
-            // the default on-state fill would paint a solid block behind the cap
             button->setColour (juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
 
             if (isRadioButton)
@@ -64,6 +63,7 @@ public:
 
         attachment->sendInitialUpdate();
     }
+
 
 
     void resized() override

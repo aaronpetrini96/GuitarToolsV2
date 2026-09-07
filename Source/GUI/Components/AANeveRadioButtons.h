@@ -9,12 +9,12 @@
 #include <memory>
 
 #include "BinaryData.h"
-#include "GTLook.h"
+#include "../../Utils/GTLook.h"
 
-class AANeveStyleRadioButtons : public juce::Component
+class AANeveRadioButtons : public juce::Component
 {
 public:
-    AANeveStyleRadioButtons (juce::AudioProcessorValueTreeState& apvts, const juce::ParameterID& parameterID)
+    AANeveRadioButtons (juce::AudioProcessorValueTreeState& apvts, const juce::ParameterID& parameterID)
     {
         for (auto index = 0; index < 4; ++index)   // the housing image has four recesses
         {
@@ -79,5 +79,5 @@ private:
     std::unique_ptr<juce::ParameterAttachment> attachment;
     int radioGroupId {188889};
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AANeveStyleRadioButtons)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AANeveRadioButtons)
 };

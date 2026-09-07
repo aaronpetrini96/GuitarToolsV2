@@ -18,7 +18,6 @@ namespace  GTColors
     inline juce::Colour sectionTitleText {215, 215, 215};
     inline juce::Colour buttonsNameText {200, 200, 200};
     inline juce::Colour clearGrey {200, 200, 200};
-    // inline juce::Colour clearGrey {180, 180, 180};
     inline juce::Colour darkGrey {90, 90, 90};
 
     // inline juce::Colour dividerLinesStart{12, 12, 12};
@@ -48,6 +47,8 @@ namespace UITools
         if (bounds.isEmpty() || blurRadius <= 0.0f || opacity <= 0.0f)
             return;
 
+        const juce::Graphics::ScopedSaveState savedState (g);
+
         juce::Path shape;
 
         if (cornerSize > 0.0f)
@@ -55,8 +56,7 @@ namespace UITools
         else
             shape.addRectangle (bounds);
 
-        juce::DropShadow (juce::Colours::black.withAlpha (opacity),
-                          juce::jmax (1, juce::roundToInt (blurRadius)), offset).drawForPath (g, shape);
+        juce::DropShadow (juce::Colours::black.withAlpha (opacity), juce::jmax (1, juce::roundToInt (blurRadius)), offset).drawForPath (g, shape);
     }
 }
 

@@ -4,6 +4,7 @@
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
+#include <juce_gui_extra/juce_gui_extra.h>
 #include "BinaryData.h"
 
 namespace  GTColors
@@ -12,9 +13,12 @@ namespace  GTColors
     inline juce::Colour controlBackground { juce::Colour(100, 100, 110).darker(0.5f) };
     inline juce::Colour footerBackground {juce::Colour(15, 15, 15).withAlpha(0.9f)};
 
+    inline juce::Colour iconsColor {220, 220, 220};
+
     inline juce::Colour sectionTitleText {215, 215, 215};
     inline juce::Colour buttonsNameText {200, 200, 200};
-    inline juce::Colour clearGrey {180, 180, 180};
+    inline juce::Colour clearGrey {200, 200, 200};
+    // inline juce::Colour clearGrey {180, 180, 180};
     inline juce::Colour darkGrey {90, 90, 90};
 
     // inline juce::Colour dividerLinesStart{12, 12, 12};
@@ -26,8 +30,9 @@ namespace  GTColors
     inline juce::Colour mainPanelBottom {42, 45,49};
 
 
-    // inline juce::Colour accentActive { juce::Colour(64, 196, 255) };
-    inline juce::Colour accentActive { juce::Colour(95, 200, 255) };
+    inline juce::Colour accentActive { juce::Colour(64, 196, 255) };
+    // inline juce::Colour accentActive { juce::Colour(95, 200, 255) };
+    // inline juce::Colour accentActive { juce::Colour(35, 150, 255) };
 
     inline juce::Colour clipWarning { juce::Colours::red.withAlpha(0.9f) };
     inline juce::Colour levelOk { juce::Colours::green.withAlpha(0.75f) };
@@ -35,103 +40,144 @@ namespace  GTColors
     inline juce::Colour sliderTrack { juce::Colours::grey.withAlpha(0.3f) };
 }
 
+namespace UITools
+{
+    inline void drawDropShadow (juce::Graphics& g, juce::Rectangle<float> bounds, const float blurRadius,
+                                const float opacity, const float cornerSize = 0.0f, juce::Point<int> offset = {})
+    {
+        if (bounds.isEmpty() || blurRadius <= 0.0f || opacity <= 0.0f)
+            return;
+
+        juce::Path shape;
+
+        if (cornerSize > 0.0f)
+            shape.addRoundedRectangle (bounds, cornerSize);
+        else
+            shape.addRectangle (bounds);
+
+        juce::DropShadow (juce::Colours::black.withAlpha (opacity),
+                          juce::jmax (1, juce::roundToInt (blurRadius)), offset).drawForPath (g, shape);
+    }
+}
+
 namespace GTFonts
 {
+    inline juce::Font ibmPlexSansCondensedSemiBold (const float fontHeight)
+    {
+        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
+            BinaryData::IBMPlexSansCondensedSemiBold_ttf, BinaryData::IBMPlexSansCondensedSemiBold_ttfSize);
+        return juce::Font {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))}.withExtraKerningFactor (0.08f);
+    }
+
+    inline juce::Font ibmPlexSansMedium (const float fontHeight)
+    {
+        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
+            BinaryData::IBMPlexSansMedium_ttf, BinaryData::IBMPlexSansMedium_ttfSize);
+        return juce::Font {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))}.withExtraKerningFactor (0.04f);
+    }
+
+    inline juce::Font ibmPlexMonoMedium (const float fontHeight)
+    {
+        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
+            BinaryData::IBMPlexMonoMedium_ttf, BinaryData::IBMPlexMonoMedium_ttfSize);
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
+    }
+
     inline juce::Font chivoRegular (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::ChivoRegular_ttf, BinaryData::ChivoRegular_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (fontHeight)};
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 
     inline juce::Font chivoBold (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::ChivoBold_ttf, BinaryData::ChivoBold_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (fontHeight)};
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 
     inline juce::Font futuraBold (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::FuturaBold_otf, BinaryData::FuturaBold_otfSize);
-        return {juce::FontOptions (typeface).withHeight (fontHeight)};
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 
     inline juce::Font interRegular (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::Inter_18ptRegular_ttf, BinaryData::Inter_18ptRegular_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (fontHeight)};
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 
     inline juce::Font interMedium (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::Inter_18ptMedium_ttf, BinaryData::Inter_18ptMedium_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (fontHeight)};
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 
     inline juce::Font interSemiBold (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::Inter_18ptSemiBold_ttf, BinaryData::Inter_18ptSemiBold_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (fontHeight)};
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 
     inline juce::Font interBold (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::Inter_18ptBold_ttf, BinaryData::Inter_18ptBold_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (fontHeight)};
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 
     inline juce::Font jetBrainsMonoMedium (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::JetBrainsMonoMedium_ttf, BinaryData::JetBrainsMonoMedium_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (fontHeight)};
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 
     inline juce::Font robotoSerifThin (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::RobotoSerifThin_ttf, BinaryData::RobotoSerifThin_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (fontHeight)};
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 
     inline juce::Font robotoSerifExtraLight (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::RobotoSerifExtraLight_ttf, BinaryData::RobotoSerifExtraLight_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (fontHeight)};
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 
     inline juce::Font robotoSerifLight (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::RobotoSerifLight_ttf, BinaryData::RobotoSerifLight_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (fontHeight)};
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 
     inline juce::Font robotoSerifRegular (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::RobotoSerifRegular_ttf, BinaryData::RobotoSerifRegular_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (fontHeight)};
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 
     inline juce::Font robotoSerifMedium (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::RobotoSerifMedium_ttf, BinaryData::RobotoSerifMedium_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (fontHeight)};
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 
     inline juce::Font robotoSerifSemiBold (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::RobotoSerifSemiBold_ttf, BinaryData::RobotoSerifSemiBold_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (fontHeight)};
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 }

@@ -22,7 +22,7 @@ public:
 
             button->setImages (capOff.get(), nullptr, nullptr, nullptr, capOn.get());
             button->setClickingTogglesState (true);
-            button->setEdgeIndent (0);   // the default 3px inset would leave the housing's unlit cap showing around the lit one
+            button->setEdgeIndent (0);
             button->setColour (juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
             button->setRadioGroupId (radioGroupId);
 

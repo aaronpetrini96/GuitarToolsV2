@@ -8,7 +8,8 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "Utils/ParamIDs.h"
+#include "Utils/PresetManager.h"
+
 
 #include <cmath>
 #include <memory>
@@ -39,6 +40,9 @@ GuitarToolsAudioProcessor::GuitarToolsAudioProcessor()
 
     for (auto& paramID : eqParameterIDs)
         treeState.addParameterListener(paramID, this);
+
+    PresetManager::installFactoryPresets();
+    loadDefaultPreset();
 }
 
 GuitarToolsAudioProcessor::~GuitarToolsAudioProcessor()
@@ -137,6 +141,10 @@ void GuitarToolsAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     inputGain.setRampDurationSeconds(0.05);
     outputGain.prepare(spec);
     outputGain.setRampDurationSeconds(0.05);
+
+    smoothedInputMeanSquare = 0.f;
+    smoothedOutputMeanSquare = 0.f;
+    loudnessMatchGainDb = 0.f;
     
     for (auto& buffer : filterBuffers)
         buffer.setSize(spec.numChannels, samplesPerBlock);
@@ -186,6 +194,25 @@ bool GuitarToolsAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
 }
 #endif
 
+
+float GuitarToolsAudioProcessor::getBufferMeanSquare (const juce::AudioBuffer<float>& buffer)
+{
+    const auto numChannels = buffer.getNumChannels();
+    const auto numSamples = buffer.getNumSamples();
+
+    if (numChannels <= 0 || numSamples <= 0)
+        return 0.f;
+
+    float sumOfSquares {0.f};
+
+    for (int channel = 0; channel < numChannels; ++channel)
+    {
+        const auto channelRms = buffer.getRMSLevel (channel, 0, numSamples);
+        sumOfSquares += channelRms * channelRms;
+    }
+
+    return sumOfSquares / (float) numChannels;
+}
 
 void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
@@ -254,6 +281,31 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     leftChain.process(leftContext);
     rightChain.process(rightContext);
     
+    const auto blocksPerSecond = getSampleRate() / (double) buffer.getNumSamples();
+    const auto levelSmoothingCoefficient = 1.f - std::exp (-1.f / (float) blocksPerSecond);
+
+    const auto inputMeanSquare = getBufferMeanSquare (dryBuffer);
+
+    if (inputMeanSquare > 0.000001f)
+    {
+        const auto outputMeanSquare = getBufferMeanSquare (buffer);
+
+        smoothedInputMeanSquare += levelSmoothingCoefficient * (inputMeanSquare - smoothedInputMeanSquare);
+        smoothedOutputMeanSquare += levelSmoothingCoefficient * (outputMeanSquare - smoothedOutputMeanSquare);
+
+        if (smoothedOutputMeanSquare > 0.000001f)
+        {
+            const auto targetGainDb = juce::jlimit (-24.f, 24.f,
+                                                    juce::Decibels::gainToDecibels (std::sqrt (smoothedInputMeanSquare / smoothedOutputMeanSquare)));
+
+            if (std::abs (targetGainDb - loudnessMatchGainDb) > 0.5f)
+                loudnessMatchGainDb = targetGainDb;
+        }
+    }
+
+    if (loudnessMatchParam->get())
+        outputGain.setGainDecibels (loudnessMatchGainDb);
+
     applyGain(buffer, outputGain);
     
     // Smooth crossfade
@@ -287,6 +339,8 @@ void GuitarToolsAudioProcessor::getStateInformation (juce::MemoryBlock& destData
 {
     auto state = treeState.copyState();
     state.setProperty("CurrentPresetName", currentPresetName, nullptr);
+    state.setProperty("UIScale", uiScale, nullptr);
+    state.setProperty("ShowTooltips", showTooltips, nullptr);
     std::unique_ptr<juce::XmlElement> xml (state.createXml());
     copyXmlToBinary(*xml, destData);
 }
@@ -299,6 +353,10 @@ void GuitarToolsAudioProcessor::setStateInformation (const void* data, int sizeI
         juce::ValueTree state = juce::ValueTree::fromXml(*xml);
         if (auto* presetNameProp = state.getPropertyPointer("CurrentPresetName"))
             currentPresetName = presetNameProp->toString(); // restore preset name
+        if (auto* uiScaleProp = state.getPropertyPointer("UIScale"))
+            uiScale = static_cast<float>(*uiScaleProp); // restore selected ui size
+        if (auto* showTooltipsProp = state.getPropertyPointer("ShowTooltips"))
+            showTooltips = static_cast<bool>(*showTooltipsProp);
         treeState.replaceState(state);
         updateFilters();
     }
@@ -320,7 +378,9 @@ void GuitarToolsAudioProcessor::loadPreset(const juce::File& file)
         if (auto* presetNameProp = state.getPropertyPointer("CurrentPresetName"))
             currentPresetName = presetNameProp->toString(); // restore preset name
         treeState.replaceState(state);
-        updateFilters();
+
+        if (getSampleRate() > 0.0)
+            updateFilters();
     }
 }
 
@@ -337,11 +397,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout GuitarToolsAudioProcessor::c
     const auto frequencyStringFromValue = [] (float value, int) { return juce::String (juce::roundToInt (value)); };
     const auto decibelStringFromValue = [] (float value, int) { return juce::String (value, 1); };
 
-    auto lowCutFrequencyRange = juce::NormalisableRange<float> (20.f, 20000.f, frequencyIntervalValue);
-    lowCutFrequencyRange.setSkewForCentre (150.0f);
-
-    auto highCutFrequencyRange = juce::NormalisableRange<float> (20.f, 20000.f, frequencyIntervalValue);
-    highCutFrequencyRange.setSkewForCentre (3000.0f);
+    auto lowCutFrequencyRange = juce::NormalisableRange<float> (20.f, 4500.f, frequencyIntervalValue);
+    auto highCutFrequencyRange = juce::NormalisableRange<float> (200.f, 20000.f, frequencyIntervalValue);
 
 //    ========== HICUT LOW CUT ===========
     auto name = ParamIDs::getLowCutFreqName();
@@ -432,6 +489,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout GuitarToolsAudioProcessor::c
     name = ParamIDs::getCompBypassName();
     layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, true));
 
+    name = ParamIDs::getLoudnessMatchName();
+    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, false));
+
 //    COMP RANGE PARAMETERS
 //    auto compRangeStartRange = juce::NormalisableRange<float>(MIN_FREQ, 149.9f, frequencyIntervalValue, 1.f);
 //    auto compRangeEndRange = juce::NormalisableRange<float>(150.f, MAX_FREQ, frequencyIntervalValue, 1.f);
@@ -465,16 +525,16 @@ ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& treeState)
     settings.pluginBypass = treeState.getRawParameterValue(ParamIDs::getPluginBypassName())->load() > 0.5;
     
 //    presence
-    if (settings.presenceIndex == 0) {settings.presenceFreq = 4500.f;}
+    if (settings.presenceIndex == 0) {settings.presenceFreq = 4000.f;}
     else if (settings.presenceIndex == 1) { settings.presenceFreq = 6000.f;}
     else if (settings.presenceIndex == 2) {settings.presenceFreq = 8000.f;}
-    else if (settings.presenceIndex == 3) {settings.presenceFreq = 12000.f;}
+    else if (settings.presenceIndex == 3) {settings.presenceFreq = 16000.f;}
 
 //    Depth
     if (settings.depthIndex == 0) {settings.depthFreq = 60.f;}
-    else if (settings.depthIndex == 1) {settings.depthFreq = 100.f;}
-    else if (settings.depthIndex == 2) {settings.depthFreq = 170.f;}
-    else if (settings.depthIndex == 3) {settings.depthFreq = 250.f;}
+    else if (settings.depthIndex == 1) {settings.depthFreq = 80.f;}
+    else if (settings.depthIndex == 2) {settings.depthFreq = 150.f;}
+    else if (settings.depthIndex == 3) {settings.depthFreq = 200.f;}
 
     return settings;
 }
@@ -508,12 +568,12 @@ void GuitarToolsAudioProcessor::updateBellFitlers(const ChainSettings& chainSett
 void GuitarToolsAudioProcessor::updateShelfFilters(const ChainSettings& chainSettings)
 {
 
-    auto presCoefficients = juce::dsp::IIR::Coefficients<float>::makeHighShelf(getSampleRate(), chainSettings.presenceFreq, 0.707f, juce::Decibels::decibelsToGain(chainSettings.presenceGain));
+    auto presCoefficients = juce::dsp::IIR::Coefficients<float>::makeHighShelf(getSampleRate(), chainSettings.presenceFreq, 0.5f, juce::Decibels::decibelsToGain(chainSettings.presenceGain));
     
     updateCoefficients(leftChain.get<ChainPositions::Presence>().coefficients, presCoefficients);
     updateCoefficients(rightChain.get<ChainPositions::Presence>().coefficients, presCoefficients);
     
-    auto depthCoefficientes = juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), chainSettings.depthFreq, 0.707f, juce::Decibels::decibelsToGain(chainSettings.depthGain));
+    auto depthCoefficientes = juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), chainSettings.depthFreq, 0.5f, juce::Decibels::decibelsToGain(chainSettings.depthGain));
     updateCoefficients(leftChain.get<ChainPositions::Depth>().coefficients, depthCoefficientes);
     updateCoefficients(rightChain.get<ChainPositions::Depth>().coefficients, depthCoefficientes);
 }
@@ -553,8 +613,13 @@ void GuitarToolsAudioProcessor::parameterChanged(const juce::String&, float)
 
 void GuitarToolsAudioProcessor::loadDefaultPreset()
 {
-    loadPreset(juce::File::getSpecialLocation(juce::File::userDocumentsDirectory).getChildFile("DefaultPreset.xml"));
-               
+    const auto defaultPresetFile = PresetManager::getPresetFolder().getChildFile ("Default.xml");
+
+    if (! defaultPresetFile.existsAsFile())
+        return;
+
+    loadPreset (defaultPresetFile);
+    currentPresetName = "Default";
 }
 
 //==============================================================================
@@ -576,6 +641,7 @@ void GuitarToolsAudioProcessor::linkCompParameters()
 
     inputGainParam = dynamic_cast<juce::AudioParameterFloat*>(treeState.getParameter(juce::ParameterID(ParamIDs::getCompGainInName(), 1).getParamID()));
     outputGainParam = dynamic_cast<juce::AudioParameterFloat*>(treeState.getParameter(juce::ParameterID(ParamIDs::getCompGainOutName(), 1).getParamID()));
+    loudnessMatchParam = dynamic_cast<juce::AudioParameterBool*>(treeState.getParameter(juce::ParameterID(ParamIDs::getLoudnessMatchName(), 1).getParamID()));
     
     using FilterType = juce::dsp::LinkwitzRileyFilterType;
     LP1.setType(FilterType::lowpass);

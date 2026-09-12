@@ -16,6 +16,7 @@
 
 #include "DSP/CompressorBand.h"
 #include "DSP/SingleChannelSampleFifo.h"
+#include "Utils/ParamUtils.h"
 
 
 enum Slope
@@ -91,7 +92,8 @@ public:
     juce::String getCurrentPresetName() const {return currentPresetName;}
     //==============================================================================
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
-    juce::AudioProcessorValueTreeState treeState {*this, nullptr, "Parameters", createParameterLayout()};
+    juce::UndoManager undoManager { 100000, 100 };
+    juce::AudioProcessorValueTreeState treeState {*this, &undoManager, "Parameters", createParameterLayout()};
     
     
     SingleChannelSampleFifo <juce::AudioBuffer<float>> leftChannelFifo {Channel::Left};
@@ -103,7 +105,11 @@ public:
     CompressorBand& highBandComp = compressors[2];
 
     juce::String currentPresetName;
-    
+    float uiScale {1.f};
+    bool showTooltips {false};
+    std::atomic<bool> levelMatchActive {false};
+    std::atomic<bool> levelMatch {false};
+
 private:
     
     juce::LinearSmoothedValue<float> smoothedBypassValue {1.f};
@@ -199,6 +205,11 @@ private:
     juce::dsp::Gain<float> inputGain, outputGain;
     juce::AudioParameterFloat* inputGainParam {nullptr};
     juce::AudioParameterFloat* outputGainParam {nullptr};
+    juce::AudioParameterBool* loudnessMatchParam {nullptr};
+    float smoothedInputMeanSquare {0.f};
+    float smoothedOutputMeanSquare {0.f};
+    float loudnessMatchGainDb {0.f};
+    static float getBufferMeanSquare (const juce::AudioBuffer<float>& buffer);
 
     template<typename T, typename U>
     void applyGain(T& buffer, U& gain)

@@ -18,10 +18,15 @@ public:
     int getItemIdForText(const juce::ComboBox&, const juce::String&);
     void applyPresetSelection(const juce::String&);
     void displayCurrentPresetName();
-    
+
+    static juce::File getPresetFolder();
+    static void installFactoryPresets();
+
 private:
-    juce::File getPresetFolder();
+    void addPresetFolderToMenu (const juce::File& folder);
+
     GuitarToolsAudioProcessor& audioProcessor;
     juce::ComboBox& presetBox;
     std::unique_ptr<juce::FileChooser> fileChooser;
+    juce::Array<juce::File> presetFiles;
 };

@@ -3,7 +3,6 @@
 //
 
 #pragma once
-
 #include "../../Utils/GTLook.h"
 
 class PresetBrowserLAF : public juce::LookAndFeel_V4
@@ -11,13 +10,9 @@ class PresetBrowserLAF : public juce::LookAndFeel_V4
 public:
     PresetBrowserLAF()
     {
-        setColour (juce::ComboBox::backgroundColourId, juce::Colours::lightgrey.withAlpha (0.75f));
-        setColour (juce::ComboBox::textColourId, juce::Colours::white);
-        setColour (juce::ComboBox::outlineColourId, juce::Colour (138, 138, 138));
-        setColour (juce::PopupMenu::backgroundColourId, GTColors::footerBackground);
-        setColour (juce::PopupMenu::textColourId, GTColors::clearGrey);
-        setColour (juce::PopupMenu::highlightedBackgroundColourId, GTColors::controlBackground);
-        setColour (juce::PopupMenu::highlightedTextColourId, GTColors::accentActive);
+        setColour (juce::PopupMenu::backgroundColourId, GTColors::transparent);
+        setColour (juce::PopupMenu::textColourId, GTColors::iconOverColor);
+        setColour (juce::PopupMenu::highlightedBackgroundColourId, GTColors::presetPopupHighlight.withAlpha(0.7f));
     }
 
     static PresetBrowserLAF* get()
@@ -26,62 +21,87 @@ public:
         return &instance;
     }
 
-    void drawComboBox (juce::Graphics& g, int width, int height, bool, int, int, int, int, juce::ComboBox& box) override
+    void drawComboBox (juce::Graphics& g, int width, int height, bool, int, int, int, int, juce::ComboBox&) override
     {
-        const auto cornerSize = 3.0f;
         const juce::Rectangle<int> boxBounds (0, 0, width, height);
-
-        g.setColour (box.findColour (juce::ComboBox::backgroundColourId));
-        g.fillRoundedRectangle (boxBounds.toFloat(), cornerSize);
-
-        g.setColour (box.findColour (juce::ComboBox::outlineColourId));
-        g.drawRoundedRectangle (boxBounds.toFloat().reduced (1.f, 1.f), cornerSize, 2.f);
-
-        const auto arrowWidth = (float) height * 0.2f;
-        const auto arrowCentre = juce::Point<float> ((float) width - (float) height * 0.5f, (float) height * 0.5f);
-        juce::Path arrow;
-        arrow.startNewSubPath (arrowCentre.x - arrowWidth * 0.5f, arrowCentre.y - arrowWidth * 0.25f);
-        arrow.lineTo (arrowCentre.x, arrowCentre.y + arrowWidth * 0.25f);
-        arrow.lineTo (arrowCentre.x + arrowWidth * 0.5f, arrowCentre.y - arrowWidth * 0.25f);
-        g.setColour (box.findColour (juce::ComboBox::arrowColourId));
-        g.strokePath (arrow, juce::PathStrokeType ((float) height * 0.07f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
-    }
-
-    void drawButtonBackground (juce::Graphics& g, juce::Button& button, const juce::Colour& backgroundColour,
-                               bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
-    {
-        auto colour = backgroundColour;
-
-        if (shouldDrawButtonAsDown || shouldDrawButtonAsHighlighted)
-            colour = colour.contrasting (shouldDrawButtonAsDown ? 0.2f : 0.05f);
-
-        const auto boundsF = button.getLocalBounds().toFloat();
-        const auto cornerSize = 3.0f;
-
-        g.setColour (colour);
+        const auto boundsF = boxBounds.toFloat();
+        const auto cornerSize = boundsF.getHeight() * 0.2f;
+        g.setGradientFill (juce::ColourGradient::horizontal (GTColors::presetBox, 0.0f, GTColors::presetBox.darker (0.1f), boundsF.getWidth()));
         g.fillRoundedRectangle (boundsF, cornerSize);
-
-        g.setColour (button.findColour (juce::ComboBox::outlineColourId));
-        g.drawRoundedRectangle (boundsF.reduced (1.0f), cornerSize, 2.0f);
     }
 
-    juce::Font getComboBoxFont (juce::ComboBox& box) override
+    int getMenuWindowFlags() override
     {
-        return GTFonts::ibmPlexSansMedium ((float) box.getHeight() * 0.6f);
+        return 0;
     }
 
-    juce::Font getTextButtonFont (juce::TextButton&, int buttonHeight) override
+    void drawPopupMenuBackgroundWithOptions (juce::Graphics& g, int width, int height,
+                                             const juce::PopupMenu::Options& options) override
     {
-        return GTFonts::ibmPlexSansMedium ((float) buttonHeight * 0.55f);
+        const auto boundsF = juce::Rectangle<int> (0, 0, width, height).toFloat();
+        const auto cornerSize = (options.getStandardItemHeight() > 0
+                                     ? options.getStandardItemHeight()
+                                     : getPopupMenuFont().getHeight()) * 0.2f;
+
+        g.setGradientFill (juce::ColourGradient::vertical (GTColors::presetBox, 0.0f, GTColors::presetBox.darker (0.1f), boundsF.getHeight()));
+        g.fillRoundedRectangle (boundsF, cornerSize);
+    }
+
+    juce::PopupMenu::Options getOptionsForComboBoxPopupMenu (juce::ComboBox& box, juce::Label& label) override
+    {
+        const auto options = juce::LookAndFeel_V4::getOptionsForComboBoxPopupMenu (box, label);
+        const auto boxBounds = box.getScreenBounds().toFloat();
+        const auto popupTop = juce::roundToInt(boxBounds.getBottom() * 1.025f);
+
+        return options.withTargetScreenArea ({ juce::roundToInt(boxBounds.getRight()), popupTop,  juce::roundToInt(boxBounds.getWidth() * 0.75f), 0 })
+                      .withPreferredPopupDirection (juce::PopupMenu::Options::PopupDirection::downwards);
+    }
+
+    int getPopupMenuBorderSizeWithOptions (const juce::PopupMenu::Options&) override
+    {
+        return 0;
+    }
+
+    void drawPopupMenuItemWithOptions (juce::Graphics& g, const juce::Rectangle<int>& area,
+                                      bool isHighlighted, const juce::PopupMenu::Item& item,
+                                      const juce::PopupMenu::Options& options) override
+    {
+
+        auto itemBounds = area.toFloat();
+        if (isHighlighted && item.isEnabled)
+        {
+            g.setColour (findColour (juce::PopupMenu::highlightedBackgroundColourId));
+            g.fillRect(itemBounds);
+        }
+
+        const auto* targetComponent = options.getTargetComponent();
+        const auto fontH = (targetComponent != nullptr ? targetComponent->getHeight() : itemBounds.getHeight()) * 0.675f;
+        itemBounds.reduce (itemBounds.getWidth() * 0.05f, itemBounds.getHeight() * 0.04f);
+
+        g.setColour (item.isTicked ? juce::Colours::white : GTColors::almostWhite);
+        g.setFont (item.isTicked ? GTFonts::interSemiBold(fontH) : GTFonts::interMedium (fontH));
+        g.drawFittedText (item.text, itemBounds.toNearestInt(), juce::Justification::centred, 1);
+
+        if (item.subMenu != nullptr && (item.itemID == 0 || item.subMenu->getNumItems() > 0))
+        {
+            const auto arrowHeight = itemBounds.getHeight() * 0.35f;
+            const auto arrowX = itemBounds.removeFromRight (arrowHeight).getX();
+            const auto arrowCentreY = itemBounds.getCentreY();
+
+            juce::Path arrow;
+            arrow.startNewSubPath (arrowX, arrowCentreY - arrowHeight * 0.5f);
+            arrow.lineTo (arrowX + arrowHeight * 0.6f, arrowCentreY);
+            arrow.lineTo (arrowX, arrowCentreY + arrowHeight * 0.5f);
+            g.strokePath (arrow, juce::PathStrokeType (itemBounds.getHeight() * 0.08f));
+        }
     }
 
     void positionComboBoxText (juce::ComboBox& box, juce::Label& label) override
     {
-        label.setBounds (0, 0, box.getWidth() - box.getHeight(), box.getHeight());
-        label.setFont (getComboBoxFont (box));
+        label.setBounds (box.getLocalBounds());
+        label.setFont (GTFonts::interMedium (box.getHeight() * 0.675f));
         label.setJustificationType (juce::Justification::centred);
     }
-
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PresetBrowserLAF)
 };

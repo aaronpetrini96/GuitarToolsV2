@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Parameters>
+  <PARAM id="LowCut Freq" value="70"/>
+  <PARAM id="HighCut Freq" value="18000"/>
+  <PARAM id="LowCut Slope" value="2"/>
+  <PARAM id="HighCut Slope" value="1"/>
+  <PARAM id="Presence Freq" value="1"/>
+  <PARAM id="Presence Gain" value="1.5"/>
+  <PARAM id="Depth Freq" value="2"/>
+  <PARAM id="Depth Gain" value="1.5"/>
+  <PARAM id="Reso Freq" value="3800"/>
+  <PARAM id="Reso Bypass" value="0"/>
+  <PARAM id="Mud Freq" value="140"/>
+  <PARAM id="Mud Bypass" value="0"/>
+  <PARAM id="Plugin Bypass" value="0"/>
+  <PARAM id="Comp Gain In" value="0"/>
+  <PARAM id="Comp Gain Out" value="0"/>
+  <PARAM id="Threshold" value="-4"/>
+  <PARAM id="Attack" value="20"/>
+  <PARAM id="Release" value="75"/>
+  <PARAM id="Ratio" value="6"/>
+  <PARAM id="Comp Bypass" value="0"/>
+  <PARAM id="Loudness Match" value="1"/>
+</Parameters>

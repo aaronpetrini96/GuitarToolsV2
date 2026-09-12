@@ -1,6 +1,8 @@
 #include "MainPanel.h"
 
-MainPanel::MainPanel (GuitarToolsAudioProcessor& processor) : audioProcessor (processor)
+MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
+    : audioProcessor (processor),
+      loudnessMatchAttachment (processor.treeState, ParamIDs::getLoudnessMatchName(), levelMatchButton)
 {
     //================  GROUP TITLES  ================//
     for (auto* l : {&cutFiltersGroupLabel, &magicButtonsGroupLabel, &shelfFiltersGroupLabel})
@@ -8,21 +10,25 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor) : audioProcessor (pr
 
     //================  CUT FILTERS ================//
     addAndMakeVisible (lowCutFreqKnob);
+    lowCutFreqKnob.setTooltip(ParamTooltips::getLowCutKnobTooltip());
     addAndMakeVisible (highCutFreqKnob);
     addAndMakeVisible (lowCutSlopeButtons);
     addAndMakeVisible (highCutSlopeButtons);
+
+    setupLabels (&lowCutSlopeLabel,     textWhiteColor, juce::Justification::centred);
+    setupLabels (&highCutSlopeLabel,    textWhiteColor, juce::Justification::centred);
 
     //================  SHELF FILTERS  ================//
     addAndMakeVisible(highShelfGainKnob);
     addAndMakeVisible(lowShelfGainKnob);
     addAndMakeVisible (presenceFreqButtons);
     addAndMakeVisible (depthFreqButtons);
+    setupLabels (&presenceModeLabel,    textWhiteColor, juce::Justification::centred);
+    setupLabels (&depthModeLabel,       textWhiteColor, juce::Justification::centred);
 
     //================  MAGIC BUTTONS  ================//
-    // Labels
     for (auto* l : {&resoBypassLabel, &compBypassLabel, &mudBypassLabel})
-        setupLabels (l, GTColors::clearGrey.withAlpha(0.95f), juce::Justification::centredTop);
-    //buttons
+        setupLabels (l, textWhiteColor, juce::Justification::centredTop);
     addAndMakeVisible (resoButton);
     addAndMakeVisible (mudButton);
     addAndMakeVisible (compBypassButton);
@@ -32,11 +38,38 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor) : audioProcessor (pr
     mudButton.setOnStateChange ([this]       { fadersPlatePanel.mudFreqFader.setEnabled (mudButton.getToggleState()); });
     compBypassButton.setOnStateChange ([this]{ fadersPlatePanel.compThresholdFader.setEnabled (compBypassButton.getToggleState()); });
 
+
     //================  LEVEL KNOBS  ================//
     for (auto* l : {&inputGainLabel, &outputGainLabel})
-        setupLabels (l, GTColors::clearGrey.withAlpha(0.95f), juce::Justification::centred);
+        setupLabels (l, textWhiteColor, juce::Justification::centredTop);
+    for (auto* l : {&matchLabel, &levelsLabel})
+        setupLabels (l, textWhiteColor, juce::Justification::centred);
+    matchLabel.setVisible(false);
     addAndMakeVisible (inputGainKnob);
     addAndMakeVisible (outputGainKnob);
+
+
+    levelMatchButton.setClickingTogglesState (true);
+    levelMatchButton.setColour (juce::DrawableButton::backgroundColourId, GTColors::transparent);
+    levelMatchButton.setColour (juce::DrawableButton::backgroundOnColourId, GTColors::transparent);
+    addAndMakeVisible(levelMatchButton);
+
+    if (const auto linkOnIcon = juce::Drawable::createFromImageData (BinaryData::linkON_svg, BinaryData::linkON_svgSize))
+    {
+        const auto linkOffIcon = linkOnIcon->createCopy();
+        const auto linkOffIconOver = linkOnIcon->createCopy();
+        linkOffIconOver->replaceColour (GTColors::activeNeonBlue, GTColors::iconOverColor);
+        linkOffIcon->replaceColour (GTColors::activeNeonBlue, GTColors::iconNormalColor);
+        levelMatchButton.setImages (linkOffIcon.get(), linkOffIconOver.get(),  linkOnIcon.get(), nullptr, linkOnIcon.get());
+    }
+
+    levelMatchButton.onStateChange = [this]
+    {
+        const auto isMatchEnabled = levelMatchButton.getToggleState();
+        outputGainKnob.setEnabled (! isMatchEnabled);
+        matchLabel.setColour (juce::Label::textColourId, isMatchEnabled ? GTColors::activeNeonBlue : textWhiteColor);
+    };
+    levelMatchButton.onStateChange();
 }
 
 void MainPanel::paint(juce::Graphics& g)
@@ -45,25 +78,20 @@ void MainPanel::paint(juce::Graphics& g)
     const auto boundsFWidth = boundsF.getWidth();
     const auto dividerThickness = boundsFWidth * 0.006f;
 
-    // const auto lineThickness = boundsFWidth * 0.004f;
-    // g.setColour (GTColors::dividerLinesEnd);
-    // g.fillRect (0.0f, boundsF.getHeight() - lineThickness, boundsFWidth, lineThickness);
+    g.setColour (GTColors::dividerLinesEnd);
+    g.fillRect (0.0f, 0.0f, boundsFWidth, dividerThickness * 0.5f);
 
-    const auto cutFiltersDivider   = cutFiltersArea.withSizeKeepingCentre (cutFiltersArea.getWidth() * 0.9f, dividerThickness).withY (sectionTitleH);
-    const auto buttonsDivider      = buttonsArea.withSizeKeepingCentre (buttonsArea.getWidth() * 0.9f, dividerThickness).withY (sectionTitleH);
-    const auto shelfFiltersDivider = shelfFiltersArea.withSizeKeepingCentre (shelfFiltersArea.getWidth() * 0.9f, dividerThickness).withY (sectionTitleH);
-
-    for (const auto& sectionDivider : { cutFiltersDivider, buttonsDivider, shelfFiltersDivider })
-        drawDivider (g, sectionDivider);
+    for (const auto& sectionArea : { cutFiltersArea, buttonsArea, shelfFiltersArea })
+        drawDivider (g, sectionArea.withSizeKeepingCentre (sectionArea.getWidth() * 0.9f, dividerThickness).withY (sectionTitleH));
 
     drawDivider (g, magicDividerBounds);
 
     const auto verticalDividerBounds = boundsF.withSizeKeepingCentre (dividerThickness, boundsF.getHeight() * 0.975f);
 
     g.setColour (GTColors::dividerLinesEnd);
-    for (const auto& dividerCentreX : { (cutFiltersDivider.getRight() + buttonsDivider.getX()) * 0.5f,
-                                        (buttonsDivider.getRight() + shelfFiltersDivider.getX()) * 0.5f })
+    for (const auto& dividerCentreX : { cutFiltersArea.getRight(), shelfFiltersArea.getX() })
         g.fillRoundedRectangle (verticalDividerBounds.withCentre ({ dividerCentreX, verticalDividerBounds.getCentreY() }), dividerThickness * 0.5f);
+
 }
 
 void MainPanel::resized()
@@ -87,8 +115,8 @@ void MainPanel::resized()
     shelfFiltersGroupLabel  .setBounds (shelfFiltersArea.withHeight (sectionTitleH).toNearestInt());
 
 //    CUT FILTERS
-    const auto topKnobsCY = boundsFHeight * 0.275f;
-    const auto bottomKnobsCY= boundsFHeight * 0.72f;
+    const auto topKnobsCY = boundsFHeight * 0.26f;
+    const auto bottomKnobsCY= boundsFHeight * 0.71f;
     const auto knobSizeReference = cutFiltersArea.getWidth() * 0.85f;
     const auto knobBounds= boundsF.withSize (knobSizeReference, knobSizeReference);
     lowCutFreqKnob.setBounds (knobBounds.withCentre ({cutFiltersArea.getCentreX(), topKnobsCY}).toNearestInt());
@@ -97,55 +125,74 @@ void MainPanel::resized()
     const auto slopeButtonsWidth = knobSizeReference * 0.75f;
     const auto slopeButtonsHeight = slopeButtonsWidth / lowCutSlopeButtons.getImageAspectRatio();
     const auto slopeButtonsBounds = knobBounds.withSize (slopeButtonsWidth, slopeButtonsHeight);
-    const auto slopeGap = knobSizeReference * 0.5f + slopeButtonsHeight * 0.75f;
+    const auto slopeGap = knobSizeReference * 0.5f + slopeButtonsHeight * 0.5f;
     const auto slopeButtonsTopCY = topKnobsCY + slopeGap;
     const auto slopeButtonsBottomCY = bottomKnobsCY + slopeGap;
     lowCutSlopeButtons.setBounds (slopeButtonsBounds.withCentre({cutFiltersArea.getCentreX(), slopeButtonsTopCY}).toNearestInt());
     highCutSlopeButtons.setBounds (slopeButtonsBounds.withCentre({cutFiltersArea.getCentreX(), slopeButtonsBottomCY}).toNearestInt());
+
+    const auto slopeLabelBounds = cutFiltersArea.withSizeKeepingCentre(slopeButtonsWidth, slopeButtonsHeight * 0.5f);
+    lowCutSlopeLabel.setFont (GTFonts::ibmPlexSansMedium (slopeButtonsHeight * 0.4f));
+    highCutSlopeLabel.setFont (GTFonts::ibmPlexSansMedium (slopeButtonsHeight * 0.4f));
+    presenceModeLabel.setFont (GTFonts::ibmPlexSansMedium (slopeButtonsHeight * 0.4f));
+    depthModeLabel.setFont (GTFonts::ibmPlexSansMedium (slopeButtonsHeight * 0.4f));
+    lowCutSlopeLabel.setBounds(slopeLabelBounds.withBottomY(slopeButtonsTopCY + slopeButtonsHeight).toNearestInt());
+    highCutSlopeLabel.setBounds(slopeLabelBounds.withBottomY(slopeButtonsBottomCY + slopeButtonsHeight).toNearestInt());
 
     //SHELF FILTERS
     highShelfGainKnob.setBounds (knobBounds.withCentre ({shelfFiltersArea.getCentreX(), topKnobsCY}).toNearestInt());
     lowShelfGainKnob.setBounds (knobBounds.withCentre ({shelfFiltersArea.getCentreX(), bottomKnobsCY}).toNearestInt());
     presenceFreqButtons.setBounds (slopeButtonsBounds.withCentre ({ shelfFiltersArea.getCentreX(), slopeButtonsTopCY }).toNearestInt());
     depthFreqButtons.setBounds (slopeButtonsBounds.withCentre ({ shelfFiltersArea.getCentreX(), slopeButtonsBottomCY }).toNearestInt());
+    presenceModeLabel.setBounds (slopeLabelBounds.withX (shelfFiltersArea.getCentreX() - slopeLabelBounds.getWidth() * 0.5f).withBottomY (slopeButtonsTopCY + slopeButtonsHeight).toNearestInt());
+    depthModeLabel.setBounds (slopeLabelBounds.withX (shelfFiltersArea.getCentreX() - slopeLabelBounds.getWidth() * 0.5f).withBottomY (slopeButtonsBottomCY + slopeButtonsHeight).toNearestInt());
 
 //  MAGIC BUTTONS
-    const auto magicButtonSize = knobSizeReference * 0.275f;
-    const auto magicButtonBounds = buttonsArea.withSizeKeepingCentre (magicButtonSize, magicButtonSize).withY(boundsFHeight * 0.2f);
-    const auto gap = magicButtonSize * 0.125f;
+    const auto magicButtonSize = knobSizeReference * 0.3f;
+    const auto magicButtonBounds = buttonsArea.withSizeKeepingCentre (magicButtonSize, magicButtonSize).withY(boundsFHeight * 0.18f);
+    const auto gap = magicButtonSize * 0.15f;
     mudButton.setBounds (magicButtonBounds.toNearestInt());
     resoButton.setBounds (magicButtonBounds.withRightX(magicButtonBounds.getX() - gap).toNearestInt());
     compBypassButton.setBounds (magicButtonBounds.withX(magicButtonBounds.getRight() + gap).toNearestInt());
 
-    const auto magicLabelsBounds = buttonsArea.withSize (buttonsArea.getWidth() * 0.33f, buttonsArea.getWidth() * 0.2f).withY (boundsFHeight * 0.111f);
+    const auto magicLabelsBounds = buttonsArea.withSize (buttonsArea.getWidth() * 0.33f, buttonsArea.getWidth() * 0.2f).withY (boundsFHeight * 0.105f);
     for (const auto l : { &mudBypassLabel, &resoBypassLabel, &compBypassLabel })
-        l->setFont (GTFonts::ibmPlexSansMedium (knobSizeReference * 0.1f).withExtraKerningFactor(-0.025f));
+        l->setFont (GTFonts::ibmPlexSansMedium (knobSizeReference * 0.092f).withExtraKerningFactor(-0.025f));
 
     mudBypassLabel.setBounds    (magicLabelsBounds.withX(mudButton.getBounds().toFloat().getCentreX() - magicLabelsBounds.getWidth() * 0.5f).toNearestInt());
     resoBypassLabel.setBounds   (magicLabelsBounds.withX(resoButton.getBounds().toFloat().getCentreX() - magicLabelsBounds.getWidth() * 0.5f).toNearestInt());
     compBypassLabel.setBounds   (magicLabelsBounds.withX(compBypassButton.getBounds().toFloat().getCentreX() - magicLabelsBounds.getWidth() * 0.5f).toNearestInt());
 
-    magicDividerBounds = buttonsArea.withSizeKeepingCentre (buttonsArea.getWidth() * 0.9f, boundsFWidth * 0.006f).withY (buttonsArea.getHeight() * 0.79f);
+    magicDividerBounds = buttonsArea.withSizeKeepingCentre (buttonsArea.getWidth() * 0.9f, boundsFWidth * 0.006f).withY (buttonsArea.getHeight() * 0.8f);
 
     // MAGIC FADERS
-    plateBounds = buttonsArea.withHeight(buttonsArea.proportionOfHeight (0.5f))
-                .withCentre({buttonsArea.getCentreX(), (magicButtonBounds.getBottom() + magicDividerBounds.getY()) * 0.5f});
+    plateBounds = buttonsArea.withHeight(buttonsArea.proportionOfHeight (0.475f)).withCentre({buttonsArea.getCentreX(), buttonsArea.getHeight() * 0.535f});
     fadersPlatePanel.setFaderSpacing (magicButtonSize + gap);
     fadersPlatePanel.setBounds (plateBounds.toNearestInt());
 
-//    GAIN KNOBS
-    auto gainKnobsArea = buttonsArea.withTop (magicDividerBounds.getBottom());
-    const auto gainLabelBounds = gainKnobsArea.removeFromTop(gainKnobsArea.getHeight() * 0.2f).withWidth(gainKnobsArea.getWidth() * 0.33f);
-    const auto gainKnobSize = gainKnobsArea.getHeight() * 0.85f;
-    const auto gainKnobBounds = gainKnobsArea.withSizeKeepingCentre (gainKnobSize, gainKnobSize);
-    const auto gainKnobOffsetX = gainKnobSize * 0.85f;
-    inputGainKnob.setBounds (gainKnobBounds.translated (-gainKnobOffsetX, 0.0f).toNearestInt());
-    outputGainKnob.setBounds (gainKnobBounds.translated (gainKnobOffsetX, 0.0f).toNearestInt());
+//  LEVEL KNOBS
+    const auto gainKnobsArea = buttonsArea.withTop (magicDividerBounds.getBottom());
+    const auto gainLabelBounds = gainKnobsArea.withSizeKeepingCentre(gainKnobsArea.getWidth() * 0.5f, gainKnobsArea.getHeight() * 0.2f);
+    levelsLabel.setFont (GTFonts::ibmPlexSansMedium (gainLabelBounds.getHeight() * 0.875f));
+    levelsLabel.setBounds(gainLabelBounds.withY(buttonsArea.getHeight() * 0.81f).toNearestInt());
 
-    for (const auto l : { &inputGainLabel, &outputGainLabel })
-        l->setFont (GTFonts::ibmPlexSansMedium (gainLabelBounds.getHeight() * 0.75f));
-    inputGainLabel.setBounds (gainLabelBounds.withCentre({inputGainKnob.getBounds().toFloat().getCentreX(), gainLabelBounds.getCentreY()}) .toNearestInt());
-    outputGainLabel.setBounds (gainLabelBounds.withCentre({outputGainKnob.getBounds().toFloat().getCentreX(), gainLabelBounds.getCentreY()}) .toNearestInt());
+    const auto gainKnobSize = gainKnobsArea.getHeight() * 0.675f;
+    const auto gainKnobBounds = gainKnobsArea.withSize (gainKnobSize, gainKnobSize);
+    const auto gainKnobCY = buttonsArea.getHeight() * 0.91f;
+    inputGainKnob.setBounds    (gainKnobBounds.withCentre({resoButton.getBounds().toFloat().getCentreX(), gainKnobCY}).toNearestInt());
+    outputGainKnob.setBounds (gainKnobBounds.withCentre({compBypassButton.getBounds().toFloat().getCentreX(), gainKnobCY}).toNearestInt());
+
+    const auto matchButtonSize = buttonsArea.getWidth() * 0.115f;
+    levelMatchButton.setBounds (gainKnobsArea.withSize(matchButtonSize, matchButtonSize).withCentre({gainKnobsArea.getCentreX(), gainKnobCY}).toNearestInt());
+
+    for (const auto l : { &inputGainLabel, &outputGainLabel})
+        l->setFont (GTFonts::ibmPlexSansMedium (gainLabelBounds.getHeight() * 0.65f));
+
+    matchLabel.setFont (GTFonts::ibmPlexSansMedium (gainLabelBounds.getHeight() * 0.65f));
+
+    const auto gainLabelY = gainKnobCY * 1.053f;
+    inputGainLabel.setBounds    (gainKnobBounds.withCentre({inputGainKnob.getBounds().toFloat().getCentre()}).withY(gainLabelY) .toNearestInt());
+    outputGainLabel.setBounds   (gainKnobBounds.withCentre({outputGainKnob.getBounds().toFloat().getCentre()}).withY(gainLabelY) .toNearestInt());
 }
 
 void MainPanel::drawDivider(juce::Graphics& g, juce::Rectangle<float> dividerBounds)

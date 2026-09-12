@@ -5,37 +5,36 @@
 #pragma once
 
 #include "../../Utils/GTLook.h"
-#include "PluginProcessor.h"
-#include "GUI/Components/GainSlider.h"
-// #include "GUI/Components/AAImageKnobs.h"
-// #include "GUI/Components/AAFaderSSL.h"
-#include "../../Utils/ParamIDs.h"
-#include "Utils/PresetManager.h"
 
 class FooterPanel : public juce::Component
 {
 public:
-    explicit FooterPanel (GuitarToolsAudioProcessor& processor);
-    ~FooterPanel() override;
+    FooterPanel() = default;
 
-    void paint (juce::Graphics& g) override;
-    void resized() override;
+    void setTooltipText (const juce::String& newTooltipText)
+    {
+        tooltipText = newTooltipText.toUpperCase();
+        repaint();
+    }
 
-    GainSlider inputGainSlider;
-    GainSlider outputGainSlider;
+    void paint (juce::Graphics& g) override
+    {
+        const auto boundsF = getLocalBounds().toFloat();
+        const auto boundsFWidth = boundsF.getWidth();
+        const auto boundsFHeight = boundsF.getHeight();
+        g.setGradientFill (juce::ColourGradient::horizontal (GTColors::presetBox.darker (0.775f), 0.f, GTColors::dividerLinesEnd, boundsFWidth));
+        g.fillRect (boundsF);
+        const auto dividerHalfThickness = boundsFWidth * 0.003f;
+        g.setColour (GTColors::dividerLinesStart);
+        g.fillRect (0.0f, 0.0f, boundsFWidth, dividerHalfThickness);
+
+        g.setColour (GTColors::sectionTitleText);
+        g.setFont (GTFonts::interSemiBold (boundsFHeight * 0.9f).withExtraKerningFactor(0.01f));
+        g.drawText (tooltipText, boundsF, juce::Justification::centred);
+    }
 
 private:
-    GuitarToolsAudioProcessor& audioProcessor;
-
-    juce::DrawableButton settingsButton {"Settings", juce::DrawableButton::ImageFitted};
-    juce::DrawableButton infoButton {"Info", juce::DrawableButton::ImageFitted};
-
-    // AAFullCircleFillKnob inputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getCompGainInName()), ""};
-    // AAVerticalSSLFader outputGainFader {audioProcessor.treeState, juce::ParameterID (ParamIDs::getCompGainOutName(), 1), " dB", 1};
-
-    juce::ComboBox presetBox;
-    juce::DrawableButton savePresetButton {"Save", juce::DrawableButton::ImageFitted};
-    PresetManager presetManager;
+    juce::String tooltipText;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FooterPanel)
 };

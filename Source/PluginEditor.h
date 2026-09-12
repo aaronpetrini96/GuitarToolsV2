@@ -33,7 +33,6 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
-    void paintOverChildren(juce::Graphics& g) override;
     void mouseDown (const juce::MouseEvent& event) override;
     void mouseUp (const juce::MouseEvent& event) override;
     void mouseEnter (const juce::MouseEvent& event) override;
@@ -64,6 +63,5 @@ private:
     OptionsPopupLAF resizeButtonLAF;
     juce::DrawableButton resizeButton {"GUI Size", juce::DrawableButton::ImageFitted};
     std::unique_ptr<juce::Drawable> metalBackground =  juce::Drawable::createFromImageData(BinaryData::uiBackgroundTexture_png, BinaryData::uiBackgroundTexture_pngSize);
-    std::unique_ptr<juce::Drawable> logoAP  {juce::Drawable::createFromImageData(BinaryData::logoAP_png, BinaryData::logoAP_pngSize)};
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuitarToolsAudioProcessorEditor)
 };

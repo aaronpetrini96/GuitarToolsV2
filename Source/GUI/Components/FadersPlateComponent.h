@@ -56,8 +56,6 @@ public:
 
 private:
     float faderSpacing {0.f};
-    float screwToHeightRatio {0.075f};
-    juce::Image screw = juce::ImageCache::getFromMemory (BinaryData::screw_png, BinaryData::screw_pngSize);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FadersPlateComponent)
 };

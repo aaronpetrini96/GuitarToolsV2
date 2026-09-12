@@ -122,11 +122,6 @@ void GuitarToolsAudioProcessorEditor::resized()
     infoPanel.setBounds (mainPanelBounds.withSizeKeepingCentre (settingsPanelSize, settingsPanelSize).toNearestInt());
 }
 
-void GuitarToolsAudioProcessorEditor::paintOverChildren(juce::Graphics& g)
-{
-    // g.fillAll(juce::Colours::black.withAlpha(0.025f));
-}
-
 void GuitarToolsAudioProcessorEditor::mouseDown (const juce::MouseEvent& event)
 {
     dismissInfoPanelOnMouseUp = infoPanel.isVisible()

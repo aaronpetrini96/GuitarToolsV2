@@ -16,7 +16,7 @@
 class AASquareSSLButton : public juce::Component
 {
 public:
-    AASquareSSLButton (juce::AudioProcessorValueTreeState& apvts, const juce::ParameterID& parameterID, int numberOfButtons, bool isRadioButton = true)
+    AASquareSSLButton (juce::AudioProcessorValueTreeState& apvts, const juce::ParameterID& parameterID, int numberOfButtons, bool isRadioButton = true, juce::UndoManager* undoManager = nullptr)
     {
         for (auto index = 0; index < numberOfButtons; ++index)
         {
@@ -45,7 +45,7 @@ public:
                 if (onStateChange != nullptr)
                     onStateChange();
             },
-            nullptr);
+            undoManager);
 
         for (auto index = 0; index < buttons.size(); ++index)
         {

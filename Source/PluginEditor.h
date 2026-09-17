@@ -14,11 +14,11 @@
 
 #include "BinaryData.h"
 #include "PluginProcessor.h"
-#include "GUI/Panels/FooterPanel.h"
+#include "GUI/Panels/TooltipsPanel.h"
 #include "GUI/Panels/HeaderPanel.h"
 #include "GUI/Panels/InfoPanel.h"
 #include "GUI/Panels/MainPanel.h"
-#include "GUI/Panels/SettingsPanel.h"
+// #include "GUI/Panels/SettingsPanel.h"
 #include "GUI/LAF/OptionsPopupLAF.h"
 //==============================================================================
 /**
@@ -40,28 +40,24 @@ public:
 
 private:
     GuitarToolsAudioProcessor& audioProcessor;
-
-    void showUISizeMenu();
+    void showSettingsMenu(juce::DrawableButton& button);
     void updateMainPanelAlpha();
     void updateEditorSize();
-    void updatePanelsVisibility (bool shouldShowSettings, bool shouldShowInfo);
-    const juce::StringArray uiSizeNames {"TINY", "EXTRA SMALL", "SMALL", "DEFAULT", "LARGE", "EXTRA LARGE", "HUGE"};
-    const std::array<float, 7> uiScales {0.5f, 0.65f, 0.8f, 1.0f, 1.25f, 1.5f, 2.0f};
+    const juce::StringArray uiSizeNames {"X-SMALL", "SMALL", "DEFAULT", "LARGE", "X-LARGE", "HUGE"};
+    const std::array<float, 7> uiScales {0.6f, 0.8f, 1.0f, 1.2f, 1.4f, 1.75f};
 
-    const int defaultUIWidth = 700;
-    const int defaultUIHeight = 600;
-    const float headerHeightRatio = 0.07f;
-    float footerHeightRatio = 0.5f;
+    const int defaultUIWidth = 770;
+    const int defaultUIHeight = 660;
+    const float headerHeightRatio = 0.065f;
+    float tooltipsHeightRatio = 0.5f;
 
     HeaderPanel headerPanel {audioProcessor};
     MainPanel mainPanel {audioProcessor};
-    SettingsPanel settingsPanel;
     InfoPanel infoPanel;
-    FooterPanel footerPanel;
+    TooltipsPanel tooltipsPanel;
     bool dismissInfoPanelOnMouseUp {false};
 
-    OptionsPopupLAF resizeButtonLAF;
-    juce::DrawableButton resizeButton {"GUI Size", juce::DrawableButton::ImageFitted};
+    OptionsPopupLAF settingsMenuLAF;
     std::unique_ptr<juce::Drawable> metalBackground =  juce::Drawable::createFromImageData(BinaryData::uiBackgroundTexture_png, BinaryData::uiBackgroundTexture_pngSize);
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuitarToolsAudioProcessorEditor)
 };

@@ -6,10 +6,10 @@
 
 #include "../../Utils/GTLook.h"
 
-class FooterPanel : public juce::Component
+class TooltipsPanel : public juce::Component
 {
 public:
-    FooterPanel() = default;
+    TooltipsPanel() = default;
 
     void setTooltipText (const juce::String& newTooltipText)
     {
@@ -28,13 +28,13 @@ public:
         g.setColour (GTColors::dividerLinesStart);
         g.fillRect (0.0f, 0.0f, boundsFWidth, dividerHalfThickness);
 
-        g.setColour (GTColors::sectionTitleText);
-        g.setFont (GTFonts::interSemiBold (boundsFHeight * 0.9f).withExtraKerningFactor(0.01f));
+        g.setColour (GTColors::almostWhite.withAlpha(0.9f));
+        g.setFont (GTFonts::interMedium (boundsFHeight * 0.65f).withExtraKerningFactor(0.02f));
         g.drawText (tooltipText, boundsF, juce::Justification::centred);
     }
 
 private:
     juce::String tooltipText;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FooterPanel)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TooltipsPanel)
 };

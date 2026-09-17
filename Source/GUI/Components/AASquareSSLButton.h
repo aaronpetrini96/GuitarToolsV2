@@ -12,105 +12,79 @@
 #include <utility>
 
 #include "BinaryData.h"
+#include "../../Utils/GTLook.h"
 
 class AASquareSSLButton : public juce::Component
 {
 public:
-    AASquareSSLButton (juce::AudioProcessorValueTreeState& apvts, const juce::ParameterID& parameterID, int numberOfButtons, bool isRadioButton = true, juce::UndoManager* undoManager = nullptr)
+    explicit AASquareSSLButton (juce::RangedAudioParameter& parameterToUse, juce::String  newNameText)
+        : parameter (parameterToUse), nameText (std::move(newNameText))
     {
-        for (auto index = 0; index < numberOfButtons; ++index)
+        setComponentID (parameter.getParameterID());
+        button.setImages (buttonOff.get(), nullptr, nullptr, nullptr, buttonOn.get());
+        button.setClickingTogglesState (true);
+        button.setColour (juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
+        button.setColour (juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
+        button.onClick = [this]
         {
-            auto* button = buttons.add (new juce::DrawableButton ({}, juce::DrawableButton::ImageFitted));
+            if (onClick != nullptr)
+                onClick();
+        };
+        addAndMakeVisible (button);
 
-            button->setImages (buttonOff.get(), nullptr, nullptr, nullptr, buttonOn.get());
-            button->setClickingTogglesState (true);
-            button->setColour (juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
-
-            if (isRadioButton)
-                button->setRadioGroupId (radioGroupId);
-
-            addAndMakeVisible (button);
-        }
-
-        attachment = std::make_unique<juce::ParameterAttachment> (
-            *apvts.getParameter (parameterID.getParamID()),
-            [this] (float newValue)
-            {
-                if (buttons.size() == 1)
-                    buttons[0]->setToggleState (newValue > 0.5f, juce::dontSendNotification);
-                else
-                    buttons[juce::jlimit (0, buttons.size() - 1, juce::roundToInt (newValue))]
-                        ->setToggleState (true, juce::dontSendNotification);
-
-                if (onStateChange != nullptr)
-                    onStateChange();
-            },
-            undoManager);
-
-        for (auto index = 0; index < buttons.size(); ++index)
-        {
-            buttons[index]->onClick = [this, index]
-            {
-                const auto newValue = buttons.size() == 1
-                                          ? (buttons[0]->getToggleState() ? 1.0f : 0.0f)
-                                          : (float) index;
-                attachment->setValueAsCompleteGesture (newValue);
-
-                if (onStateChange != nullptr)
-                    onStateChange();
-            };
-        }
-
-        attachment->sendInitialUpdate();
+        createAttachment (nullptr);
     }
 
-
+    void paintOverChildren (juce::Graphics& g) override
+    {
+        if (nameText.isEmpty())
+            return;
+        const auto boundsF =getLocalBounds().toFloat();
+        const auto textBounds = boundsF.withSizeKeepingCentre(boundsF.getWidth() * 0.65f, boundsF.getHeight() * 0.7f);
+        const auto isSelected = button.getToggleState();
+        const auto fontHeight = textBounds.getHeight() * (isSelected ? 0.275f : 0.28f);
+        g.setFont (isSelected ? GTFonts::interBold (fontHeight) : GTFonts::interSemiBold (fontHeight));
+        g.setColour (juce::Colours::black);
+        g.drawFittedText (nameText, textBounds.toNearestInt(), juce::Justification::centred, 2);
+    }
 
     void resized() override
     {
         const auto boundsF = getLocalBounds().toFloat();
-        const auto boundsFWidth = boundsF.getWidth();
-        const auto boundsFHeight = boundsF.getHeight();
-
-        const auto cellWidth = boundsFWidth / (float) buttons.size();
-        const auto gapFactor = buttons.size() > 1 ? 1.0f + gapToButtonSizeRatio : 1.0f;
-        const auto buttonSize = juce::jmin (cellWidth / gapFactor, boundsFHeight);
-
-        for (auto index = 0; index < buttons.size(); ++index)
-            buttons[index]->setBounds (boundsF.withWidth (cellWidth) .withX (cellWidth * (float) index).withSizeKeepingCentre (buttonSize, buttonSize).toNearestInt());
+        const auto buttonSize = juce::jmin (boundsF.getWidth(), boundsF.getHeight());
+        button.setBounds (boundsF.withSizeKeepingCentre (buttonSize, buttonSize).toNearestInt());
     }
 
     bool getToggleState() const
     {
-        jassert (buttons.size() == 1);
-        return buttons[0]->getToggleState();
+        return button.getToggleState();
     }
 
-    void setOnStateChange (std::function<void()> callback)
+    void setUndoManager (juce::UndoManager& undoManager)
     {
-        onStateChange = std::move (callback);
-        onStateChange();
+        createAttachment (&undoManager);
     }
 
-    // 0.22 leaves the same spacing as the magic buttons
-    float gapToButtonSizeRatio { 0.22f };
-
-    // 0 turns them back into independent toggles
-    void setRadioGroupId (const int newRadioGroupId)
+    void setTooltip (const juce::String& newTooltip)
     {
-        radioGroupId = newRadioGroupId;
-
-        for (auto* button : buttons)
-            button->setRadioGroupId (radioGroupId);
+        button.setTooltip (newTooltip);
     }
+
+    std::function<void()> onClick;
 
 private:
-    std::unique_ptr<juce::Drawable> buttonOff = juce::Drawable::createFromImageData (BinaryData::radioButtonOff_png, BinaryData::radioButtonOff_pngSize);
-    std::unique_ptr<juce::Drawable> buttonOn = juce::Drawable::createFromImageData (BinaryData::radioButtonOn_png, BinaryData::radioButtonOn_pngSize);
-    juce::OwnedArray<juce::DrawableButton> buttons;
-    std::unique_ptr<juce::ParameterAttachment> attachment;
-    std::function<void()> onStateChange;
-    int radioGroupId {188888};
+    void createAttachment (juce::UndoManager* undoManager)
+    {
+        attachment = std::make_unique<juce::ButtonParameterAttachment> (parameter, button, undoManager);
+        attachment->sendInitialUpdate();
+    }
+
+    std::unique_ptr<juce::Drawable> buttonOn = juce::Drawable::createFromImageData (BinaryData::defON2_png, BinaryData::defON2_pngSize);
+    std::unique_ptr<juce::Drawable> buttonOff = juce::Drawable::createFromImageData (BinaryData::defOff_png, BinaryData::defOff_pngSize);
+    juce::DrawableButton button {{}, juce::DrawableButton::ImageFitted};
+    juce::RangedAudioParameter& parameter;
+    juce::String nameText;
+    std::unique_ptr<juce::ButtonParameterAttachment> attachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AASquareSSLButton)
 };

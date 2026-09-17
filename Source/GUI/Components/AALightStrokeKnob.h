@@ -5,16 +5,15 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
-
 #include <cmath>
-
+#include <memory>
 #include "../../Utils/GTLook.h"
 
 class AALightStrokeKnob : public juce::Slider
 {
 public:
-    AALightStrokeKnob (juce::RangedAudioParameter& parameter, const juce::String& nameText, const bool shouldDrawDots = true, const bool shouldDrawFromMiddle = false, const bool shouldFillFromEnd = false, juce::UndoManager* undoManager = nullptr)
-        : drawDots (shouldDrawDots), drawFromMiddle (shouldDrawFromMiddle), fillFromEnd (shouldFillFromEnd), attachment (parameter, *this, undoManager)
+    AALightStrokeKnob (juce::RangedAudioParameter& parameterToUse, const juce::String& nameText, const bool shouldDrawDots = true, const bool shouldDrawFromMiddle = false, const bool shouldFillFromEnd = false)
+        : parameter (parameterToUse), drawDots (shouldDrawDots), drawFromMiddle (shouldDrawFromMiddle), fillFromEnd (shouldFillFromEnd)
     {
         jassert (knobImage.isValid());
         setSliderStyle (RotaryVerticalDrag);
@@ -22,7 +21,7 @@ public:
         setMouseDragSensitivity (400);
         setRotaryParameters (startAngle, endAngle, true);
         setTextValueSuffix (parameter.getLabel().isEmpty() ? juce::String() : " " + parameter.getLabel());
-        // setDoubleClickReturnValue(slider);
+        setComponentID (parameter.getParameterID());
 
         for (auto* label : { &nameLabel, &valueLabel })
         {
@@ -34,24 +33,30 @@ public:
         nameLabel.setInterceptsMouseClicks (false, false);
         valueLabel.setInterceptsMouseClicks (false, false);
 
+        createAttachment (nullptr);
         updateValueLabelText();
+    }
+
+    void setUndoManager (juce::UndoManager& undoManager)
+    {
+        createAttachment (&undoManager);
     }
 
     void resized() override
     {
         const auto boundsF = getLocalBounds().toFloat();
         const auto fontBounds = boundsF.withHeight (boundsF.getHeight() * 0.15f);
-        nameLabel.setFont (GTFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.7f));
-        nameLabel.setJustificationType (juce::Justification::centredBottom);
+        nameLabel.setFont (GTFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.65f));
+        nameLabel.setJustificationType (juce::Justification::centred);
         nameLabel.setBounds (fontBounds.toNearestInt());
-        valueLabel.setFont (GTFonts::ibmPlexMonoMedium (fontBounds.getHeight() * 0.65f));
+        valueLabel.setFont (GTFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.65f));
         valueLabel.setJustificationType(juce::Justification::centredTop);
-        valueLabel.setBounds (fontBounds.withY (boundsF.getHeight() - fontBounds.getHeight()).toNearestInt());
+        valueLabel.setBounds (fontBounds.withY (boundsF.getHeight() - fontBounds.getHeight() * 1.1f).toNearestInt());
     }
 
     void enablementChanged() override
     {
-        const auto labelOpacity = isEnabled() ? 1.0f : 0.3f;
+        const auto labelOpacity = isEnabled() ? 1.0f : 0.5f;
         nameLabel.setAlpha (labelOpacity);
         valueLabel.setAlpha (labelOpacity);
         repaint();
@@ -60,10 +65,8 @@ public:
     void paintOverChildren (juce::Graphics& g) override
     {
         const auto boundsF = getLocalBounds().toFloat();
-        if (boundsF.isEmpty())
-            return;
 
-        const auto imageBounds = boundsF.reduced (boundsF.getWidth() * 0.0275f);
+        const auto imageBounds = boundsF.reduced (boundsF.getWidth() * 0.025f);
 
         g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
         g.setOpacity (isEnabled() ? 0.8f : 0.3f);
@@ -99,6 +102,11 @@ public:
     }
 
 private:
+    void createAttachment (juce::UndoManager* undoManager)
+    {
+        attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, undoManager);
+    }
+
     void paintFillStroke (juce::Graphics& g, juce::Point<float> centre, float arcRadius, const juce::PathStrokeType& stroke, juce::Range<float> fillAngleRange)
     {
         juce::Path backgroundArc;
@@ -164,6 +172,7 @@ private:
 
     juce::Image knobImage = juce::ImageCache::getFromMemory (BinaryData::knob_preview3_png, BinaryData::knob_preview3_pngSize);
 
+    juce::RangedAudioParameter& parameter;
     const bool drawDots;
     const bool drawFromMiddle;
     const bool fillFromEnd;
@@ -175,7 +184,8 @@ private:
     const float endAngle { 2.75f * juce::MathConstants<float>::pi };
     const int numberOfDots { 13 };
 
-    juce::SliderParameterAttachment attachment;
+    std::unique_ptr<juce::SliderParameterAttachment> attachment;
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AALightStrokeKnob)
 };

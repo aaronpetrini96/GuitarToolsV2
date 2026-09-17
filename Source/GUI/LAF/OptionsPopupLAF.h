@@ -37,14 +37,6 @@ public:
         g.drawRoundedRectangle (boundsF.reduced (1.0f), cornerSize, 2.0f);
     }
 
-    void preparePopupMenuWindow (juce::Component& menuWindow) override
-    {
-        const auto clickPosition = juce::Desktop::getMousePosition();
-
-        menuWindow.setTopLeftPosition (clickPosition.x - menuWindow.getWidth(),
-                                       clickPosition.y - menuWindow.getHeight());
-    }
-
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OptionsPopupLAF)
 };

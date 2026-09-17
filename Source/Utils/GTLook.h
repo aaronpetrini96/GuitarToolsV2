@@ -49,6 +49,19 @@ namespace UITools
             button.setColour(juce::DrawableButton::ColourIds::backgroundOnColourId, juce::Colours::transparentBlack);
         }
     }
+
+    inline void drawRoundedDivider (juce::Graphics& g, const juce::Rectangle<float> dividerBounds)
+    {
+        const auto dividerThickness = juce::jmin (dividerBounds.getWidth(), dividerBounds.getHeight());
+        const auto cornerSize = dividerThickness * 0.5f;
+        const auto outlineThickness = dividerThickness * 0.125f;
+        const auto outlineExpansion = outlineThickness * 0.5f;
+
+        g.setColour (GTColors::dividerLinesEnd);
+        g.fillRoundedRectangle (dividerBounds, cornerSize);
+        g.setColour (GTColors::dividerLinesEnd.brighter (0.1f));
+        g.drawRoundedRectangle (dividerBounds.expanded (outlineExpansion), cornerSize + outlineExpansion, outlineThickness);
+    }
 }
 
 namespace GTFonts

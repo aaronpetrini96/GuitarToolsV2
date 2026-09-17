@@ -7,13 +7,15 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #include <cmath>
+#include <memory>
 
 #include "../../Utils/GTLook.h"
 
 class AANotchSSLKnob : public juce::Slider
 {
 public:
-    explicit AANotchSSLKnob (juce::RangedAudioParameter& parameter, juce::UndoManager* undoManager = nullptr) : attachment (parameter, *this, undoManager)
+    explicit AANotchSSLKnob (juce::RangedAudioParameter& parameterToUse, juce::Label* nameLabelToUse = nullptr)
+        : parameter (parameterToUse), nameText (nameLabelToUse != nullptr ? nameLabelToUse->getText() : juce::String()), nameLabel (nameLabelToUse)
     {
         jassert (knobImage.isValid());
         setSliderStyle (juce::Slider::SliderStyle::RotaryVerticalDrag);
@@ -22,18 +24,35 @@ public:
         setTextValueSuffix (" " + parameter.getLabel());
         setMouseDragSensitivity (300);
         setRotaryParameters (startAngle, endAngle, true);
+        setComponentID (parameter.getParameterID());
+        createAttachment (nullptr);
     }
 
-    void startedDragging() override
+    void setUndoManager (juce::UndoManager& undoManager)
     {
-        isDragging = true;
-        repaint();
+        createAttachment (&undoManager);
+    }
+
+    void mouseDrag (const juce::MouseEvent& e) override
+    {
+        if (isEnabled() && ! isDragging && e.mouseWasDraggedSinceMouseDown())
+        {
+            isDragging = true;
+            updateValueDisplay();
+        }
+
+        juce::Slider::mouseDrag (e);
     }
 
     void stoppedDragging() override
     {
         isDragging = false;
-        repaint();
+        updateValueDisplay();
+    }
+
+    void valueChanged () override
+    {
+        updateValueDisplay();
     }
 
     void enablementChanged() override
@@ -64,14 +83,14 @@ public:
             g.drawImage (knobImage, knobBounds, juce::RectanglePlacement::centred);
         }
 
-        if (isDragging)
+        if (isDragging && nameLabel == nullptr)
         {
             const auto valueBounds = knobBounds.withSizeKeepingCentre (knobBounds.getWidth() * 0.65f, knobBounds.getWidth() * 0.25f).withY(knobBounds.getCentreX());
             g.setColour (GTColors::dividerLinesEnd);
             g.fillRect (valueBounds);
             g.setColour (GTColors::almostWhite);
             g.setFont (GTFonts::interMedium (valueBounds.getHeight() * 0.65f));
-            g.drawFittedText (getTextFromValue (getValue()), valueBounds.toNearestInt(), juce::Justification::centred, 1);
+            g.drawFittedText (getTextFromValue (getValue()), valueBounds.toNearestInt(), juce::Justification::centredBottom, 1);
         }
 
         g.endTransparencyLayer();
@@ -79,7 +98,13 @@ public:
 
     int numberOfDots {11};
 
+
 private:
+
+    void createAttachment (juce::UndoManager* undoManager)
+    {
+        attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, undoManager);
+    }
 
     void paintLightDots (juce::Graphics& g, juce::Point<float> centre, float dotRingRadius, float dotRadius, float angle)
     {
@@ -101,6 +126,14 @@ private:
         }
     }
 
+    void updateValueDisplay()
+    {
+        if (nameLabel != nullptr)
+            nameLabel->setText (isDragging ? getTextFromValue(getValue()) : nameText, juce::dontSendNotification);
+        else
+            repaint();
+    }
+
     juce::Image knobImage = juce::ImageCache::getFromMemory (BinaryData::sslKnotchKnobShadow2_png, BinaryData::sslKnotchKnobShadow2_pngSize);
     const float startAngle { 1.25f * juce::MathConstants<float>::pi };
     const float endAngle { 2.75f * juce::MathConstants<float>::pi };
@@ -108,7 +141,10 @@ private:
     const float knobBoundsReducer {1.f};
 
     bool isDragging {false};
-    juce::SliderParameterAttachment attachment;
+    juce::RangedAudioParameter& parameter;
+    const juce::String nameText;
+    juce::Label* const nameLabel {nullptr};
+    std::unique_ptr<juce::SliderParameterAttachment> attachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AANotchSSLKnob)
 };

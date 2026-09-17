@@ -51,7 +51,7 @@ public:
     {
         const auto options = juce::LookAndFeel_V4::getOptionsForComboBoxPopupMenu (box, label);
         const auto boxBounds = box.getScreenBounds().toFloat();
-        const auto popupTop = juce::roundToInt(boxBounds.getBottom() * 1.025f);
+        const auto popupTop = box.getParentComponent()->getScreenBounds().getBottom();
 
         return options.withTargetScreenArea ({ juce::roundToInt(boxBounds.getRight()), popupTop,  juce::roundToInt(boxBounds.getWidth() * 0.75f), 0 })
                       .withPreferredPopupDirection (juce::PopupMenu::Options::PopupDirection::downwards);

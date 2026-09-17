@@ -1,27 +1,9 @@
-/*
-  ==============================================================================
-
-    This file contains the basic framework code for a JUCE plugin processor.
-
-  ==============================================================================
-*/
-
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
-#include "Utils/PresetManager.h"
 
-
+#include <array>
 #include <cmath>
 #include <memory>
-#include <vector>
-
-//==============================================================================
-static const juce::StringArray eqParameterIDs
-{
-    ParamIDs::getLowCutFreqName(), ParamIDs::getLowCutSlopeName(), ParamIDs::getHighCutFreqName(), ParamIDs::getHighCutSlopeName(),
-    ParamIDs::getResoFreqName(), ParamIDs::getResoBypassName(), ParamIDs::getMudFreqName(), ParamIDs::getMudBypassName(),
-    ParamIDs::getPresenceFreqName(), ParamIDs::getPresenceGainName(), ParamIDs::getDepthFreqName(), ParamIDs::getDepthGainName()
-};
 
 //==============================================================================
 GuitarToolsAudioProcessor::GuitarToolsAudioProcessor()
@@ -36,24 +18,16 @@ GuitarToolsAudioProcessor::GuitarToolsAudioProcessor()
                        )
 #endif
 {
-    linkCompParameters();
-
-    for (auto& paramID : eqParameterIDs)
-        treeState.addParameterListener(paramID, this);
-
+    linkParameters();
     PresetManager::installFactoryPresets();
     loadDefaultPreset();
 }
 
 GuitarToolsAudioProcessor::~GuitarToolsAudioProcessor()
 {
-    for (auto& paramID : eqParameterIDs)
-        treeState.removeParameterListener(paramID, this);
 }
 
 //==============================================================================
-
-
 
 //==============================================================================
 const juce::String GuitarToolsAudioProcessor::getName() const
@@ -120,45 +94,42 @@ void GuitarToolsAudioProcessor::changeProgramName (int index, const juce::String
 //==============================================================================
 void GuitarToolsAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    juce::dsp::ProcessSpec spec;
-    spec.maximumBlockSize = samplesPerBlock;
+    juce::dsp::ProcessSpec spec{};
+    const auto numSamples = samplesPerBlock;
+    spec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
     spec.sampleRate = sampleRate;
-    spec.numChannels = getTotalNumInputChannels();
+    spec.numChannels = static_cast<juce::uint32>(getTotalNumInputChannels());
     
-    smoothedBypassValue.reset(sampleRate, 0.01);
+    smoothedBypassValue.reset(sampleRate, DefaultValues::parameterSmoothingTime);
     
 //==============================================================================
 //    Compressor Section
-    compressors[1].prepare(spec);
-    
-    LP1.prepare(spec);
-    HP1.prepare(spec);
-    AP2.prepare(spec);
-    LP2.prepare(spec);
-    HP2.prepare(spec);
-    
-    inputGain.prepare(spec);
-    inputGain.setRampDurationSeconds(0.05);
-    outputGain.prepare(spec);
-    outputGain.setRampDurationSeconds(0.05);
-
-    smoothedInputMeanSquare = 0.f;
-    smoothedOutputMeanSquare = 0.f;
-    loudnessMatchGainDb = 0.f;
-    
-    for (auto& buffer : filterBuffers)
-        buffer.setSize(spec.numChannels, samplesPerBlock);
-    
-    leftChannelFifo.prepare(samplesPerBlock);
-    rightChannelFifo.prepare(samplesPerBlock);
+    midBandCompressor.prepare(spec);
 
 //==============================================================================
+//    Levels Section
+    inputGain.prepare(spec);
+    inputGain.setRampDurationSeconds(DefaultValues::parameterSmoothingTime);
+    outputGain.prepare(spec);
+    outputGain.setRampDurationSeconds(DefaultValues::parameterSmoothingTime);
 
-    spec.numChannels = 1;
-    leftChain.prepare(spec);
-    rightChain.prepare(spec);
+    levelMatch.prepare(spec);
+
+    dryBuffer.setSize(static_cast<int>(spec.numChannels), numSamples);
+
+//==============================================================================
+//    EQ Section
+    auto monospec = spec;
+    monospec.numChannels = 1;
+    leftChain.prepare(monospec);
+    rightChain.prepare(monospec);
+    lastChainSettings = ChainSettings{};
+
+    for (const auto& [param, smoother] : smootherBindings)
+        smoother->reset(sampleRate, DefaultValues::parameterSmoothingTime);
+
+    updateSmootherFromParams(1, SmootherUpdateMode::initialize);
     updateFilters();
-    filtersNeedUpdate.store(false);
 //==============================================================================
 }
 
@@ -175,15 +146,11 @@ bool GuitarToolsAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
     juce::ignoreUnused (layouts);
     return true;
   #else
-    // This is the place where you check if the layout is supported.
-    // In this template code we only support mono or stereo.
-    // Some plugin hosts, such as certain GarageBand versions, will only
-    // load plugins that support stereo bus layouts.
+
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
      && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
 
-    // This checks if the input layout matches the output layout
    #if ! JucePlugin_IsSynth
     if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
         return false;
@@ -195,138 +162,66 @@ bool GuitarToolsAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
 #endif
 
 
-float GuitarToolsAudioProcessor::getBufferMeanSquare (const juce::AudioBuffer<float>& buffer)
+void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
-    const auto numChannels = buffer.getNumChannels();
-    const auto numSamples = buffer.getNumSamples();
-
-    if (numChannels <= 0 || numSamples <= 0)
-        return 0.f;
-
-    float sumOfSquares {0.f};
-
-    for (int channel = 0; channel < numChannels; ++channel)
-    {
-        const auto channelRms = buffer.getRMSLevel (channel, 0, numSamples);
-        sumOfSquares += channelRms * channelRms;
-    }
-
-    return sumOfSquares / (float) numChannels;
-}
-
-void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
-{
-    juce::ignoreUnused(midiMessages);
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
-
+    const auto totalNumInputChannels  = getTotalNumInputChannels();
+    const auto totalNumOutputChannels = getTotalNumOutputChannels();
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-        
-// Save a dry copy before processing
-    juce::AudioBuffer<float> dryBuffer;
-    dryBuffer.makeCopyOf(buffer);
+    dryBuffer.makeCopyOf(buffer, true); // Save a dry copy before processing
+
+    updateSmootherFromParams(buffer.getNumSamples(), SmootherUpdateMode::liveInRealTime);
+    updateGainState();
+    midBandCompressor.setAmount(compAmountParamSmoother.getCurrentValue() / DefaultValues::compAmountRangeEnd);
+    midBandCompressor.setActive(compActiveParam->get());
+    midBandCompressor.setExtremeMode(compExtremeActiveParam->get());
+    updateFilters();
+
+    const auto bypassActive = pluginBypassActiveParam->get(); // Update smoothed bypass target
+    smoothedBypassValue.setTargetValue(bypassActive ? 0.0f : 1.0f);
+
+//========================    LEVELS part    ========================
+    applyGain(buffer, inputGain);
 
 //========================    COMP part    ========================
-    updateCompState();
-    
-    leftChannelFifo.update(buffer);
-    if (buffer.getNumChannels() > 1)
-        rightChannelFifo.update(buffer);
-    
-    applyGain(buffer, inputGain);
-    
-    splitBands(buffer);
-    compressors[1].process(filterBuffers[1]); //only process midband
-    
-    auto numSamples = buffer.getNumSamples();
-    auto numChannels = buffer.getNumChannels();
-    buffer.clear();
-    
-    auto addFilterBand = [nc=numChannels, ns=numSamples](auto& inputBuffer, const auto& source)
-    {
-        for(auto i{0};i<nc;++i)
-            inputBuffer.addFrom(i, 0, source, i, 0, ns);
-    };
-    
-    for(size_t i{0}; i < compressors.size(); ++i)
-        addFilterBand(buffer, filterBuffers[i]);
-    
-//    applyGain(buffer, outputGain);
-    
+    midBandCompressor.process(buffer);
+
 //========================    EQ part    ========================
-    auto chainSettings = getChainSettings(treeState);
+    const juce::dsp::AudioBlock<float> block {buffer};
 
-    if (filtersNeedUpdate.exchange(false))
-        updateFilters();
-
-    juce::dsp::AudioBlock<float> block {buffer};
-       
-    // Update smoothed bypass target
-    bool bypassActive = (chainSettings.pluginBypass != 0);
-    smoothedBypassValue.setTargetValue(bypassActive ? 0.0f : 1.0f);
-    
-    
     auto leftBlock = block.getSingleChannelBlock(0);
-    auto rightBlock = block.getSingleChannelBlock(0);
-    if (totalNumInputChannels > 1)
-        rightBlock = block.getSingleChannelBlock(1);
-
     juce::dsp::ProcessContextReplacing<float> leftContext {leftBlock};
-    juce::dsp::ProcessContextReplacing<float> rightContext {rightBlock};
-
     leftChain.process(leftContext);
-    rightChain.process(rightContext);
-    
-    const auto blocksPerSecond = getSampleRate() / (double) buffer.getNumSamples();
-    const auto levelSmoothingCoefficient = 1.f - std::exp (-1.f / (float) blocksPerSecond);
 
-    const auto inputMeanSquare = getBufferMeanSquare (dryBuffer);
-
-    if (inputMeanSquare > 0.000001f)
+    if (totalNumInputChannels > 1)
     {
-        const auto outputMeanSquare = getBufferMeanSquare (buffer);
-
-        smoothedInputMeanSquare += levelSmoothingCoefficient * (inputMeanSquare - smoothedInputMeanSquare);
-        smoothedOutputMeanSquare += levelSmoothingCoefficient * (outputMeanSquare - smoothedOutputMeanSquare);
-
-        if (smoothedOutputMeanSquare > 0.000001f)
-        {
-            const auto targetGainDb = juce::jlimit (-24.f, 24.f,
-                                                    juce::Decibels::gainToDecibels (std::sqrt (smoothedInputMeanSquare / smoothedOutputMeanSquare)));
-
-            if (std::abs (targetGainDb - loudnessMatchGainDb) > 0.5f)
-                loudnessMatchGainDb = targetGainDb;
-        }
+        auto rightBlock = block.getSingleChannelBlock(1);
+        juce::dsp::ProcessContextReplacing<float> rightContext {rightBlock};
+        rightChain.process(rightContext);
     }
-
-    if (loudnessMatchParam->get())
-        outputGain.setGainDecibels (loudnessMatchGainDb);
-
+    
+    levelMatch.update (dryBuffer, buffer);
     applyGain(buffer, outputGain);
     
-    // Smooth crossfade
-    for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
-    {
-        auto* wet = buffer.getWritePointer(channel);
-        auto* dry = dryBuffer.getReadPointer(channel);
 
-        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+    for (int n {0}; n < buffer.getNumSamples(); ++n)     // Smooth crossfade
+    {
+        const auto mix = smoothedBypassValue.getNextValue();
+        for (int ch {0}; ch < buffer.getNumChannels(); ++ch)
         {
-            float mix = smoothedBypassValue.getNextValue();
-            wet[sample] = wet[sample] * mix + dry[sample] * (1.0f - mix);
+            auto* wet = buffer.getWritePointer(ch);
+            const auto* dry = dryBuffer.getReadPointer(ch);
+            wet[n] = wet[n] * mix + dry[n] * (1.f - mix);
         }
     }
+
 }
 
 //==============================================================================
-bool GuitarToolsAudioProcessor::hasEditor() const
-{
-    return true; // (change this to false if you choose to not supply an editor)
-}
+bool GuitarToolsAudioProcessor::hasEditor() const {return true;}
 
 juce::AudioProcessorEditor* GuitarToolsAudioProcessor::createEditor()
 {
@@ -358,15 +253,17 @@ void GuitarToolsAudioProcessor::setStateInformation (const void* data, int sizeI
         if (auto* showTooltipsProp = state.getPropertyPointer("ShowTooltips"))
             showTooltips = static_cast<bool>(*showTooltipsProp);
         treeState.replaceState(state);
-        updateFilters();
     }
 }
 
 void GuitarToolsAudioProcessor::savePreset(const juce::File& file)
 {
-    auto state = treeState.copyState();
-    std::unique_ptr<juce::XmlElement> xml (state.createXml());
-    if (xml) { xml->writeTo(file);}
+    const auto state = treeState.copyState();
+    auto xml = state.createXml();
+    if (xml)
+    {
+        xml->writeTo(file);
+    }
 }
 
 void GuitarToolsAudioProcessor::loadPreset(const juce::File& file)
@@ -378,9 +275,6 @@ void GuitarToolsAudioProcessor::loadPreset(const juce::File& file)
         if (auto* presetNameProp = state.getPropertyPointer("CurrentPresetName"))
             currentPresetName = presetNameProp->toString(); // restore preset name
         treeState.replaceState(state);
-
-        if (getSampleRate() > 0.0)
-            updateFilters();
     }
 }
 
@@ -391,150 +285,110 @@ juce::AudioProcessorValueTreeState::ParameterLayout GuitarToolsAudioProcessor::c
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
     constexpr auto versionHint {1};
-    constexpr auto frequencyIntervalValue {0.01f};
-    constexpr auto decibelIntervalValue {0.001f};
 
     const auto frequencyStringFromValue = [] (float value, int) { return juce::String (juce::roundToInt (value)); };
     const auto decibelStringFromValue = [] (float value, int) { return juce::String (value, 1); };
 
-    auto lowCutFrequencyRange = juce::NormalisableRange<float> (20.f, 4500.f, frequencyIntervalValue);
-    auto highCutFrequencyRange = juce::NormalisableRange<float> (200.f, 20000.f, frequencyIntervalValue);
+    auto lowCutFrequencyRange = juce::NormalisableRange<float> (DefaultValues::lowCutRangeStart, DefaultValues::lowCutRangeEnd, DefaultValues::frequencyIntervalValue);
+    auto highCutFrequencyRange = juce::NormalisableRange<float> (DefaultValues::highCutRangeStart, DefaultValues::highCutRangeEnd, DefaultValues::frequencyIntervalValue);
+    auto gainRange = juce::NormalisableRange<float> (DefaultValues::gainRangeStart, DefaultValues::gainRangeEnd, DefaultValues::decibelIntervalValue, 1.f);
 
 //    ========== HICUT LOW CUT ===========
     auto name = ParamIDs::getLowCutFreqName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, lowCutFrequencyRange, 20.f, juce::AudioParameterFloatAttributes().withLabel ("Hz").withStringFromValueFunction (frequencyStringFromValue)));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, lowCutFrequencyRange, DefaultValues::lowCutFreq, juce::AudioParameterFloatAttributes().withLabel ("Hz").withStringFromValueFunction (frequencyStringFromValue)));
 
     name = ParamIDs::getHighCutFreqName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name,highCutFrequencyRange, 20000.f, juce::AudioParameterFloatAttributes().withLabel ("Hz").withStringFromValueFunction (frequencyStringFromValue)));
-    
-    
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name,highCutFrequencyRange, DefaultValues::highCutFreq, juce::AudioParameterFloatAttributes().withLabel ("Hz").withStringFromValueFunction (frequencyStringFromValue)));
+
     juce::StringArray stringArray;
     for (int i {0}; i < 4; ++i)
-    {
-        juce::String str;
-        str << (12 + 12*i);
-        str << " dB/Oct";
-        stringArray.add(str);
-    }
+        stringArray.add(juce::String(12 + 12*i)+ " dB/Oct");
     
     name = ParamIDs::getLowCutSlopeName();
-    layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID(name, versionHint), name, stringArray, 0));
-
+    layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID(name, versionHint), name, stringArray, DefaultValues::lowCutSlope));
     name = ParamIDs::getHighCutSlopeName();
-    layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID(name, versionHint), name, stringArray, 0));
+    layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID(name, versionHint), name, stringArray, DefaultValues::highCutSlope));
 
 //    ========== HIGH/LOW SHELVE  ===========
-    juce::StringArray presenceFreqArray {"4.5 kHz", "6 kHz", "8 kHz", "12 kHz"};
-    name = ParamIDs::getPresenceFreqName();
-    layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID(name, versionHint), name, presenceFreqArray, 1));
-
+    juce::StringArray presenceModeArray {"A", "B", "C", "D"};
+    name = ParamIDs::getPresenceModeName();
+    layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID(name, versionHint), name, presenceModeArray, DefaultValues::presenceMode));
     name = ParamIDs::getPresenceGainName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, juce::NormalisableRange<float>(-12.f, 12.f, decibelIntervalValue, 1.f),0.f, juce::AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (decibelStringFromValue)));
-    
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, gainRange, DefaultValues::presenceGain, juce::AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (decibelStringFromValue)));
 
-    juce::StringArray depthFreqArray {"60 Hz", "100 Hz", "170 Hz", "250 Hz"};
-    name = ParamIDs::getDepthFreqName();
-    layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID(name, versionHint), name, depthFreqArray, 1));
-
+    juce::StringArray depthModeArray {"A", "B", "C", "D"};
+    name = ParamIDs::getDepthModeName();
+    layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID(name, versionHint), name, depthModeArray, DefaultValues::depthMode));
     name = ParamIDs::getDepthGainName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, juce::NormalisableRange<float>(-12.f, 12.f, decibelIntervalValue, 1.f),0.f, juce::AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (decibelStringFromValue)));
-    
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, gainRange, DefaultValues::depthGain, juce::AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (decibelStringFromValue)));
+
 //    ========== RESONANCE TAMER ===========
     name = ParamIDs::getResoFreqName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name,juce::NormalisableRange<float>(2000.f, 6000.f, frequencyIntervalValue, 1.f),3850.f, juce::AudioParameterFloatAttributes().withLabel ("Hz").withStringFromValueFunction (frequencyStringFromValue)));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name,juce::NormalisableRange<float>(DefaultValues::resoRangeStart, DefaultValues::resoRangeEnd, DefaultValues::frequencyIntervalValue, 1.f), DefaultValues::resoFreq, juce::AudioParameterFloatAttributes().withLabel ("Hz").withStringFromValueFunction (frequencyStringFromValue)));
+    name = ParamIDs::getResoActiveName();
+    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::resoActive));
+    name = ParamIDs::getResoExtremeActiveName();
+    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::resoExtremeActive));
 
-    name = ParamIDs::getResoBypassName();
-    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, false));
-    
 //    ========== MUD KILLER TAMER ===========
     name = ParamIDs::getMudFreqName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name,juce::NormalisableRange<float>(40.f, 500.f, frequencyIntervalValue, 1.f),120.f, juce::AudioParameterFloatAttributes().withLabel ("Hz").withStringFromValueFunction (frequencyStringFromValue)));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name,juce::NormalisableRange<float>(DefaultValues::mudRangeStart, DefaultValues::mudRangeEnd, DefaultValues::frequencyIntervalValue, 1.f), DefaultValues::mudFreq, juce::AudioParameterFloatAttributes().withLabel ("Hz").withStringFromValueFunction (frequencyStringFromValue)));
+    name = ParamIDs::getMudActiveName();
+    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::mudActive));
+    name = ParamIDs::getMudExtremeActiveName();
+    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::mudExtremeActive));
 
-    name = ParamIDs::getMudBypassName();
-    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, false));
-    
-//    ========== BYPASS ===========
-    name = ParamIDs::getPluginBypassName();
-    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, false));
-    
-    //==============================================================================
-    //==============================================================================
-//    COMPRESSOR
-    
-    auto gainRange = juce::NormalisableRange<float>(-12.f, 12.f, decibelIntervalValue, 1.f);
-    name = ParamIDs::getCompGainInName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name, gainRange, 0.f, juce::AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (decibelStringFromValue)));
+//   ========== BYPASS ===========
+    name = ParamIDs::getPluginBypassActiveName();
+    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::pluginBypassActive));
 
-    name = ParamIDs::getCompGainOutName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name, gainRange, 0.f, juce::AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (decibelStringFromValue)));
-    
-    auto thresholdRange = juce::NormalisableRange<float>(MIN_THRESHOLD, MAX_DECIBELS, decibelIntervalValue, 1.f);
-    name = ParamIDs::getThresholdName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name, thresholdRange, 0.f, juce::AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (decibelStringFromValue)));
-    
-    auto attackReleaseRange = juce::NormalisableRange<float> (5.f, 500.f, 0.1f, 1.f);
-    name = ParamIDs::getAttackName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name, attackReleaseRange, 30.f));
+//  ========== COMP ===========
+    auto compAmountRange = juce::NormalisableRange<float>(DefaultValues::compAmountRangeStart, DefaultValues::compAmountRangeEnd, DefaultValues::compAmountIntervalValue, 1.f);
+    name = ParamIDs::getCompAmountName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name, compAmountRange, DefaultValues::compAmount, juce::AudioParameterFloatAttributes().withLabel ("%").withStringFromValueFunction (frequencyStringFromValue)));
+    name = ParamIDs::getCompActiveName();
+    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::compActive));
+    name = ParamIDs::getCompExtremeActiveName();
+    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::compExtremeActive));
 
-    name = ParamIDs::getReleaseName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name, attackReleaseRange, 50.f));
-    
-    auto choices = std::vector<double>{1,1.4,2,3,4,8,10,20,50,100};
-    juce::StringArray sa;
-    for (auto choice: choices)
-        sa.add(juce::String(choice, 1));
-    name = ParamIDs::getRatioName();
-    layout.add(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID(name, versionHint),name, sa, 4));
-    
-    name = ParamIDs::getCompBypassName();
-    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, true));
-
-    name = ParamIDs::getLoudnessMatchName();
-    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, false));
-
-//    COMP RANGE PARAMETERS
-//    auto compRangeStartRange = juce::NormalisableRange<float>(MIN_FREQ, 149.9f, frequencyIntervalValue, 1.f);
-//    auto compRangeEndRange = juce::NormalisableRange<float>(150.f, MAX_FREQ, frequencyIntervalValue, 1.f);
-//    name = ParamIDs::getCompRangeStartName();
-//    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, compRangeStartRange, 80.f));
-//
-//    name = ParamIDs::getCompRangeEndName();
-//    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, compRangeEndRange, 180.f));
+//  ========== LEVELS ===========
+    name = ParamIDs::getInputGainName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, gainRange, DefaultValues::inputGainValue, juce::AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (decibelStringFromValue)));
+    name = ParamIDs::getOutputGainName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, gainRange, DefaultValues::outputGainValue, juce::AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (decibelStringFromValue)));
+    name = ParamIDs::getLoudnessMatchActiveName();
+    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::loudnessMatchActive));
 
 //    ========== RETURN LAYOUT ===========
     return layout;
 }
 
 //==============================================================================
-ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& treeState)
+ChainSettings GuitarToolsAudioProcessor::getChainSettings() const
 {
     ChainSettings settings;
-    
-    settings.lowCutFreq = treeState.getRawParameterValue(ParamIDs::getLowCutFreqName())->load();
-    settings.lowCutSlope = static_cast<Slope>(treeState.getRawParameterValue(ParamIDs::getLowCutSlopeName())->load());
-    settings.highCutFreq = treeState.getRawParameterValue(ParamIDs::getHighCutFreqName())->load();
-    settings.highCutSlope = static_cast<Slope>(treeState.getRawParameterValue(ParamIDs::getHighCutSlopeName())->load());
-    settings.mudFreq = treeState.getRawParameterValue(ParamIDs::getMudFreqName())->load();
-    settings.mudBypass = treeState.getRawParameterValue(ParamIDs::getMudBypassName())->load() < 0.5f;
-    settings.presenceIndex = static_cast<int>(treeState.getRawParameterValue(ParamIDs::getPresenceFreqName())->load());
-    settings.presenceGain = treeState.getRawParameterValue(ParamIDs::getPresenceGainName())->load();
-    settings.depthIndex = static_cast<int>(treeState.getRawParameterValue(ParamIDs::getDepthFreqName())->load());
-    settings.depthGain = treeState.getRawParameterValue(ParamIDs::getDepthGainName())->load();
-    settings.resoBypass = treeState.getRawParameterValue(ParamIDs::getResoBypassName())->load() < 0.5f;
-    settings.resoFreq = treeState.getRawParameterValue(ParamIDs::getResoFreqName())->load();
-    settings.pluginBypass = treeState.getRawParameterValue(ParamIDs::getPluginBypassName())->load() > 0.5;
-    
-//    presence
-    if (settings.presenceIndex == 0) {settings.presenceFreq = 4000.f;}
-    else if (settings.presenceIndex == 1) { settings.presenceFreq = 6000.f;}
-    else if (settings.presenceIndex == 2) {settings.presenceFreq = 8000.f;}
-    else if (settings.presenceIndex == 3) {settings.presenceFreq = 16000.f;}
 
-//    Depth
-    if (settings.depthIndex == 0) {settings.depthFreq = 60.f;}
-    else if (settings.depthIndex == 1) {settings.depthFreq = 80.f;}
-    else if (settings.depthIndex == 2) {settings.depthFreq = 150.f;}
-    else if (settings.depthIndex == 3) {settings.depthFreq = 200.f;}
+    settings.lowCutFreq = lowCutFreqParamSmoother.getCurrentValue();
+    settings.lowCutSlope = static_cast<Slope>(lowCutSlopeParam->getIndex());
+    settings.highCutFreq = highCutFreqParamSmoother.getCurrentValue();
+    settings.highCutSlope = static_cast<Slope>(highCutSlopeParam->getIndex());
+
+    settings.resoFreq = resoFreqParamSmoother.getCurrentValue();
+    settings.resoBypass = ! resoActiveParam->get();
+    settings.resoExtremeActive = resoExtremeActiveParam->get();
+    settings.mudFreq = mudFreqParamSmoother.getCurrentValue();
+    settings.mudBypass = ! mudActiveParam->get();
+    settings.mudExtremeActive = mudExtremeActiveParam->get();
+
+    settings.presenceIndex = presenceModeParam->getIndex();
+    settings.presenceGain = presenceGainParamSmoother.getCurrentValue();
+    settings.presenceFreq = DefaultValues::presenceFreqByMode[(size_t) juce::jlimit (0, 3, settings.presenceIndex)];
+    settings.presenceResonance = DefaultValues::presenceResonanceByMode[(size_t) juce::jlimit (0, 3, settings.presenceIndex)];
+
+    settings.depthIndex = depthModeParam->getIndex();
+    settings.depthGain = depthGainParamSmoother.getCurrentValue();
+    settings.depthFreq = DefaultValues::depthFreqByMode[(size_t) juce::jlimit (0, 3, settings.depthIndex)];
+    settings.depthResonance = DefaultValues::depthResonanceByMode[(size_t) juce::jlimit (0, 3, settings.depthIndex)];
 
     return settings;
 }
@@ -545,37 +399,46 @@ void GuitarToolsAudioProcessor::updateCoefficients(Coefficients& old, const Coef
     *old = *replacements;
 }
 //==============================================================================
-void GuitarToolsAudioProcessor::updateBellFitlers(const ChainSettings& chainSettings)
+void GuitarToolsAudioProcessor::updateResoFilters(const ChainSettings& chainSettings)
 {
-
-    auto resoCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.resoFreq, 10.f, juce::Decibels::decibelsToGain(-6.f));
+    const auto resoQ = chainSettings.resoExtremeActive ? DefaultValues::resoExtremeQ : DefaultValues::resoQ;
+    const auto resoGain = juce::Decibels::decibelsToGain(chainSettings.resoExtremeActive ? DefaultValues::resoExtremeGainDb : DefaultValues::resoGainDb);
+    const auto resoCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.resoFreq, resoQ, resoGain);
 
     leftChain.setBypassed<ChainPositions::Reso>(chainSettings.resoBypass);
     rightChain.setBypassed<ChainPositions::Reso>(chainSettings.resoBypass);
 
     updateCoefficients(leftChain.get<ChainPositions::Reso>().coefficients, resoCoefficients);
     updateCoefficients(rightChain.get<ChainPositions::Reso>().coefficients, resoCoefficients);
-    
-    auto mudCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.mudFreq, 2.5f, juce::Decibels::decibelsToGain(-2.f));
-    
+}
+//==============================================================================
+void GuitarToolsAudioProcessor::updateMudFilters(const ChainSettings& chainSettings)
+{
+    const auto mudQ = chainSettings.mudExtremeActive ? DefaultValues::mudExtremeQ : DefaultValues::mudQ;
+    const auto mudGain = juce::Decibels::decibelsToGain(chainSettings.mudExtremeActive ? DefaultValues::mudExtremeGainDb : DefaultValues::mudGainDb);
+    const auto mudCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.mudFreq, mudQ, mudGain);
+
     leftChain.setBypassed<ChainPositions::Mud>(chainSettings.mudBypass);
     rightChain.setBypassed<ChainPositions::Mud>(chainSettings.mudBypass);
-    
+
     updateCoefficients(leftChain.get<ChainPositions::Mud>().coefficients, mudCoefficients);
     updateCoefficients(rightChain.get<ChainPositions::Mud>().coefficients, mudCoefficients);
 }
 //==============================================================================
-void GuitarToolsAudioProcessor::updateShelfFilters(const ChainSettings& chainSettings)
+void GuitarToolsAudioProcessor::updatePresenceFilters(const ChainSettings& chainSettings)
 {
+    const auto presCoefficients = juce::dsp::IIR::Coefficients<float>::makeHighShelf(getSampleRate(), chainSettings.presenceFreq, chainSettings.presenceResonance, juce::Decibels::decibelsToGain(chainSettings.presenceGain));
 
-    auto presCoefficients = juce::dsp::IIR::Coefficients<float>::makeHighShelf(getSampleRate(), chainSettings.presenceFreq, 0.5f, juce::Decibels::decibelsToGain(chainSettings.presenceGain));
-    
     updateCoefficients(leftChain.get<ChainPositions::Presence>().coefficients, presCoefficients);
     updateCoefficients(rightChain.get<ChainPositions::Presence>().coefficients, presCoefficients);
-    
-    auto depthCoefficientes = juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), chainSettings.depthFreq, 0.5f, juce::Decibels::decibelsToGain(chainSettings.depthGain));
-    updateCoefficients(leftChain.get<ChainPositions::Depth>().coefficients, depthCoefficientes);
-    updateCoefficients(rightChain.get<ChainPositions::Depth>().coefficients, depthCoefficientes);
+}
+//==============================================================================
+void GuitarToolsAudioProcessor::updateDepthFilters(const ChainSettings& chainSettings)
+{
+    const auto depthCoefficients = juce::dsp::IIR::Coefficients<float>::makeLowShelf(getSampleRate(), chainSettings.depthFreq, chainSettings.depthResonance, juce::Decibels::decibelsToGain(chainSettings.depthGain));
+
+    updateCoefficients(leftChain.get<ChainPositions::Depth>().coefficients, depthCoefficients);
+    updateCoefficients(rightChain.get<ChainPositions::Depth>().coefficients, depthCoefficients);
 }
 //==============================================================================
 void GuitarToolsAudioProcessor::updateLowCutFilters(const ChainSettings& chainSettings)
@@ -599,101 +462,123 @@ void GuitarToolsAudioProcessor::updateHighCutFilters(const ChainSettings& chainS
 //==============================================================================
 void GuitarToolsAudioProcessor::updateFilters()
 {
-    auto chainSettings = getChainSettings(treeState);
-    updateBellFitlers(chainSettings);
-    updateShelfFilters(chainSettings);
-    updateLowCutFilters(chainSettings);
-    updateHighCutFilters(chainSettings);
-}
+    const auto chainSettings = getChainSettings();
 
-void GuitarToolsAudioProcessor::parameterChanged(const juce::String&, float)
-{
-    filtersNeedUpdate.store(true);
+    if (chainSettings.lowCutFreq != lastChainSettings.lowCutFreq
+     || chainSettings.lowCutSlope != lastChainSettings.lowCutSlope)
+        updateLowCutFilters(chainSettings);
+
+    if (chainSettings.highCutFreq != lastChainSettings.highCutFreq
+     || chainSettings.highCutSlope != lastChainSettings.highCutSlope)
+        updateHighCutFilters(chainSettings);
+
+    if (chainSettings.resoFreq != lastChainSettings.resoFreq
+     || chainSettings.resoBypass != lastChainSettings.resoBypass
+     || chainSettings.resoExtremeActive != lastChainSettings.resoExtremeActive)
+        updateResoFilters(chainSettings);
+
+    if (chainSettings.mudFreq != lastChainSettings.mudFreq
+     || chainSettings.mudBypass != lastChainSettings.mudBypass
+     || chainSettings.mudExtremeActive != lastChainSettings.mudExtremeActive)
+        updateMudFilters(chainSettings);
+
+    if (chainSettings.presenceIndex != lastChainSettings.presenceIndex
+     || chainSettings.presenceGain != lastChainSettings.presenceGain)
+        updatePresenceFilters(chainSettings);
+
+    if (chainSettings.depthIndex != lastChainSettings.depthIndex
+     || chainSettings.depthGain != lastChainSettings.depthGain)
+        updateDepthFilters(chainSettings);
+
+    lastChainSettings = chainSettings;
 }
 
 void GuitarToolsAudioProcessor::loadDefaultPreset()
 {
-    const auto defaultPresetFile = PresetManager::getPresetFolder().getChildFile ("Default.xml");
-
+    const auto defaultPresetFile = PresetManager::getPresetFolder().getChildFile ("Start From Here.xml");
     if (! defaultPresetFile.existsAsFile())
         return;
-
     loadPreset (defaultPresetFile);
-    currentPresetName = "Default";
+    currentPresetName = "Start From Here";
 }
 
 //==============================================================================
 //==============================================================================
-//==============================================================================
-//==============================================================================
 
-void GuitarToolsAudioProcessor::linkCompParameters()
+void GuitarToolsAudioProcessor::linkParameters()
 {
+    auto floatParams = std::array
+    {
+        &lowCutFreqParam, &highCutFreqParam, &resoFreqParam, &mudFreqParam,
+        &presenceGainParam, &depthGainParam, &compAmountParam,
+        &inputGainParam, &outputGainParam
+    };
 
-    midBandComp.attack = dynamic_cast<juce::AudioParameterFloat*>(treeState.getParameter(juce::ParameterID(ParamIDs::getAttackName(), 1).getParamID()));
-    midBandComp.release = dynamic_cast<juce::AudioParameterFloat*>(treeState.getParameter(juce::ParameterID(ParamIDs::getReleaseName(), 1).getParamID()));
-    midBandComp.threshold = dynamic_cast<juce::AudioParameterFloat*>(treeState.getParameter(juce::ParameterID(ParamIDs::getThresholdName(), 1).getParamID()));
-    midBandComp.ratio = dynamic_cast<juce::AudioParameterChoice*>(treeState.getParameter(juce::ParameterID(ParamIDs::getRatioName(), 1).getParamID()));
-    midBandComp.bypassed = dynamic_cast<juce::AudioParameterBool*>(treeState.getParameter(juce::ParameterID(ParamIDs::getCompBypassName(), 1).getParamID()));
+    auto floatParamIDs = std::array
+    {
+        &ParamIDs::getLowCutFreqName, &ParamIDs::getHighCutFreqName, &ParamIDs::getResoFreqName, &ParamIDs::getMudFreqName,
+        &ParamIDs::getPresenceGainName, &ParamIDs::getDepthGainName, &ParamIDs::getCompAmountName,
+        &ParamIDs::getInputGainName, &ParamIDs::getOutputGainName
+    };
 
-//    compRangeStartParameter = dynamic_cast<juce::AudioParameterFloat*>(treeState.getParameter(juce::ParameterID(ParamIDs::getCompRangeStartName(), 1).getParamID()));
-//    compRangeEndParameter = dynamic_cast<juce::AudioParameterFloat*>(treeState.getParameter(juce::ParameterID(ParamIDs::getCompRangeEndName(), 1).getParamID()));
+    initCachedParams<juce::AudioParameterFloat*>(floatParams, floatParamIDs);
 
-    inputGainParam = dynamic_cast<juce::AudioParameterFloat*>(treeState.getParameter(juce::ParameterID(ParamIDs::getCompGainInName(), 1).getParamID()));
-    outputGainParam = dynamic_cast<juce::AudioParameterFloat*>(treeState.getParameter(juce::ParameterID(ParamIDs::getCompGainOutName(), 1).getParamID()));
-    loudnessMatchParam = dynamic_cast<juce::AudioParameterBool*>(treeState.getParameter(juce::ParameterID(ParamIDs::getLoudnessMatchName(), 1).getParamID()));
-    
-    using FilterType = juce::dsp::LinkwitzRileyFilterType;
-    LP1.setType(FilterType::lowpass);
-    HP1.setType(FilterType::highpass);
-    AP2.setType(FilterType::allpass);
-    LP2.setType(FilterType::lowpass);
-    HP2.setType(FilterType::highpass);
-    
+    auto choiceParams = std::array
+    {
+        &lowCutSlopeParam, &highCutSlopeParam, &presenceModeParam, &depthModeParam
+    };
+
+    auto choiceParamIDs = std::array
+    {
+        &ParamIDs::getLowCutSlopeName, &ParamIDs::getHighCutSlopeName,
+        &ParamIDs::getPresenceModeName, &ParamIDs::getDepthModeName
+    };
+
+    initCachedParams<juce::AudioParameterChoice*>(choiceParams, choiceParamIDs);
+
+    auto boolParams = std::array
+    {
+        &resoActiveParam, &resoExtremeActiveParam, &mudActiveParam, &mudExtremeActiveParam,
+        &compActiveParam, &compExtremeActiveParam, &loudnessMatchActiveParam, &pluginBypassActiveParam
+    };
+
+    auto boolParamIDs = std::array
+    {
+        &ParamIDs::getResoActiveName, &ParamIDs::getResoExtremeActiveName, &ParamIDs::getMudActiveName, &ParamIDs::getMudExtremeActiveName,
+        &ParamIDs::getCompActiveName, &ParamIDs::getCompExtremeActiveName, &ParamIDs::getLoudnessMatchActiveName, &ParamIDs::getPluginBypassActiveName
+    };
+
+    initCachedParams<juce::AudioParameterBool*>(boolParams, boolParamIDs);
+
+    smootherBindings =
+    {
+        {lowCutFreqParam, &lowCutFreqParamSmoother},
+        {highCutFreqParam, &highCutFreqParamSmoother},
+        {resoFreqParam, &resoFreqParamSmoother},
+        {mudFreqParam, &mudFreqParamSmoother},
+        {presenceGainParam, &presenceGainParamSmoother},
+        {depthGainParam, &depthGainParamSmoother},
+        {compAmountParam, &compAmountParamSmoother}
+    };
 }
 
-
-
-void GuitarToolsAudioProcessor::updateCompState()
+void GuitarToolsAudioProcessor::updateSmootherFromParams(int numSamplesToSkip, SmootherUpdateMode mode)
 {
-    compressors[1].updateCompressorSettings();
+    for (const auto& [param, smoother] : smootherBindings)
+    {
+        if (mode == SmootherUpdateMode::initialize)
+            smoother->setCurrentAndTargetValue(param->get());
+        else
+            smoother->setTargetValue(param->get());
 
-//    const auto compRangeStart = compRangeStartParameter->get();
-//    const auto compRangeEnd = compRangeEndParameter->get();
+        smoother->skip(numSamplesToSkip);
+    }
+}
 
-    constexpr auto compRangeStart {80.0f};
-    constexpr auto compRangeEnd {180.0f};
-
-    LP1.setCutoffFrequency(compRangeStart);
-    HP1.setCutoffFrequency(compRangeStart);
-
-    AP2.setCutoffFrequency(compRangeEnd);
-    LP2.setCutoffFrequency(compRangeEnd);
-    HP2.setCutoffFrequency(compRangeEnd);
-    
+void GuitarToolsAudioProcessor::updateGainState()
+{
     inputGain.setGainDecibels(inputGainParam->get());
-    outputGain.setGainDecibels(outputGainParam->get());
-}
-
-void GuitarToolsAudioProcessor::splitBands(const juce::AudioBuffer<float> &inputBuffer)
-{
-    for(auto& filterBuffer : filterBuffers)
-        filterBuffer = inputBuffer;
-    
-    auto fb0Block = juce::dsp::AudioBlock<float>(filterBuffers[0]); //lowpass audio
-    auto fb1Block = juce::dsp::AudioBlock<float>(filterBuffers[1]);
-    auto fb2Block = juce::dsp::AudioBlock<float>(filterBuffers[2]);
-    
-    auto fb0Ctx = juce::dsp::ProcessContextReplacing<float>(fb0Block);
-    auto fb1Ctx = juce::dsp::ProcessContextReplacing<float>(fb1Block);
-    auto fb2Ctx = juce::dsp::ProcessContextReplacing<float>(fb2Block);
-    
-    LP1.process(fb0Ctx);
-    AP2.process(fb0Ctx);
-    HP1.process(fb1Ctx);
-    filterBuffers[2]=filterBuffers[1];
-    LP2.process(fb1Ctx);
-    HP2.process(fb2Ctx);
+    outputGain.setGainDecibels(loudnessMatchActiveParam->get() ? levelMatch.getGainDb() : outputGainParam->get());
 }
 
 // This creates new instances of the plugin..

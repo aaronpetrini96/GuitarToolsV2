@@ -11,12 +11,13 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
 
-#include <array>
-#include <atomic>
+#include <utility>
+#include <vector>
 
-#include "DSP/CompressorBand.h"
-#include "DSP/SingleChannelSampleFifo.h"
-#include "Utils/ParamUtils.h"
+
+#include "DSP/AALevelMatch.h"
+#include "DSP/GTMidBandCompressor.h"
+#include "Utils/AAParamUtils.h"
 
 
 enum Slope
@@ -32,21 +33,17 @@ struct ChainSettings
 {
     float lowCutFreq {0}, highCutFreq{0};
     float resoFreq {0}, mudFreq {0}, presenceFreq {0}, depthFreq{0};
-    float presenceGain {0}, depthGain{0};
+    float presenceGain {0}, depthGain{0}, presenceResonance {0}, depthResonance {0};
     int presenceIndex{0}, depthIndex{0};
-    
-    bool resoBypass {false}, mudBypass {false}, pluginBypass {false}, compBypass {false};
-
+    bool resoBypass {false}, mudBypass {false};
     Slope lowCutSlope {Slope::Slope_12}, highCutSlope {Slope::Slope_12};
+    bool resoExtremeActive{false}, mudExtremeActive{false};
 };
-
-ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& treeState);
 
 //==============================================================================
 /**
 */
-class GuitarToolsAudioProcessor  : public juce::AudioProcessor,
-                                    private juce::AudioProcessorValueTreeState::Listener
+class GuitarToolsAudioProcessor  : public juce::AudioProcessor
 {
 public:
     //==============================================================================
@@ -96,23 +93,12 @@ public:
     juce::AudioProcessorValueTreeState treeState {*this, &undoManager, "Parameters", createParameterLayout()};
     
     
-    SingleChannelSampleFifo <juce::AudioBuffer<float>> leftChannelFifo {Channel::Left};
-    SingleChannelSampleFifo <juce::AudioBuffer<float>> rightChannelFifo {Channel::Right};
-    
-    std::array<CompressorBand,3> compressors;
-    CompressorBand& lowBandComp = compressors[0];
-    CompressorBand& midBandComp = compressors[1];
-    CompressorBand& highBandComp = compressors[2];
-
     juce::String currentPresetName;
     float uiScale {1.f};
     bool showTooltips {false};
-    std::atomic<bool> levelMatchActive {false};
-    std::atomic<bool> levelMatch {false};
 
 private:
-    
-    juce::LinearSmoothedValue<float> smoothedBypassValue {1.f};
+
     //==============================================================================
 //    EQ PART
     //==============================================================================
@@ -120,96 +106,113 @@ private:
 //    Declare Filter types and Process Chains
     using EQFilter = juce::dsp::IIR::Filter<float>;
     using CutFilter = juce::dsp::ProcessorChain<EQFilter, EQFilter, EQFilter, EQFilter>;
-    using MonoChain = juce::dsp::ProcessorChain<CutFilter, EQFilter, EQFilter, EQFilter, EQFilter, CutFilter>;
+    using MonoChain = juce::dsp::ProcessorChain<CutFilter, CutFilter, EQFilter, EQFilter, EQFilter, EQFilter>;
     MonoChain leftChain, rightChain;
-    
+
     enum ChainPositions
     {
         LowCut,
+        HighCut,
         Reso,
         Mud,
         Presence,
-        Depth,
-        HighCut
+        Depth
     };
-    
 //    =====  UPDATE COEFFICIENTS =====
     
     using Coefficients = EQFilter::CoefficientsPtr; //alias for type needed to update coef
     static void updateCoefficients(Coefficients& old, const Coefficients& replacements);
-    
-//    =====  UPDATE FILTERS =====
-    void updateBellFitlers(const ChainSettings& chainSettings);
-    void updateShelfFilters(const ChainSettings& chainSettings);
     void updateLowCutFilters(const ChainSettings& chainSettings);
     void updateHighCutFilters(const ChainSettings& chainSettings);
+    void updateResoFilters(const ChainSettings& chainSettings);
+    void updateMudFilters(const ChainSettings& chainSettings);
+    void updatePresenceFilters(const ChainSettings& chainSettings);
+    void updateDepthFilters(const ChainSettings& chainSettings);
     void updateFilters();
-    void parameterChanged (const juce::String& parameterID, float newValue) override;
-    std::atomic<bool> filtersNeedUpdate { true };
+    ChainSettings getChainSettings() const;
+    ChainSettings lastChainSettings;
+
+
+    juce::AudioParameterFloat* lowCutFreqParam {nullptr};
+    juce::AudioParameterChoice* lowCutSlopeParam {nullptr};
+    juce::AudioParameterFloat* highCutFreqParam {nullptr};
+    juce::AudioParameterChoice* highCutSlopeParam {nullptr};
+    juce::AudioParameterFloat* resoFreqParam {nullptr};
+    juce::AudioParameterBool* resoActiveParam {nullptr};
+    juce::AudioParameterBool* resoExtremeActiveParam {nullptr};
+    juce::AudioParameterFloat* mudFreqParam {nullptr};
+    juce::AudioParameterBool* mudActiveParam {nullptr};
+    juce::AudioParameterBool* mudExtremeActiveParam {nullptr};
+    juce::AudioParameterChoice* presenceModeParam {nullptr};
+    juce::AudioParameterFloat* presenceGainParam {nullptr};
+    juce::AudioParameterChoice* depthModeParam {nullptr};
+    juce::AudioParameterFloat* depthGainParam {nullptr};
+
+    juce::SmoothedValue<float>
+    lowCutFreqParamSmoother,
+    highCutFreqParamSmoother,
+    resoFreqParamSmoother,
+    mudFreqParamSmoother,
+    presenceGainParamSmoother,
+    depthGainParamSmoother,
+    compAmountParamSmoother;
+
+    std::vector<std::pair<juce::AudioParameterFloat*, juce::SmoothedValue<float>*>> smootherBindings;
+
+
 
     template<int Index, typename ChainType, typename CoefficientType>
-    void update(ChainType& chain, const CoefficientType& cutCoefficients)
+    void updateCutStage(ChainType& chain, const CoefficientType& cutCoefficients, const Slope& slope)
     {
-        updateCoefficients(chain.template get<Index>().coefficients, cutCoefficients[Index]);
-        chain.template setBypassed<Index>(false);
+        const auto stageIsUsed = Index <= static_cast<int>(slope);
+
+        if (stageIsUsed)
+        {
+            if (chain.template isBypassed<Index>())
+                chain.template get<Index>().reset();
+
+            updateCoefficients(chain.template get<Index>().coefficients, cutCoefficients[Index]);
+        }
+
+        chain.template setBypassed<Index>(! stageIsUsed);
     }
-    
+
     template<typename ChainType, typename CoefficientType>
     void updateCutFilter(ChainType& chain, const CoefficientType& cutCoefficients, const Slope& slope)
     {
-
-        chain.template setBypassed<0>(true);
-        chain.template setBypassed<1>(true);
-        chain.template setBypassed<2>(true);
-        chain.template setBypassed<3>(true);
-        
-        
-        switch (slope)
-        {
-            case Slope_48:
-            {
-                update<3>(chain, cutCoefficients);
-            }
-                
-            case Slope_36:
-            {
-                update<2>(chain, cutCoefficients);
-            }
-
-            case Slope_24:
-            {
-                update<1>(chain, cutCoefficients);
-            }
-
-            case Slope_12:
-            {
-                update<0>(chain, cutCoefficients);
-            }
-            
-        }
-        
+        updateCutStage<0>(chain, cutCoefficients, slope);
+        updateCutStage<1>(chain, cutCoefficients, slope);
+        updateCutStage<2>(chain, cutCoefficients, slope);
+        updateCutStage<3>(chain, cutCoefficients, slope);
     }
 
     //==============================================================================
 //    COMPRESSOR PART
     //==============================================================================
     
-    using CompFilter = juce::dsp::LinkwitzRileyFilter<float>;
-    CompFilter LP1, HP1, AP2, LP2, HP2;
+    GTMidBandCompressor midBandCompressor;
+    juce::AudioParameterFloat* compAmountParam {nullptr};
+    juce::AudioParameterBool* compActiveParam {nullptr};
+    juce::AudioParameterBool* compExtremeActiveParam {nullptr};
 
-//    juce::AudioParameterFloat* compRangeStartParameter {nullptr};
-//    juce::AudioParameterFloat* compRangeEndParameter {nullptr};
-    
-    std::array<juce::AudioBuffer<float>, 3> filterBuffers;
-    
+    //==============================================================================
+//    LEVELS PART
+    //==============================================================================
+
     juce::dsp::Gain<float> inputGain, outputGain;
     juce::AudioParameterFloat* inputGainParam {nullptr};
     juce::AudioParameterFloat* outputGainParam {nullptr};
-    juce::AudioParameterBool* loudnessMatchParam {nullptr};
-    float smoothedInputMeanSquare {0.f};
-    float smoothedOutputMeanSquare {0.f};
-    float loudnessMatchGainDb {0.f};
-    static float getBufferMeanSquare (const juce::AudioBuffer<float>& buffer);
+    juce::AudioParameterBool* loudnessMatchActiveParam {nullptr};
+    juce::AudioParameterBool* pluginBypassActiveParam {nullptr};
+    juce::LinearSmoothedValue<float> smoothedBypassValue {1.f};
+    AALevelMatch levelMatch;
+    juce::AudioBuffer<float> dryBuffer {};
+
+    void updateGainState();
+
+
+
+
 
     template<typename T, typename U>
     void applyGain(T& buffer, U& gain)
@@ -218,12 +221,28 @@ private:
         auto ctx = juce::dsp::ProcessContextReplacing<float>(block);
         gain.process(ctx);
     }
-    
-    void updateCompState();
-    void splitBands(const juce::AudioBuffer<float>& inputBuffer);
-    
-    void linkCompParameters();
 
+
+    /// PARAM FUNCTIONS
+    void linkParameters();
+    template<typename ParamType, typename Params, typename Funcs> // <-- new
+    void initCachedParams(Params paramsArray, Funcs funcsArray)
+    {
+        for (size_t i = 0; i < paramsArray.size(); ++i)
+        {
+            auto ptrToParamPtr = paramsArray[i];
+            *ptrToParamPtr = dynamic_cast<ParamType>(treeState.getParameter(funcsArray[i]()));
+            jassert(*ptrToParamPtr != nullptr);
+        }
+    }
+
+    enum class SmootherUpdateMode
+    {
+        initialize,
+        liveInRealTime
+    };
+
+    void updateSmootherFromParams(int numSamplesToSkip, SmootherUpdateMode mode);
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuitarToolsAudioProcessor)
 };

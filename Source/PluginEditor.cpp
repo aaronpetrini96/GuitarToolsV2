@@ -7,24 +7,14 @@ GuitarToolsAudioProcessorEditor::GuitarToolsAudioProcessorEditor (GuitarToolsAud
     setWantsKeyboardFocus(true);
     addAndMakeVisible(headerPanel);
     addAndMakeVisible(mainPanel);
-    addChildComponent (settingsPanel);
     addChildComponent (infoPanel);
-    addChildComponent (footerPanel);
-    footerPanel.setVisible (audioProcessor.showTooltips);
-    settingsPanel.setShowTooltips (audioProcessor.showTooltips);
-    settingsPanel.onShowTooltipsChanged = [this] (const bool shouldShow)
+    addChildComponent (tooltipsPanel);
+    tooltipsPanel.setVisible (audioProcessor.showTooltips);
+    headerPanel.onInfoClicked = [this]
     {
-        audioProcessor.showTooltips = shouldShow;
-        footerPanel.setVisible (shouldShow);
-        updateEditorSize();
-    };
-    headerPanel.onSettingsClicked = [this] { updatePanelsVisibility (! settingsPanel.isVisible(), false); };
-    settingsPanel.onHidden = [this]
-    {
+        infoPanel.setVisible (! infoPanel.isVisible());
         updateMainPanelAlpha();
-        headerPanel.setSettingsButtonOn (false);
     };
-    headerPanel.onInfoClicked = [this] { updatePanelsVisibility (false, ! infoPanel.isVisible()); };
     infoPanel.onHidden = [this]
     {
         updateMainPanelAlpha();
@@ -33,25 +23,9 @@ GuitarToolsAudioProcessorEditor::GuitarToolsAudioProcessorEditor (GuitarToolsAud
     updateMainPanelAlpha();
     addMouseListener (this, true);
 
-    addAndMakeVisible(resizeButton);
-    resizeButton.setColour(juce::DrawableButton::ColourIds::backgroundOnColourId, GTColors::transparent);
-    resizeButton.setColour(juce::DrawableButton::ColourIds::backgroundColourId, GTColors::transparent);
-    if (const auto icon = juce::Drawable::createFromImageData (BinaryData::resizeLines_svg, BinaryData::resizeLines_svgSize))
+    headerPanel.onSettingsClicked = [this]
     {
-        const auto iconNormal = icon->createCopy();
-        const auto iconOver = icon->createCopy();
-        const auto iconActive = icon->createCopy();
-        iconNormal->replaceColour (GTColors::iconSVGColor, GTColors::iconOverColor);
-        iconOver->replaceColour (GTColors::iconSVGColor, GTColors::iconNormalColor);
-        iconActive->replaceColour (GTColors::iconSVGColor, GTColors::activeNeonBlue);
-        resizeButton.setImages (iconNormal.get(), iconOver.get(), iconActive.get(), nullptr, iconActive.get());
-    }
-    resizeButton.setToggleable(true);
-    resizeButton.setClickingTogglesState(false);
-    resizeButton.onClick = [this] 
-    {
-        resizeButton.setToggleState(true, juce::dontSendNotification); 
-        showUISizeMenu(); 
+        showSettingsMenu(headerPanel.settingsButton);
     };
 
     setResizable (false, false);
@@ -64,7 +38,7 @@ GuitarToolsAudioProcessorEditor::~GuitarToolsAudioProcessorEditor()
 
 void GuitarToolsAudioProcessorEditor::updateMainPanelAlpha()
 {
-    if (settingsPanel.isVisible() || infoPanel.isVisible() || headerPanel.isBypassed())
+    if (infoPanel.isVisible() || headerPanel.isBypassed())
         mainPanel.setAlpha (0.4f);
     else
         mainPanel.setAlpha (1.0f);
@@ -72,16 +46,22 @@ void GuitarToolsAudioProcessorEditor::updateMainPanelAlpha()
 
 void GuitarToolsAudioProcessorEditor::updateEditorSize()
 {
-    const auto contentHeight = (float) defaultUIHeight * audioProcessor.uiScale;
-    const auto footerHeight = audioProcessor.showTooltips ? contentHeight * headerHeightRatio * footerHeightRatio : 0.0f;
-    setSize (juce::roundToInt ((float) defaultUIWidth * audioProcessor.uiScale), juce::roundToInt (contentHeight + footerHeight));
-}
+    const auto footerRatio = audioProcessor.showTooltips ? headerHeightRatio * tooltipsHeightRatio : 0.0f;
+    const auto defaultEditorHeight = (float) defaultUIHeight * (1.0f + footerRatio);
+    auto effectiveScale = audioProcessor.uiScale;
 
-void GuitarToolsAudioProcessorEditor::updatePanelsVisibility (bool shouldShowSettings, bool shouldShowInfo)
-{
-    settingsPanel.setVisible (shouldShowSettings);
-    infoPanel.setVisible (shouldShowInfo);
-    updateMainPanelAlpha();
+    if (const auto* display = juce::Desktop::getInstance().getDisplays().getDisplayForRect (getScreenBounds()))
+    {
+        const auto usableBounds = display->userBounds.reduced (display->userBounds.getWidth() * 0.05f,
+                                                                display->userBounds.getHeight() * 0.05f);
+        const auto widthScaleLimit = usableBounds.getWidth() / (float) defaultUIWidth;
+        const auto heightScaleLimit = usableBounds.getHeight() / defaultEditorHeight;
+        effectiveScale = juce::jmin (effectiveScale, widthScaleLimit, heightScaleLimit);
+    }
+
+    const auto contentHeight = (float) defaultUIHeight * effectiveScale;
+    const auto footerHeight = audioProcessor.showTooltips ? contentHeight * headerHeightRatio * tooltipsHeightRatio : 0.0f;
+    setSize (juce::roundToInt ((float) defaultUIWidth * effectiveScale), juce::roundToInt (contentHeight + footerHeight));
 }
 
 //==============================================================================
@@ -91,35 +71,35 @@ void GuitarToolsAudioProcessorEditor::paint (juce::Graphics& g)
     const auto boundsFHeight = boundsF.getHeight();
 
     g.fillAll(juce::Colours::black);
+
     if (metalBackground != nullptr)
         metalBackground->drawWithin (g, boundsF, juce::RectanglePlacement::fillDestination, 1.f);
 
     g.setGradientFill (juce::ColourGradient::vertical (GTColors::mainPanelTop.withAlpha(0.45f), 0.0f, GTColors::mainPanelBottom.brighter(0.12f).withAlpha(0.45f), boundsFHeight));
     g.fillRect (boundsF);
     g.fillAll(juce::Colours::black.withAlpha(0.1f));
+
+    // const auto dividerThickness = boundsF.getWidth() * 0.003f;
+    // g.setColour (GTColors::dividerLinesStart);
+    // g.drawRect (boundsF.reduced(dividerThickness* 0.5f), dividerThickness);
 }
 
 void GuitarToolsAudioProcessorEditor::resized()
 {
-    const auto boundsF = getLocalBounds().toFloat();
+    const auto boundsF =  getLocalBounds().toFloat();
     const auto boundsFWidth = boundsF.getWidth();
     const auto contentHeight = boundsFWidth * (float) defaultUIHeight / (float) defaultUIWidth;
     const float headerH = contentHeight * headerHeightRatio;
-    const float footerH = headerH * footerHeightRatio;
+    const auto tooltipsPanelH = tooltipsPanel.isVisible() ? headerH * tooltipsHeightRatio : 0.0f;
 
-    headerPanel.setBounds(boundsF.withHeight(headerH).toNearestInt());
-    const auto mainPanelBounds = boundsF.withHeight(contentHeight - headerH).withY(headerH);
+    headerPanel.setBounds (boundsF.withHeight (headerH).toNearestInt());
+    const auto mainPanelBounds = boundsF.withHeight (contentHeight - headerH).withY (headerH);
     mainPanel.sectionTitleH = mainPanelBounds.getHeight() * 0.07f;
-    mainPanel.setBounds(mainPanelBounds.toNearestInt());
-    footerPanel.setBounds(boundsF.withHeight(footerH).withY(contentHeight).toNearestInt());
+    mainPanel.setBounds (mainPanelBounds.toNearestInt());
+    tooltipsPanel.setBounds (boundsF.withHeight (tooltipsPanelH).withY (contentHeight).toNearestInt());
 
-    const auto resizeButtonSize = contentHeight * 0.045f;
-    const auto resizeButtonGap = resizeButtonSize * 0.52f;
-    resizeButton.setBounds (boundsF.withSize(resizeButtonSize, resizeButtonSize)
-                            .withCentre({boundsFWidth - resizeButtonGap, contentHeight - resizeButtonGap}).toNearestInt());
-    const auto settingsPanelSize = boundsFWidth * 0.4f;
-    settingsPanel.setBounds (mainPanelBounds.withSizeKeepingCentre (settingsPanelSize, settingsPanelSize).toNearestInt());
-    infoPanel.setBounds (mainPanelBounds.withSizeKeepingCentre (settingsPanelSize, settingsPanelSize).toNearestInt());
+    const auto infoPanelSize = boundsFWidth * 0.4f;
+    infoPanel.setBounds (mainPanelBounds.withSizeKeepingCentre (infoPanelSize, infoPanelSize).toNearestInt());
 }
 
 void GuitarToolsAudioProcessorEditor::mouseDown (const juce::MouseEvent& event)
@@ -148,35 +128,63 @@ void GuitarToolsAudioProcessorEditor::mouseEnter (const juce::MouseEvent& event)
             tooltipText = tooltipClient->getTooltip();
     }
 
-    footerPanel.setTooltipText (tooltipText);
+    tooltipsPanel.setTooltipText (tooltipText);
 }
 
 void GuitarToolsAudioProcessorEditor::mouseExit (const juce::MouseEvent&)
 {
-    footerPanel.setTooltipText ({});
+    tooltipsPanel.setTooltipText ({});
 }
 
-void GuitarToolsAudioProcessorEditor::showUISizeMenu()
+void GuitarToolsAudioProcessorEditor::showSettingsMenu(juce::DrawableButton& button)
 {
+    juce::PopupMenu settingsMenu;
     juce::PopupMenu uiSizeMenu;
-    uiSizeMenu.setLookAndFeel (&resizeButtonLAF);
-    resizeButtonLAF.menuFontHeight = (float) resizeButton.getHeight() * 0.675f;
+    settingsMenu.setLookAndFeel (&settingsMenuLAF);
+    uiSizeMenu.setLookAndFeel (&settingsMenuLAF);
+    settingsMenuLAF.menuFontHeight = (float) button.getHeight() * 0.675f;
+
+    settingsMenu.addSectionHeader ("SETTINGS");
+    settingsMenu.addColouredItem (1, audioProcessor.showTooltips ? "Hide Tooltips" : "Show Tooltips", GTColors::iconNormalColor);
 
     for (int optionIndex = 0; optionIndex < uiSizeNames.size(); ++optionIndex)
     {
         const auto isSelectedSize = juce::approximatelyEqual (uiScales[(size_t) optionIndex], audioProcessor.uiScale);
-        uiSizeMenu.addColouredItem (optionIndex + 1, uiSizeNames[optionIndex], isSelectedSize ? GTColors::activeNeonBlue : GTColors::iconNormalColor);
+        uiSizeMenu.addColouredItem (optionIndex + 100, uiSizeNames[optionIndex], isSelectedSize ? GTColors::activeNeonBlue : GTColors::iconNormalColor);
     }
 
-    uiSizeMenu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (resizeButton)
-                                                        .withPreferredPopupDirection (juce::PopupMenu::Options::PopupDirection::upwards),
+    settingsMenu.addSubMenu ("UI Size", uiSizeMenu);
+    settingsMenu.addColouredItem (2, "Show Info", GTColors::iconNormalColor);
+
+    const auto menuWidth = button.getHeight() * 4;
+    const auto buttonScreenBounds = button.getScreenBounds();
+    const auto menuTargetArea = buttonScreenBounds.withX (buttonScreenBounds.getX() - menuWidth);
+
+    settingsMenu.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (button)
+                                                         .withTargetScreenArea (menuTargetArea)
+                                                         .withMinimumWidth (menuWidth)
+                                                         .withPreferredPopupDirection (juce::PopupMenu::Options::PopupDirection::downwards),
                               [this] (const int selectedItemIndex)
                               {
-                                  resizeButton.setToggleState(false, juce::dontSendNotification); 
-                                  if (selectedItemIndex == 0)
-                                      return;
+                                  headerPanel.settingsButton.setToggleState (false, juce::dontSendNotification);
 
-                                  audioProcessor.uiScale = uiScales[(size_t) (selectedItemIndex - 1)];
-                                  updateEditorSize();
+                                  if (selectedItemIndex == 1)
+                                  {
+                                      audioProcessor.showTooltips = ! audioProcessor.showTooltips;
+                                      tooltipsPanel.setVisible (audioProcessor.showTooltips);
+                                      updateEditorSize();
+                                  }
+                                  else if (selectedItemIndex == 2)
+                                  {
+                                      infoPanel.setVisible (true);
+                                      infoPanel.toFront (true);
+                                      updateMainPanelAlpha();
+                                  }
+                                  else if (selectedItemIndex >= 100)
+                                  {
+                                      audioProcessor.uiScale = uiScales[(size_t) (selectedItemIndex - 100)];
+                                      updateEditorSize();
+                                  }
+
                               });
 }

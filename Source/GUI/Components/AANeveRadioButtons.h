@@ -14,9 +14,11 @@
 class AANeveRadioButtons : public juce::Component
 {
 public:
-    AANeveRadioButtons (juce::AudioProcessorValueTreeState& apvts, const juce::ParameterID& parameterID, const juce::StringArray& newNameText = {}, juce::UndoManager* undoManager = nullptr)
-        : nameText (newNameText)
+    AANeveRadioButtons (juce::RangedAudioParameter& parameterToUse, const juce::StringArray& newNameText = {})
+        : parameter (parameterToUse), nameText (newNameText)
     {
+        setComponentID (parameter.getParameterID());
+
         for (auto index = 0; index < 4; ++index)
         {
             auto* button = buttons.add (new juce::DrawableButton ({}, juce::DrawableButton::ImageFitted));
@@ -28,17 +30,6 @@ public:
             addAndMakeVisible (button);
         }
 
-        attachment = std::make_unique<juce::ParameterAttachment> (
-            *apvts.getParameter (parameterID.getParamID()),
-            [this] (float newValue)
-            {
-                buttons[juce::jlimit (0, buttons.size() - 1, juce::roundToInt (newValue))]
-                    ->setToggleState (true, juce::dontSendNotification);
-
-                repaint();
-            },
-            undoManager);
-
         for (auto index = 0; index < buttons.size(); ++index)
             buttons[index]->onClick = [this, index]
             {
@@ -46,7 +37,18 @@ public:
                 repaint();
             };
 
-        attachment->sendInitialUpdate();
+        createAttachment (nullptr);
+    }
+
+    void setUndoManager (juce::UndoManager& undoManager)
+    {
+        createAttachment (&undoManager);
+    }
+
+    void setTooltip (const juce::String& newTooltip)
+    {
+        for (auto* button : buttons)
+            button->setTooltip (newTooltip);
     }
 
     void paint (juce::Graphics& g) override
@@ -95,9 +97,26 @@ public:
     float capsToWidthRatio {0.9354f}, capsToHeightRatio {0.8296f};
 
 private:
+    void createAttachment (juce::UndoManager* undoManager)
+    {
+        attachment = std::make_unique<juce::ParameterAttachment> (
+            parameter,
+            [this] (float newValue)
+            {
+                buttons[juce::jlimit (0, buttons.size() - 1, juce::roundToInt (newValue))]
+                    ->setToggleState (true, juce::dontSendNotification);
+
+                repaint();
+            },
+            undoManager);
+
+        attachment->sendInitialUpdate();
+    }
+
     std::unique_ptr<juce::Drawable> housing = juce::Drawable::createFromImageData (BinaryData::neveRadioStrip_bg_png, BinaryData::neveRadioStrip_bg_pngSize);
     std::unique_ptr<juce::Drawable> capOff = juce::Drawable::createFromImageData (BinaryData::neveRadioCap_off_v2_png, BinaryData::neveRadioCap_off_v2_pngSize);
     std::unique_ptr<juce::Drawable> capOn = juce::Drawable::createFromImageData (BinaryData::neveRadioCap_on_v2_png, BinaryData::neveRadioCap_on_v2_pngSize);
+    juce::RangedAudioParameter& parameter;
     juce::StringArray nameText;
     juce::OwnedArray<juce::DrawableButton> buttons;
     std::unique_ptr<juce::ParameterAttachment> attachment;

@@ -1,6 +1,8 @@
 #include "PresetManager.h"
 #include "BinaryData.h"
 
+static const juce::StringArray rootPresetFileNames {"Start From Here.xml", "Reset To Default.xml"};
+
 PresetManager::PresetManager(GuitarToolsAudioProcessor& processor, juce::ComboBox& presetBox) : audioProcessor(processor),
 presetBox(presetBox)
 {
@@ -76,10 +78,13 @@ void PresetManager::refreshPresetList()
 
     const auto presetFolder = getPresetFolder();
 
-    if (const auto defaultPresetFile = presetFolder.getChildFile ("Default.xml"); defaultPresetFile.existsAsFile())
+    for (const auto& rootPresetFileName : rootPresetFileNames)
     {
-        presetFiles.add (defaultPresetFile);
-        presetBox.addItem (defaultPresetFile.getFileNameWithoutExtension(), presetFiles.size());
+        if (const auto rootPresetFile = presetFolder.getChildFile (rootPresetFileName); rootPresetFile.existsAsFile())
+        {
+            presetFiles.add (rootPresetFile);
+            presetBox.addItem (rootPresetFile.getFileNameWithoutExtension(), presetFiles.size());
+        }
     }
 
     addPresetFolderToMenu (presetFolder.getChildFile ("Factory Presets"));
@@ -130,7 +135,7 @@ void PresetManager::installFactoryPresets()
         if (! originalFilename.endsWithIgnoreCase (".xml"))
             continue;
 
-        const auto presetFile = (originalFilename == "Default.xml" ? presetFolder : factoryPresetFolder).getChildFile (originalFilename);
+        const auto presetFile = (rootPresetFileNames.contains (originalFilename) ? presetFolder : factoryPresetFolder).getChildFile (originalFilename);
 
         if (presetFile.existsAsFile())
             continue;

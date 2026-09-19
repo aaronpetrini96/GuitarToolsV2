@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../Utils/GTLook.h"
+#include "../../Utils/AALook.h"
 #include <functional>
 
 class InfoPanel : public juce::Component
@@ -12,27 +12,17 @@ public:
         setInterceptsMouseClicks (true, true);
         setAlwaysOnTop(true);
 
-
-        for (auto* link : { &manualLink, &emailLink, &reportBugLink })
+        if (const auto closeIcon = juce::Drawable::createFromImageData(BinaryData::closeXIcon_svg, BinaryData::closeXIcon_svgSize))
         {
-            addAndMakeVisible (*link);
-            link->setColour (juce::HyperlinkButton::textColourId, GTColors::almostWhite.withAlpha (0.9f));
+            addAndMakeVisible (closeButton);
+            const auto iconNormal = closeIcon->createCopy();
+            const auto iconActive = closeIcon->createCopy();
+            const auto iconOver = closeIcon->createCopy();
+            iconOver->replaceColour (GTColors::iconSVGColor, GTColors::iconOverColor);
+            iconActive->replaceColour (GTColors::iconSVGColor, GTColors::activeNeonBlue);
+            closeButton.setImages(iconNormal.get(), iconOver.get(),iconOver.get(), nullptr, iconActive.get());
         }
-
-        manualLink.onClick = []
-        {
-            const auto manualFile = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("GuitarTools2_User_Manual.pdf");
-            if (manualFile.replaceWithData (BinaryData::guitarTools2UserManual_pdf, BinaryData::guitarTools2UserManual_pdfSize))
-                manualFile.startAsProcess();
-        };
-    }
-
-    std::function<void()> onHidden;
-
-    void visibilityChanged() override
-    {
-        if (! isVisible() && onHidden != nullptr)
-            onHidden();
+        closeButton.onClick = [this] { setVisible (false); };
     }
 
     void paint (juce::Graphics& g) override
@@ -40,26 +30,41 @@ public:
         const auto boundsF = getLocalBounds().toFloat();
         const auto boundsFHeight = boundsF.getHeight();
         const auto boundsFWidth = boundsF.getWidth();
-        const auto cardCorners = boundsFHeight * 0.05f;
-        const auto borderThickness = boundsFHeight * 0.006f;
-        g.setGradientFill(juce::ColourGradient::vertical(GTColors::presetBox.darker(0.9f), 0.f, GTColors::presetBox.darker(0.8f), boundsFHeight));
+        g.setGradientFill(juce::ColourGradient::vertical(GTColors::infoPanelTop, 0.f, GTColors::infoPanelBottom, boundsFHeight));
         g.fillRect(boundsF);
-        g.setColour (GTColors::dividerLinesEnd);
-        g.drawRoundedRectangle (boundsF.reduced (borderThickness * 0.5f), cardCorners - borderThickness * 0.5f, borderThickness);
+        // g.setColour (GTColors::presetBox);
+        // g.drawRoundedRectangle (boundsF.reduced (borderThickness * 0.5f), cardCorners - borderThickness * 0.5f, borderThickness);
 
-        const auto logoAPSize = boundsFWidth * 0.33f;
-        apLogoBounds = boundsF.withSizeKeepingCentre(logoAPSize, logoAPSize).withY(boundsFHeight * 0.055f);
+        const auto logoAPSize = boundsFHeight * JUCE_LIVE_CONSTANT(0.2f);
+        const auto apLogoBounds = boundsF.withSizeKeepingCentre(logoAPSize, logoAPSize).withY(boundsFHeight * 0.055f);
         g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
         g.drawImage(apLogo, apLogoBounds, juce::RectanglePlacement::fillDestination, false);
-        const auto gtLogoHeight = boundsFHeight * 0.1f;
+
+        const auto gtLogoHeight = boundsFHeight * 0.125f;
         const auto gtLogoWidth = gtLogoHeight * (static_cast<float>(gtLogo.getWidth())/ static_cast<float>(gtLogo.getHeight()));
         const auto gtLogoBounds = boundsF.withSizeKeepingCentre(gtLogoWidth, gtLogoHeight).withY(apLogoBounds.getBottom());
         g.drawImage(gtLogo, gtLogoBounds, juce::RectanglePlacement::fillDestination, false);
 
-        const auto textHeight = boundsFHeight * 0.05f;
-        g.setFont(GTFonts::ibmPlexMonoMedium(textHeight * 0.775f).withExtraKerningFactor(0.01f));
-        g.setColour(GTColors::almostWhite.withAlpha(0.8f));
-        g.drawFittedText("GuitarTools2 v1.01. Copyright © APAudio 2026.", gtLogoBounds.withSizeKeepingCentre(gtLogoWidth, textHeight).withBottomY(boundsFHeight - textHeight * 0.5f).toNearestInt(),juce::Justification::centredBottom, 1);
+        const auto dividerWidth = boundsFWidth * 0.46f;
+        const auto dividerThickness = boundsFHeight * 0.003f;
+        const auto dividerBounds = boundsF.withSizeKeepingCentre(dividerWidth, dividerThickness).withY(gtLogoBounds.getBottom() + boundsFHeight * 0.075f);
+        const auto dividerEdgeColour = GTColors::infoPanelDivider.withAlpha(0.0f);
+        juce::ColourGradient dividerGradient (dividerEdgeColour, dividerBounds.getX(), 0.f, dividerEdgeColour, dividerBounds.getRight(), 0.f, false);
+        dividerGradient.addColour(0.5, GTColors::infoPanelDivider);
+        g.setGradientFill(dividerGradient);
+        g.fillRect(dividerBounds);
+
+        const auto versionTextHeight = boundsFHeight * 0.047f;
+        const auto copyrightTextHeight = versionTextHeight * 0.8f;
+        const auto versionBounds = gtLogoBounds.withSizeKeepingCentre(gtLogoWidth, versionTextHeight).withY(dividerBounds.getBottom() + boundsFHeight * 0.055f);
+        const auto copyrightBounds = versionBounds.withHeight(copyrightTextHeight).withY(versionBounds.getBottom() + boundsFHeight * 0.035f);
+
+        g.setFont(AAFonts::interMedium(versionTextHeight).withExtraKerningFactor(0.025f));
+        g.setColour(GTColors::sectionTitleText);
+        g.drawText(juce::String("Version 1.00"), versionBounds, juce::RectanglePlacement::centred);
+        g.setFont(AAFonts::interMedium(copyrightTextHeight).withExtraKerningFactor(0.025f));
+        g.setColour(GTColors::infoPanelSecondaryText);
+        g.drawText(juce::String(juce::CharPointer_UTF8("Copyright \xc2\xa9 APAudio 2026")), copyrightBounds, juce::RectanglePlacement::centred);
     }
 
     void resized() override
@@ -67,30 +72,13 @@ public:
         const auto boundsF = getLocalBounds().toFloat();
         const auto boundsFHeight = boundsF.getHeight();
         const auto boundsFWidth = boundsF.getWidth();
-
-        const auto linkHeight = boundsFHeight * 0.08f;
-        const auto linkBounds = boundsF.withSize(boundsFWidth, linkHeight).withCentre({boundsF.getCentreX(), boundsFHeight * 0.625f});
-
-        for (auto* l : { &manualLink, &emailLink, &reportBugLink })
-            l->setFont(GTFonts::interSemiBold (linkHeight * 0.9).withExtraKerningFactor(0.015f), false);
-
-        manualLink.setBounds (linkBounds.toNearestInt());
-        emailLink.setBounds (linkBounds.translated (0.0f, linkHeight).toNearestInt());
-        reportBugLink.setBounds(linkBounds.translated (0.0f, linkHeight * 2.0f).toNearestInt());
-        // portfolioLink.setBounds (linkBounds.translated (0.0f, linkHeight * 3.0f).toNearestInt());
-
+        const auto closeButtonSize = boundsFHeight * 0.0625f;
+        closeButton.setBounds (boundsF.withSize (closeButtonSize, closeButtonSize).withRightX(boundsFWidth - closeButtonSize * 0.5f).withY(closeButtonSize * 0.5f).toNearestInt());
     }
 
 private:
-
-    juce::Rectangle<float> apLogoBounds{};
-    const float apLogoPOW {0.33f};
+    juce::DrawableButton closeButton {"closeButton", juce::DrawableButton::ImageFitted};
     juce::Image apLogo {juce::ImageCache::getFromMemory(BinaryData::logoAP_png, BinaryData::logoAP_pngSize)};
     juce::Image gtLogo {juce::ImageCache::getFromMemory(BinaryData::guitarTools2Logo_png, BinaryData::guitarTools2Logo_pngSize)};
-    juce::Label gTVersionLabel {"gTVersionLabel", "GuitarTools v2.0 © 2026 AP AudioTools."};
-    juce::HyperlinkButton manualLink {"GET THE MANUAL", {}};
-    juce::HyperlinkButton emailLink {"CONTACT ME", juce::URL {"mailto:aaron.petrini96@gmail.com"}};
-    juce::HyperlinkButton reportBugLink {"REPORT BUG", juce::URL {"mailto:aaron.petrini96@gmail.com?subject=BugReport_GuitarTools2&body=Please include DAW used and the action that caused the problem. Thanks!"}};
-    // juce::HyperlinkButton portfolioLink {"CHECK MY PORTFOLIO", juce::URL {"https://sites.google.com/view/aaronpetriniwebportfolio"}};
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (InfoPanel)
 };

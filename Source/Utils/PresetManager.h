@@ -9,8 +9,19 @@ class PresetManager
 public:
     PresetManager(GuitarToolsAudioProcessor& processor, juce::ComboBox& presetBox);
     
-    void savePreset();
-    void loadPreset();
+    enum class PresetType
+    {
+        factory,
+        user
+    };
+
+    void savePreset(const juce::String& presetName);
+    bool deletePreset(const juce::File& presetFile);
+    void loadPresetFile(const juce::File& presetFile);
+    juce::Array<juce::File> getPresetFiles(PresetType presetType) const;
+    juce::File getUserPresetFile(const juce::String& presetName) const;
+    juce::String getCurrentPresetName() const;
+
     void presetSelected();
     void refreshPresetList();
     int getItemIdForText(const juce::ComboBox&, const juce::String&);
@@ -25,6 +36,5 @@ private:
 
     GuitarToolsAudioProcessor& audioProcessor;
     juce::ComboBox& presetBox;
-    std::unique_ptr<juce::FileChooser> fileChooser;
     juce::Array<juce::File> presetFiles;
 };

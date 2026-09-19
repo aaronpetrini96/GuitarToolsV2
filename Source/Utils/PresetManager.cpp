@@ -9,54 +9,76 @@ presetBox(presetBox)
     
 }
 
-void PresetManager::savePreset()
+void PresetManager::savePreset(const juce::String& presetName)
 {
-    const auto userPresetFolder = getPresetFolder().getChildFile ("User Presets");
-    userPresetFolder.createDirectory();
-    
-    fileChooser = std::make_unique<juce::FileChooser> ("Save Preset", userPresetFolder, "*.xml");
-    
-    auto fileChooserFlags = juce::FileBrowserComponent::saveMode;
-    
-    fileChooser->launchAsync (fileChooserFlags, [this, userPresetFolder] (const juce::FileChooser& fileChooser)
-    {
-        juce::File selectedFile = fileChooser.getResult();
+    const auto presetFile = getUserPresetFile (presetName);
+    const auto legalPresetName = presetFile.getFileNameWithoutExtension();
 
-        if (selectedFile == juce::File())
-        {
-            if (userPresetFolder.findChildFiles (juce::File::findFiles, false).isEmpty())
-                userPresetFolder.deleteFile();
+    if (legalPresetName.isEmpty())
+        return;
 
-            return;
-        }
-        
-        if (selectedFile.existsAsFile() || selectedFile.create())
-        {
-            // Save the preset to the selected file
-            audioProcessor.savePreset(selectedFile);
-            DBG("Preset saved to: " + selectedFile.getFullPathName());
-            
-            // Optionally, refresh the preset list in the GUI or do other actions
-            refreshPresetList();
-            audioProcessor.setCurrentPresetName (selectedFile.getFileNameWithoutExtension());
-            presetBox.setSelectedId (presetFiles.indexOf (selectedFile) + 1, juce::dontSendNotification);
-        }
-        else
-        {
-            DBG("Error: Failed to save preset. File creation failed.");
-        };
-        
-    });
+    presetFile.getParentDirectory().createDirectory();
+    audioProcessor.savePreset (presetFile);
+
+    refreshPresetList();
+    audioProcessor.setCurrentPresetName (legalPresetName);
+    displayCurrentPresetName();
 }
 
-void PresetManager::loadPreset()
+bool PresetManager::deletePreset(const juce::File& presetFile)
 {
-    juce::FileChooser chooser ("Load Preset", juce::File::getSpecialLocation (juce::File::userDocumentsDirectory), "*.xml");
+    if (! presetFile.existsAsFile() || ! presetFile.deleteFile())
+        return false;
 
-    auto file = chooser.getResult();
-    audioProcessor.loadPreset (file);  // Calls your processor’s loadPreset
-    
-    applyPresetSelection(file.getFileNameWithoutExtension());
+    if (audioProcessor.getCurrentPresetName() == presetFile.getFileNameWithoutExtension())
+        audioProcessor.setCurrentPresetName ({});
+
+    refreshPresetList();
+    displayCurrentPresetName();
+    return true;
+}
+
+void PresetManager::loadPresetFile(const juce::File& presetFile)
+{
+    if (! presetFile.existsAsFile())
+        return;
+
+    audioProcessor.loadPreset (presetFile);
+    audioProcessor.setCurrentPresetName (presetFile.getFileNameWithoutExtension());
+    displayCurrentPresetName();
+}
+
+juce::Array<juce::File> PresetManager::getPresetFiles(const PresetType presetType) const
+{
+    juce::Array<juce::File> files;
+    const auto presetFolder = getPresetFolder();
+
+    if (presetType == PresetType::user)
+    {
+        files = presetFolder.getChildFile ("User Presets").findChildFiles (juce::File::findFiles, false, "*.xml");
+        files.sort();
+        return files;
+    }
+
+    for (const auto& rootPresetFileName : rootPresetFileNames)
+        if (const auto rootPresetFile = presetFolder.getChildFile (rootPresetFileName); rootPresetFile.existsAsFile())
+            files.add (rootPresetFile);
+
+    auto factoryPresetFiles = presetFolder.getChildFile ("Factory Presets").findChildFiles (juce::File::findFiles, false, "*.xml");
+    factoryPresetFiles.sort();
+    files.addArray (factoryPresetFiles);
+
+    return files;
+}
+
+juce::File PresetManager::getUserPresetFile(const juce::String& presetName) const
+{
+    return getPresetFolder().getChildFile ("User Presets").getChildFile (juce::File::createLegalFileName (presetName.trim()) + ".xml");
+}
+
+juce::String PresetManager::getCurrentPresetName() const
+{
+    return audioProcessor.getCurrentPresetName();
 }
 
 void PresetManager::presetSelected()

@@ -3,16 +3,14 @@
 //
 
 #pragma once
-#include "../../Utils/GTLook.h"
+#include "../../Utils/AALook.h"
 
 class PresetBrowserLAF : public juce::LookAndFeel_V4
 {
 public:
     PresetBrowserLAF()
     {
-        setColour (juce::PopupMenu::backgroundColourId, GTColors::transparent);
-        setColour (juce::PopupMenu::textColourId, GTColors::iconOverColor);
-        setColour (juce::PopupMenu::highlightedBackgroundColourId, GTColors::presetPopupHighlight.withAlpha(0.7f));
+        setColour (juce::ScrollBar::thumbColourId, GTColors::iconOverColor);
     }
 
     static PresetBrowserLAF* get()
@@ -25,81 +23,72 @@ public:
     {
         const juce::Rectangle<int> boxBounds (0, 0, width, height);
         const auto boundsF = boxBounds.toFloat();
-        const auto cornerSize = boundsF.getHeight() * 0.2f;
-        g.setGradientFill (juce::ColourGradient::horizontal (GTColors::presetBox, 0.0f, GTColors::presetBox.darker (0.1f), boundsF.getWidth()));
+        const auto cornerSize = boundsF.getWidth() * 0.025f;
+        const auto outlineThickness = boundsF.getWidth() * 0.001f;
+
+        // g.setGradientFill (juce::ColourGradient::vertical (GTColors::in, 0.0f, GTColors::gradientNavy, boundsF.getHeight()));
+        g.setColour(GTColors::presetBox);
         g.fillRoundedRectangle (boundsF, cornerSize);
+        // g.setColour (GTColors::sectionTitleText);
+        // g.drawRoundedRectangle (boundsF.reduced (outlineThickness * 0.5f), cornerSize, outlineThickness);
     }
 
-    int getMenuWindowFlags() override
+    void drawMenuListBackground (juce::Graphics& g, juce::Rectangle<float> bounds)
     {
-        return 0;
+        const auto cornerSize = bounds.getWidth() * 0.02f;
+        const auto outlineThickness = bounds.getWidth() * 0.001f;
+        g.setGradientFill (juce::ColourGradient::vertical (GTColors::gradientNavyDark, bounds.getY(), GTColors::gradientNavy, bounds.getBottom()));
+        g.fillRoundedRectangle (bounds, cornerSize);
+
+        g.setColour (GTColors::sectionTitleText);
+        g.drawRoundedRectangle (bounds.reduced (outlineThickness * 0.5f), cornerSize, outlineThickness);
     }
 
-    void drawPopupMenuBackgroundWithOptions (juce::Graphics& g, int width, int height,
-                                             const juce::PopupMenu::Options& options) override
+    void drawMenuListHeader (juce::Graphics& g, juce::Rectangle<float> bounds, const juce::String& text)
     {
-        const auto boundsF = juce::Rectangle<int> (0, 0, width, height).toFloat();
-        const auto cornerSize = (options.getStandardItemHeight() > 0
-                                     ? options.getStandardItemHeight()
-                                     : getPopupMenuFont().getHeight()) * 0.2f;
+        g.setColour (GTColors::sectionTitleText);
+        g.setFont (AAFonts::ibmPlexSansCondensedSemiBold (bounds.getHeight() * 0.55f));
+        g.drawFittedText (text.toUpperCase(), bounds.reduced (bounds.getWidth() * 0.05f, 0.0f).toNearestInt(), juce::Justification::centred, 1);
+    }
+    void drawButtonBackground(juce::Graphics& g, juce::Button& button, const juce::Colour& , bool , bool ) override
+    {
+        if (button.getConnectedEdgeFlags() == 0)
+            return;
 
-        g.setGradientFill (juce::ColourGradient::vertical (GTColors::presetBox, 0.0f, GTColors::presetBox.darker (0.1f), boundsF.getHeight()));
-        g.fillRoundedRectangle (boundsF, cornerSize);
+        const auto boundsF = button.getLocalBounds().toFloat();
+        const auto isSelected = button.getToggleState();
+        const auto underlineThickness = boundsF.getHeight() * (isSelected ? 0.06f : 0.03f);
+        g.setColour (isSelected ? GTColors::activeNeonBlue : GTColors::dividerLinesEnd);
+        g.fillRect (boundsF.withTop (boundsF.getBottom() - underlineThickness));
     }
 
-    juce::PopupMenu::Options getOptionsForComboBoxPopupMenu (juce::ComboBox& box, juce::Label& label) override
+    void drawButtonText (juce::Graphics& g, juce::TextButton& button, bool shouldDrawButtonAsHighlighted, bool) override
     {
-        const auto options = juce::LookAndFeel_V4::getOptionsForComboBoxPopupMenu (box, label);
-        const auto boxBounds = box.getScreenBounds().toFloat();
-        const auto popupTop = box.getParentComponent()->getScreenBounds().getBottom();
+        const auto boundsF = button.getLocalBounds().toFloat();
 
-        return options.withTargetScreenArea ({ juce::roundToInt(boxBounds.getRight()), popupTop,  juce::roundToInt(boxBounds.getWidth() * 0.75f), 0 })
-                      .withPreferredPopupDirection (juce::PopupMenu::Options::PopupDirection::downwards);
-    }
-
-    int getPopupMenuBorderSizeWithOptions (const juce::PopupMenu::Options&) override
-    {
-        return 0;
-    }
-
-    void drawPopupMenuItemWithOptions (juce::Graphics& g, const juce::Rectangle<int>& area,
-                                      bool isHighlighted, const juce::PopupMenu::Item& item,
-                                      const juce::PopupMenu::Options& options) override
-    {
-
-        auto itemBounds = area.toFloat();
-        if (isHighlighted && item.isEnabled)
+        if (button.getConnectedEdgeFlags() != 0)
         {
-            g.setColour (findColour (juce::PopupMenu::highlightedBackgroundColourId));
-            g.fillRect(itemBounds);
+            const auto tabTextColor = button.getToggleState() ? GTColors::sectionTitleText
+                                                              : (shouldDrawButtonAsHighlighted ? GTColors::almostWhite : GTColors::iconOverColor);
+            g.setColour (tabTextColor.withMultipliedAlpha (button.isEnabled() ? 1.0f : 0.4f));
+            g.setFont (AAFonts::ibmPlexSansCondensedSemiBold (boundsF.getHeight() * 0.55f));
+            g.drawFittedText (button.getButtonText(), boundsF.toNearestInt(), juce::Justification::centred, 1);
+            return;
         }
 
-        const auto* targetComponent = options.getTargetComponent();
-        const auto fontH = (targetComponent != nullptr ? targetComponent->getHeight() : itemBounds.getHeight()) * 0.675f;
-        itemBounds.reduce (itemBounds.getWidth() * 0.05f, itemBounds.getHeight() * 0.04f);
+        const auto fontHeight = boundsF.getHeight() * 0.675f;
+        const auto isSelected = button.getToggleState();
 
-        g.setColour (item.isTicked ? juce::Colours::white : GTColors::almostWhite);
-        g.setFont (item.isTicked ? GTFonts::interSemiBold(fontH) : GTFonts::interMedium (fontH));
-        g.drawFittedText (item.text, itemBounds.toNearestInt(), juce::Justification::centred, 1);
-
-        if (item.subMenu != nullptr && (item.itemID == 0 || item.subMenu->getNumItems() > 0))
-        {
-            const auto arrowHeight = itemBounds.getHeight() * 0.35f;
-            const auto arrowX = itemBounds.removeFromRight (arrowHeight).getX();
-            const auto arrowCentreY = itemBounds.getCentreY();
-
-            juce::Path arrow;
-            arrow.startNewSubPath (arrowX, arrowCentreY - arrowHeight * 0.5f);
-            arrow.lineTo (arrowX + arrowHeight * 0.6f, arrowCentreY);
-            arrow.lineTo (arrowX, arrowCentreY + arrowHeight * 0.5f);
-            g.strokePath (arrow, juce::PathStrokeType (itemBounds.getHeight() * 0.08f));
-        }
+        const auto textColor = isSelected ? GTColors::activeNeonBlue : GTColors::sectionTitleText;
+        g.setColour (shouldDrawButtonAsHighlighted ? textColor.withBrightness(2.f) : textColor);
+        g.setFont (isSelected ? AAFonts::interSemiBold (fontHeight) : AAFonts::interMedium (fontHeight));
+        g.drawFittedText (button.getButtonText(), boundsF.reduced (boundsF.getWidth() * 0.05f, boundsF.getHeight() * 0.04f).toNearestInt(), juce::Justification::centred, 1);
     }
 
     void positionComboBoxText (juce::ComboBox& box, juce::Label& label) override
     {
         label.setBounds (box.getLocalBounds());
-        label.setFont (GTFonts::interMedium (box.getHeight() * 0.675f));
+        label.setFont (AAFonts::interMedium (box.getHeight() * 0.675f));
         label.setJustificationType (juce::Justification::centred);
     }
 private:

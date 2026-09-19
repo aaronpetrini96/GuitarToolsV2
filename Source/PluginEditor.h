@@ -1,11 +1,3 @@
-/*
-  ==============================================================================
-
-    This file contains the basic framework code for a JUCE plugin editor.
-
-  ==============================================================================
-*/
-
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
@@ -18,12 +10,16 @@
 #include "GUI/Panels/HeaderPanel.h"
 #include "GUI/Panels/InfoPanel.h"
 #include "GUI/Panels/MainPanel.h"
-// #include "GUI/Panels/SettingsPanel.h"
-#include "GUI/LAF/OptionsPopupLAF.h"
+#include "GUI/Panels/SettingsOptionsPanel.h"
+#include "Utils/AAResizeUI.h"
+#include "GUI/Components/AAListOptionsPopup.h"
+#include "GUI/Components/AAPresetBrowser.h"
+#include "GUI/Components/AAPresetPopups.h"
 //==============================================================================
 /**
 */
-class GuitarToolsAudioProcessorEditor  : public juce::AudioProcessorEditor
+class GuitarToolsAudioProcessorEditor  : public juce::AudioProcessorEditor,
+                                         private juce::ComponentListener
 
 {
 public:
@@ -40,16 +36,16 @@ public:
 
 private:
     GuitarToolsAudioProcessor& audioProcessor;
-    void showSettingsMenu(juce::DrawableButton& button);
+    void showSettingsOptionsPopup();
+    void showUISizeOptions();
+    void showPresetBrowser();
     void updateMainPanelAlpha();
+    void componentVisibilityChanged (juce::Component& component) override;
     void updateEditorSize();
-    const juce::StringArray uiSizeNames {"X-SMALL", "SMALL", "DEFAULT", "LARGE", "X-LARGE", "HUGE"};
-    const std::array<float, 7> uiScales {0.6f, 0.8f, 1.0f, 1.2f, 1.4f, 1.75f};
 
-    const int defaultUIWidth = 770;
-    const int defaultUIHeight = 660;
     const float headerHeightRatio = 0.065f;
-    float tooltipsHeightRatio = 0.5f;
+    float tooltipsHeightRatio = 0.55f;
+    AAResizeUI uiResize {audioProcessor.uiScale, 770, 660};
 
     HeaderPanel headerPanel {audioProcessor};
     MainPanel mainPanel {audioProcessor};
@@ -57,7 +53,13 @@ private:
     TooltipsPanel tooltipsPanel;
     bool dismissInfoPanelOnMouseUp {false};
 
-    OptionsPopupLAF settingsMenuLAF;
-    std::unique_ptr<juce::Drawable> metalBackground =  juce::Drawable::createFromImageData(BinaryData::uiBackgroundTexture_png, BinaryData::uiBackgroundTexture_pngSize);
+    SettingsOptionsPanel settingsOptionsPopup {uiResize, audioProcessor.showTooltips};
+    AAListOptionsPopup sizeOptionsPopup;
+    AAPresetBrowser presetBrowser {headerPanel.presetManager};
+    AASavePresetPopup savePresetPopup;
+    AADeletePresetPopup deletePresetPopup;
+    juce::File presetToDelete;
+    juce::DrawableButton resizeButton {"GUI Size", juce::DrawableButton::ImageFitted};
+    juce::Image metalBackground = juce::ImageCache::getFromMemory (BinaryData::uiBackgroundTexture_png, BinaryData::uiBackgroundTexture_pngSize);
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuitarToolsAudioProcessorEditor)
 };

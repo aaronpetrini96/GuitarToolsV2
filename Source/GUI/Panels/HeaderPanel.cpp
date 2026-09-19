@@ -5,9 +5,10 @@
 
 
 HeaderPanel::HeaderPanel (GuitarToolsAudioProcessor& processor) :
-     bypassAttachment(processor.treeState, ParamIDs::getPluginBypassActiveName(), bypassButton),
+    presetManager (processor, presetBox),
+    bypassAttachment(processor.treeState, ParamIDs::getPluginBypassActiveName(), bypassButton),
     undoManager (processor.undoManager),
-    presetManager (processor, presetBox)
+    audioProcessor (processor)
 {
     setupIconButton (savePresetButton, BinaryData::saveIcon_svg, BinaryData::saveIcon_svgSize);
     savePresetButton.setTooltip("Save preset");
@@ -16,7 +17,7 @@ HeaderPanel::HeaderPanel (GuitarToolsAudioProcessor& processor) :
     bypassButton.setClickingTogglesState(true);
     bypassButton.onStateChange = [this] { if (onBypassChanged != nullptr) onBypassChanged(); };
 
-    setupIconButton(settingsButton, BinaryData::settingsWheel_svg, BinaryData::settingsWheel_svgSize);
+    setupIconButton(settingsButton, BinaryData::settingsLines_svg, BinaryData::settingsLines_svgSize);
     settingsButton.setClickingTogglesState (true);
     settingsButton.setTooltip("Settings");
     settingsButton.onClick = [this] { if (onSettingsClicked != nullptr) onSettingsClicked(); };
@@ -25,6 +26,39 @@ HeaderPanel::HeaderPanel (GuitarToolsAudioProcessor& processor) :
     setupIconButton (redoButton, BinaryData::redoIcon_svg, BinaryData::redoIcon_svgSize);
     undoButton.onClick = [this] { undoManager.undo(); };
     redoButton.onClick = [this] { undoManager.redo(); };
+    savePresetButton.onClick = [this] { if (onSavePresetClicked != nullptr) onSavePresetClicked(); };
+
+    setupIconButton (stateAButton, BinaryData::A_svg, BinaryData::A_svgSize);
+    setupIconButton (stateBButton, BinaryData::B_svg, BinaryData::B_svgSize);
+    stateAButton.setTooltip ("Switch to sound A");
+    stateBButton.setTooltip ("Switch to sound B");
+
+    for (auto* stateButton : {&stateAButton, &stateBButton})
+    {
+        stateButton->setClickingTogglesState (true);
+        stateButton->setRadioGroupId (1);
+    }
+
+    stateAButton.setToggleState (audioProcessor.isStateAActive(), juce::dontSendNotification);
+    stateBButton.setToggleState (! audioProcessor.isStateAActive(), juce::dontSendNotification);
+
+    stateAButton.onClick = [this]
+    {
+        if (! audioProcessor.isStateAActive())
+        {
+            audioProcessor.switchABState();
+            presetManager.displayCurrentPresetName();
+        }
+    };
+
+    stateBButton.onClick = [this]
+    {
+        if (audioProcessor.isStateAActive())
+        {
+            audioProcessor.switchABState();
+            presetManager.displayCurrentPresetName();
+        }
+    };
 
     undoManager.addChangeListener (this);
     changeListenerCallback (&undoManager);
@@ -34,8 +68,8 @@ HeaderPanel::HeaderPanel (GuitarToolsAudioProcessor& processor) :
     presetManager.refreshPresetList();
     presetManager.displayCurrentPresetName();
 
-    setupLogoButton();
-    logoButton.onClick = [this] { if (onInfoClicked != nullptr) onInfoClicked(); };
+    // setupLogoButton();
+    // logoButton.onClick = [this] { if (onInfoClicked != nullptr) onInfoClicked(); };
 }
 
 HeaderPanel::~HeaderPanel()
@@ -59,11 +93,20 @@ void HeaderPanel::paint (juce::Graphics& g)
 {
     const auto boundsF = getLocalBounds().toFloat();
     const auto boundsFWidth = boundsF.getWidth();
-    g.setGradientFill(juce::ColourGradient::horizontal(GTColors::dividerLinesEnd, 0.f, GTColors::presetBox.darker(0.775f), boundsFWidth));
-    g.fillRect(boundsF);
+    const auto boundsFHeight = boundsF.getHeight();
     const auto dividerHalfThickness = boundsFWidth * 0.003f;
-    g.setColour (GTColors::dividerLinesStart);
-    g.fillRect (0.0f, boundsF.getHeight() - dividerHalfThickness, boundsFWidth, dividerHalfThickness);
+
+    g.setGradientFill(juce::ColourGradient::horizontal(GTColors::headerPanelStart, 0.f, GTColors::gradientNavy, boundsFWidth));
+    g.fillRect(boundsF);
+    // g.setColour (GTColors::dividerLinesStart);
+    // g.fillRect (0.0f, boundsF.getHeight() - dividerHalfThickness, boundsFWidth, dividerHalfThickness);
+
+    const auto reducedB = boundsF.withTrimmedBottom(dividerHalfThickness);
+    const auto logoH = reducedB.getHeight() * JUCE_LIVE_CONSTANT(0.55f);
+    const auto logoW = logoH * (float) guitarToolsLogo.getWidth() / (float) guitarToolsLogo.getHeight();
+    const auto logoBounds = reducedB.withSize (logoW, logoH).withCentre({boundsFWidth * 0.33f * 0.5f, reducedB.getCentreY()});
+    g.setOpacity(0.9f);
+    g.drawImage (guitarToolsLogo, logoBounds, juce::RectanglePlacement::fillDestination);
 }
 
 void HeaderPanel::resized()
@@ -73,38 +116,41 @@ void HeaderPanel::resized()
     const auto boundsFWidth = boundsF.getWidth();
     const auto boundsFHeight = boundsF.getHeight();
 
-    const auto presetBoxHeight = boundsFHeight * 0.625f;
-    const auto presetBoxWidth = boundsF.getWidth() * 0.33f;
+    const auto presetBoxHeight = boundsFHeight * 0.6f;
+    const auto presetBoxWidth = boundsF.getWidth() * 0.3f;
     const auto presetBoxBounds = boundsF.withSizeKeepingCentre (presetBoxWidth, presetBoxHeight);
     presetBox.setBounds (presetBoxBounds.toNearestInt());
 
-    const auto controlGap = boundsFWidth * 0.012f;
-    const auto guitarToolsLogoHeight = boundsFHeight * 0.625f;
-    const auto logoBounds = boundsF.withSizeKeepingCentre (guitarToolsLogoHeight * logoGTAspectRatio, guitarToolsLogoHeight);
-    logoButton.setBounds (logoBounds.withX(presetBoxBounds.getX() * 0.5f - logoBounds.getWidth() * 0.5f).toNearestInt());
+    // const auto logoBounds = boundsF.withSizeKeepingCentre (logoH * logoGTAspectRatio, logoH).withX(boundsF.getX());
+    // logoButton.setBounds (logoBounds.toNearestInt());
 
-    const auto iconButtonSize = boundsFHeight * 0.625f;
+
+    const auto iconButtonSize = boundsFHeight * 0.55f;
+    const auto iconGap = boundsFWidth * 0.012f;
     const auto iconButtonBounds = boundsF.withSizeKeepingCentre (iconButtonSize, iconButtonSize);
-    const auto savePresetButtonBounds = iconButtonBounds.withX (presetBoxBounds.getRight() + controlGap);
+    const auto savePresetButtonBounds = iconButtonBounds.withX (presetBoxBounds.getRight() + iconGap);
     savePresetButton.setBounds (savePresetButtonBounds.toNearestInt());
 
-    const auto bypassButtonBounds = iconButtonBounds.withRightX (boundsFWidth - controlGap);
+    const auto stateButtonSize = iconButtonSize * 0.75f;
+    const auto stateBButtonBounds = boundsF.withSizeKeepingCentre (stateButtonSize, stateButtonSize).withRightX (presetBoxBounds.getX() - iconGap);
+    stateBButton.setBounds (stateBButtonBounds.toNearestInt());
+    stateAButton.setBounds (stateBButtonBounds.withRightX (stateBButtonBounds.getX()).toNearestInt());
+
+    const auto bypassButtonBounds = iconButtonBounds.withRightX (boundsFWidth - iconGap);
     bypassButton.setBounds (bypassButtonBounds.toNearestInt());
-    const auto settingsButtonBounds = iconButtonBounds.withRightX (bypassButtonBounds.getX() - controlGap);
+    const auto settingsButtonBounds = iconButtonBounds.withRightX (bypassButtonBounds.getX() - iconGap);
     settingsButton.setBounds (settingsButtonBounds.toNearestInt());
 
     const auto undoRedoCentreX = (savePresetButtonBounds.getRight() + settingsButtonBounds.getX()) * 0.5f;
-    const auto undoRedoOffset = (iconButtonSize + controlGap) * 0.5f;
-    const auto undoButtonBounds = iconButtonBounds.withCentre ({undoRedoCentreX - undoRedoOffset, boundsF.getCentreY()});
-    const auto redoButtonBounds = iconButtonBounds.withCentre ({undoRedoCentreX + undoRedoOffset, boundsF.getCentreY()});
-    undoButton.setBounds (undoButtonBounds.toNearestInt());
-    redoButton.setBounds (redoButtonBounds.toNearestInt());
+    const auto undoRedoOffset = (iconButtonSize + iconGap) * 0.5f;
+    undoButton.setBounds (iconButtonBounds.withCentre ({undoRedoCentreX - undoRedoOffset, boundsF.getCentreY()}).toNearestInt());
+    redoButton.setBounds (iconButtonBounds.withCentre ({undoRedoCentreX + undoRedoOffset, boundsF.getCentreY()}).toNearestInt());
 }
 
 void HeaderPanel::setupIconButton (juce::DrawableButton& iconButton, const void* iconData, const int iconDataSize)
 {
     addAndMakeVisible (iconButton);
-    UITools::setIconButtonImages (iconButton, iconData, iconDataSize);
+    AAUITools::setIconButtonImages (iconButton, iconData, iconDataSize);
 }
 
 void HeaderPanel::setupPresetBox ()
@@ -114,16 +160,15 @@ void HeaderPanel::setupPresetBox ()
     presetBox.setJustificationType(juce::Justification::centred);
     presetBox.setLookAndFeel (PresetBrowserLAF::get());
     presetBox.setColour(juce::ComboBox::ColourIds::textColourId, GTColors::sectionTitleText);
-    presetBox.setColour(juce::PopupMenu::ColourIds::textColourId, GTColors::sectionTitleText);
 }
 
-void HeaderPanel::setupLogoButton ()
-{
-    if (guitarsToolLogoImg != nullptr && guitarsToolLogoImgOver != nullptr)
-    {
-        addAndMakeVisible (logoButton);
-        const auto logoBounds = guitarsToolLogoImg->getDrawableBounds();
-        logoGTAspectRatio = logoBounds.getWidth() / logoBounds.getHeight();
-        logoButton.setImages (guitarsToolLogoImg.get(), guitarsToolLogoImgOver.get());
-    }
-}
+// void HeaderPanel::setupLogoButton ()
+// {
+//     if (guitarsToolLogoImg != nullptr && guitarsToolLogoImgOver != nullptr)
+//     {
+//         addAndMakeVisible (logoButton);
+//         const auto logoBounds = guitarsToolLogoImg->getDrawableBounds();
+//         logoGTAspectRatio = logoBounds.getWidth() / logoBounds.getHeight();
+//         logoButton.setImages (guitarsToolLogoImg.get(), guitarsToolLogoImgOver.get());
+//     }
+// }

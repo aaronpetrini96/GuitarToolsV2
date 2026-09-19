@@ -7,7 +7,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <cmath>
 #include <memory>
-#include "../../Utils/GTLook.h"
+#include "../../Utils/AALook.h"
 
 class AALightStrokeKnob : public juce::Slider
 {
@@ -46,10 +46,10 @@ public:
     {
         const auto boundsF = getLocalBounds().toFloat();
         const auto fontBounds = boundsF.withHeight (boundsF.getHeight() * 0.15f);
-        nameLabel.setFont (GTFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.65f));
+        nameLabel.setFont (AAFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.65f));
         nameLabel.setJustificationType (juce::Justification::centred);
         nameLabel.setBounds (fontBounds.toNearestInt());
-        valueLabel.setFont (GTFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.65f));
+        valueLabel.setFont (AAFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.65f));
         valueLabel.setJustificationType(juce::Justification::centredTop);
         valueLabel.setBounds (fontBounds.withY (boundsF.getHeight() - fontBounds.getHeight() * 1.1f).toNearestInt());
     }

@@ -35,7 +35,7 @@ struct ChainSettings
     float resoFreq {0}, mudFreq {0}, presenceFreq {0}, depthFreq{0};
     float presenceGain {0}, depthGain{0}, presenceResonance {0}, depthResonance {0};
     int presenceIndex{0}, depthIndex{0};
-    bool resoBypass {false}, mudBypass {false};
+    float resoGainDb {0.f}, mudGainDb {0.f};
     Slope lowCutSlope {Slope::Slope_12}, highCutSlope {Slope::Slope_12};
     bool resoExtremeActive{false}, mudExtremeActive{false};
 };
@@ -87,6 +87,8 @@ public:
     void loadDefaultPreset();
     void setCurrentPresetName(const juce::String& name) {currentPresetName = name;}
     juce::String getCurrentPresetName() const {return currentPresetName;}
+    void switchABState();
+    bool isStateAActive() const { return stateAActive; }
     //==============================================================================
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     juce::UndoManager undoManager { 100000, 100 };
@@ -94,10 +96,12 @@ public:
     
     
     juce::String currentPresetName;
-    float uiScale {1.f};
+    float uiScale {0.0f};
     bool showTooltips {false};
 
 private:
+    juce::ValueTree stateA, stateB;
+    bool stateAActive {true};
 
     //==============================================================================
 //    EQ PART
@@ -156,6 +160,8 @@ private:
     presenceGainParamSmoother,
     depthGainParamSmoother,
     compAmountParamSmoother;
+
+    juce::SmoothedValue<float> resoGainDbSmoother, mudGainDbSmoother;
 
     std::vector<std::pair<juce::AudioParameterFloat*, juce::SmoothedValue<float>*>> smootherBindings;
 

@@ -63,9 +63,8 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
     for (auto* l : {&inputGainLabel, &outputGainLabel})
         setupLabels (l, textWhiteColor, juce::Justification::centredTop);
 
-    for (auto* l : {&matchLabel, &levelsLabel})
+    for (auto* l : {&levelsLabel})
         setupLabels (l, textWhiteColor, juce::Justification::centred);
-    matchLabel.setVisible(false);
 
     addAndMakeVisible (inputGainKnob);
     addAndMakeVisible (outputGainKnob);
@@ -76,49 +75,30 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
     }
 
 
-    levelMatchButton.setClickingTogglesState (true);
-    levelMatchButton.setColour (juce::DrawableButton::backgroundColourId, GTColors::transparent);
-    levelMatchButton.setColour (juce::DrawableButton::backgroundOnColourId, GTColors::transparent);
-    levelMatchButton.setTooltip (ParamHelpers::getTooltipForParam (ParamIDs::getLoudnessMatchActiveName()));
-    addAndMakeVisible(levelMatchButton);
-
-    if (const auto linkOnIcon = juce::Drawable::createFromImageData (BinaryData::linkON_svg, BinaryData::linkON_svgSize))
-    {
-        const auto linkOffIcon = linkOnIcon->createCopy();
-        const auto linkOffIconOver = linkOnIcon->createCopy();
-        linkOffIconOver->replaceColour (GTColors::activeNeonBlue, GTColors::iconOverColor);
-        linkOffIcon->replaceColour (GTColors::activeNeonBlue, GTColors::iconNormalColor);
-        levelMatchButton.setImages (linkOffIcon.get(), linkOffIconOver.get(),  linkOnIcon.get(), nullptr, linkOnIcon.get());
-    }
-
-    levelMatchButton.onStateChange = [this]
-    {
-        const auto isMatchEnabled = levelMatchButton.getToggleState();
-        outputGainKnob.setEnabled (! isMatchEnabled);
-        matchLabel.setColour (juce::Label::textColourId, isMatchEnabled ? GTColors::activeNeonBlue.withAlpha(0.85f) : GTColors::transparent);
-    };
-    levelMatchButton.onStateChange();
+    levelMatchControl.setTooltip (ParamHelpers::getTooltipForParam (levelMatchControl.getComponentID()));
+    levelMatchControl.setUndoManager (audioProcessor.undoManager);
+    levelMatchControl.onClick = [this] { outputGainKnob.setEnabled (! levelMatchControl.getToggleState()); };
+    outputGainKnob.setEnabled (! levelMatchControl.getToggleState());
+    addAndMakeVisible (levelMatchControl);
 }
 
 void MainPanel::paint(juce::Graphics& g)
 {
     const auto boundsF = getLocalBounds().toFloat();
     const auto boundsFWidth = boundsF.getWidth();
-    const auto dividerThickness = boundsFWidth * 0.006f;
+
+    dividerThickness = boundsFWidth * 0.006f;
     const auto dividerHalfThickness = dividerThickness * 0.5f;
-    g.setColour (GTColors::dividerLinesStart);
-    g.fillRect (0.0f, 0.0f, boundsFWidth, dividerHalfThickness);
+    // g.setColour (GTColors::dividerLinesStart);
+    // g.fillRect (0.0f, 0.0f, boundsFWidth, dividerHalfThickness);
 
     for (const auto& sectionArea : { cutFiltersArea, buttonsArea, shelfFiltersArea })
-        UITools::drawRoundedDivider (g, sectionArea.withSizeKeepingCentre (sectionArea.getWidth() * 0.9f, dividerThickness).withY (sectionTitleH));
-    UITools::drawRoundedDivider (g, magicDividerBounds);
+        AAUITools::drawRoundedDivider (g, sectionArea.withSizeKeepingCentre (sectionArea.getWidth() * 0.9f, dividerThickness).withY (sectionTitleH));
+    AAUITools::drawRoundedDivider (g, magicDividerBounds);
 
     const auto verticalDividerBounds = boundsF.withSizeKeepingCentre (dividerThickness, boundsF.getHeight() * 0.97f).translated(0.f, dividerHalfThickness);
     for (const auto& dividerCentreX : { cutFiltersArea.getRight(), shelfFiltersArea.getX() })
-        UITools::drawRoundedDivider (g, verticalDividerBounds.withCentre ({ dividerCentreX, verticalDividerBounds.getCentreY() }));
-
-
-    // g.fillRect (0.0f, boundsF.getHeight() - dividerHalfThickness, boundsFWidth, dividerHalfThickness);
+        AAUITools::drawRoundedDivider (g, verticalDividerBounds.withCentre ({ dividerCentreX, verticalDividerBounds.getCentreY() }));
 }
 
 void MainPanel::resized()
@@ -135,7 +115,7 @@ void MainPanel::resized()
 
     // SECTION TITLES
     for (const auto l : {&cutFiltersGroupLabel, &magicButtonsGroupLabel, &shelfFiltersGroupLabel,})
-       l->setFont (GTFonts::ibmPlexSansCondensedSemiBold (boundsFHeight * 0.038f).withExtraKerningFactor(0.16f));
+       l->setFont (AAFonts::ibmPlexSansCondensedSemiBold (boundsFHeight * 0.038f).withExtraKerningFactor(0.16f));
     cutFiltersGroupLabel    .setBounds (cutFiltersArea.withHeight (sectionTitleH).toNearestInt());
     magicButtonsGroupLabel  .setBounds (buttonsArea.withHeight (sectionTitleH).toNearestInt());
     shelfFiltersGroupLabel  .setBounds (shelfFiltersArea.withHeight (sectionTitleH).toNearestInt());
@@ -163,7 +143,7 @@ void MainPanel::resized()
 
     const auto knobButtonsLabelBounds = cutFiltersArea.withSizeKeepingCentre(knobButtonsWidth, knobButtonsHeight * 0.5f);
     for (const auto l : {&lowCutSlopeLabel, &highCutSlopeLabel, &presenceModeLabel, &depthModeLabel})
-        l->setFont (GTFonts::ibmPlexSansMedium (knobButtonsLabelBounds.getHeight() * 0.9f));
+        l->setFont (AAFonts::ibmPlexSansMedium (knobButtonsLabelBounds.getHeight() * 0.9f));
 
     const auto knobButtonsLabelGap = knobButtonsHeight * 1.05f;
     lowCutSlopeLabel.setBounds(knobButtonsLabelBounds.withBottomY(knobButtonsTopCY + knobButtonsLabelGap).toNearestInt());
@@ -189,7 +169,7 @@ void MainPanel::resized()
 //  LEVEL KNOBS
     const auto gainKnobsArea = buttonsArea.withTop (magicDividerBounds.getBottom());
     const auto gainLabelBounds = gainKnobsArea.withSizeKeepingCentre(gainKnobsArea.getWidth() * 0.5f, gainKnobsArea.getHeight() * 0.2f);
-    levelsLabel.setFont (GTFonts::ibmPlexSansMedium (gainLabelBounds.getHeight() * 0.925f));
+    levelsLabel.setFont (AAFonts::ibmPlexSansMedium (gainLabelBounds.getHeight() * 0.925f));
     levelsLabel.setBounds(gainLabelBounds.withY(gainKnobsArea.getY() * 1.01f).toNearestInt());
 
     const auto gainKnobSize = gainKnobsArea.getHeight() * 0.65f;
@@ -199,15 +179,14 @@ void MainPanel::resized()
     outputGainKnob.setBounds (gainKnobBounds.withCentre({compActiveButton.getBounds().toFloat().getCentreX(), gainKnobCY}).toNearestInt());
 
     for (const auto l : { &inputGainLabel, &outputGainLabel})
-        l->setFont (GTFonts::ibmPlexSansMedium (gainLabelBounds.getHeight() * 0.8f));
+        l->setFont (AAFonts::ibmPlexSansMedium (gainLabelBounds.getHeight() * 0.7f));
     const auto gainLabelY = gainKnobCY * 1.053f;
     inputGainLabel.setBounds    (gainKnobBounds.withCentre({inputGainKnob.getBounds().toFloat().getCentre()}).withY(gainLabelY) .toNearestInt());
     outputGainLabel.setBounds   (gainKnobBounds.withCentre({outputGainKnob.getBounds().toFloat().getCentre()}).withY(gainLabelY) .toNearestInt());
 
-    const auto matchButtonSize = buttonsArea.getWidth() * 0.12f;
-    levelMatchButton.setBounds (gainKnobsArea.withSize(matchButtonSize, matchButtonSize).withCentre({gainKnobsArea.getCentreX(), gainKnobCY}).toNearestInt());
-    matchLabel.setFont (GTFonts::ibmPlexSansMedium (gainLabelBounds.getHeight() * 0.65f));
-    matchLabel.setBounds(gainLabelBounds.withY(gainKnobCY * 1.01f).toNearestInt());
+    const auto matchLabelHeight = gainLabelBounds.getHeight();
+    const auto matchBounds = gainLabelBounds.withHeight (matchLabelHeight * 2.0f).withCentre ({gainKnobsArea.getCentreX(), gainKnobCY + matchLabelHeight * 0.5f});
+    levelMatchControl.setBounds (matchBounds.toNearestInt());
 }
 
 void MainPanel::setupLabels(juce::Label* l, juce::Colour color, juce::Justification justification)

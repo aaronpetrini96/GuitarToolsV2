@@ -64,7 +64,7 @@ bool GuitarToolsAudioProcessor::isMidiEffect() const
 
 double GuitarToolsAudioProcessor::getTailLengthSeconds() const
 {
-    return 0.0;
+    return 0.5;
 }
 
 int GuitarToolsAudioProcessor::getNumPrograms()
@@ -127,6 +127,9 @@ void GuitarToolsAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 
     for (const auto& [param, smoother] : smootherBindings)
         smoother->reset(sampleRate, DefaultValues::parameterSmoothingTime);
+
+    resoGainDbSmoother.reset(sampleRate, DefaultValues::parameterSmoothingTime);
+    mudGainDbSmoother.reset(sampleRate, DefaultValues::parameterSmoothingTime);
 
     updateSmootherFromParams(1, SmootherUpdateMode::initialize);
     updateFilters();
@@ -236,6 +239,16 @@ void GuitarToolsAudioProcessor::getStateInformation (juce::MemoryBlock& destData
     state.setProperty("CurrentPresetName", currentPresetName, nullptr);
     state.setProperty("UIScale", uiScale, nullptr);
     state.setProperty("ShowTooltips", showTooltips, nullptr);
+    state.setProperty ("StateAActive", stateAActive, nullptr);
+
+    const auto& inactiveState = stateAActive ? stateB : stateA;
+    if (inactiveState.isValid())
+    {
+        juce::ValueTree inactiveStateTree ("InactiveABState");
+        inactiveStateTree.appendChild (inactiveState.createCopy(), nullptr);
+        state.appendChild (inactiveStateTree, nullptr);
+    }
+
     std::unique_ptr<juce::XmlElement> xml (state.createXml());
     copyXmlToBinary(*xml, destData);
 }
@@ -249,9 +262,22 @@ void GuitarToolsAudioProcessor::setStateInformation (const void* data, int sizeI
         if (auto* presetNameProp = state.getPropertyPointer("CurrentPresetName"))
             currentPresetName = presetNameProp->toString(); // restore preset name
         if (auto* uiScaleProp = state.getPropertyPointer("UIScale"))
-            uiScale = static_cast<float>(*uiScaleProp); // restore selected ui size
+            uiScale = static_cast<float>(*uiScaleProp);
         if (auto* showTooltipsProp = state.getPropertyPointer("ShowTooltips"))
             showTooltips = static_cast<bool>(*showTooltipsProp);
+
+        stateAActive = static_cast<bool> (state.getProperty ("StateAActive", true));
+        stateA = {};
+        stateB = {};
+
+        const auto inactiveStateTree = state.getChildWithName ("InactiveABState");
+        if (inactiveStateTree.isValid())
+        {
+            auto& inactiveState = stateAActive ? stateB : stateA;
+            inactiveState = inactiveStateTree.getChild (0).createCopy();
+            state.removeChild (inactiveStateTree, nullptr);
+        }
+
         treeState.replaceState(state);
     }
 }
@@ -276,6 +302,32 @@ void GuitarToolsAudioProcessor::loadPreset(const juce::File& file)
             currentPresetName = presetNameProp->toString(); // restore preset name
         treeState.replaceState(state);
     }
+}
+
+void GuitarToolsAudioProcessor::switchABState()
+{
+    auto& stateToStore = stateAActive ? stateA : stateB;
+    const auto& stateToLoad = stateAActive ? stateB : stateA;
+
+    stateToStore = treeState.copyState();
+    stateToStore.setProperty ("CurrentPresetName", currentPresetName, nullptr);
+
+    if (stateToLoad.isValid())
+    {
+        undoManager.beginNewTransaction();
+
+        for (const auto& storedParameter : stateToLoad)
+        {
+            const auto parameterID = storedParameter.getProperty ("id").toString();
+
+            if (parameterID != ParamIDs::getPluginBypassActiveName())
+                treeState.state.getChildWithProperty ("id", parameterID).setProperty ("value", storedParameter.getProperty ("value"), &undoManager);
+        }
+
+        currentPresetName = stateToLoad.getProperty ("CurrentPresetName").toString();
+    }
+
+    stateAActive = ! stateAActive;
 }
 
 
@@ -374,10 +426,10 @@ ChainSettings GuitarToolsAudioProcessor::getChainSettings() const
     settings.highCutSlope = static_cast<Slope>(highCutSlopeParam->getIndex());
 
     settings.resoFreq = resoFreqParamSmoother.getCurrentValue();
-    settings.resoBypass = ! resoActiveParam->get();
+    settings.resoGainDb = resoGainDbSmoother.getCurrentValue();
     settings.resoExtremeActive = resoExtremeActiveParam->get();
     settings.mudFreq = mudFreqParamSmoother.getCurrentValue();
-    settings.mudBypass = ! mudActiveParam->get();
+    settings.mudGainDb = mudGainDbSmoother.getCurrentValue();
     settings.mudExtremeActive = mudExtremeActiveParam->get();
 
     settings.presenceIndex = presenceModeParam->getIndex();
@@ -402,11 +454,8 @@ void GuitarToolsAudioProcessor::updateCoefficients(Coefficients& old, const Coef
 void GuitarToolsAudioProcessor::updateResoFilters(const ChainSettings& chainSettings)
 {
     const auto resoQ = chainSettings.resoExtremeActive ? DefaultValues::resoExtremeQ : DefaultValues::resoQ;
-    const auto resoGain = juce::Decibels::decibelsToGain(chainSettings.resoExtremeActive ? DefaultValues::resoExtremeGainDb : DefaultValues::resoGainDb);
+    const auto resoGain = juce::Decibels::decibelsToGain(chainSettings.resoGainDb);
     const auto resoCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.resoFreq, resoQ, resoGain);
-
-    leftChain.setBypassed<ChainPositions::Reso>(chainSettings.resoBypass);
-    rightChain.setBypassed<ChainPositions::Reso>(chainSettings.resoBypass);
 
     updateCoefficients(leftChain.get<ChainPositions::Reso>().coefficients, resoCoefficients);
     updateCoefficients(rightChain.get<ChainPositions::Reso>().coefficients, resoCoefficients);
@@ -415,11 +464,8 @@ void GuitarToolsAudioProcessor::updateResoFilters(const ChainSettings& chainSett
 void GuitarToolsAudioProcessor::updateMudFilters(const ChainSettings& chainSettings)
 {
     const auto mudQ = chainSettings.mudExtremeActive ? DefaultValues::mudExtremeQ : DefaultValues::mudQ;
-    const auto mudGain = juce::Decibels::decibelsToGain(chainSettings.mudExtremeActive ? DefaultValues::mudExtremeGainDb : DefaultValues::mudGainDb);
+    const auto mudGain = juce::Decibels::decibelsToGain(chainSettings.mudGainDb);
     const auto mudCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.mudFreq, mudQ, mudGain);
-
-    leftChain.setBypassed<ChainPositions::Mud>(chainSettings.mudBypass);
-    rightChain.setBypassed<ChainPositions::Mud>(chainSettings.mudBypass);
 
     updateCoefficients(leftChain.get<ChainPositions::Mud>().coefficients, mudCoefficients);
     updateCoefficients(rightChain.get<ChainPositions::Mud>().coefficients, mudCoefficients);
@@ -473,12 +519,12 @@ void GuitarToolsAudioProcessor::updateFilters()
         updateHighCutFilters(chainSettings);
 
     if (chainSettings.resoFreq != lastChainSettings.resoFreq
-     || chainSettings.resoBypass != lastChainSettings.resoBypass
+     || chainSettings.resoGainDb != lastChainSettings.resoGainDb
      || chainSettings.resoExtremeActive != lastChainSettings.resoExtremeActive)
         updateResoFilters(chainSettings);
 
     if (chainSettings.mudFreq != lastChainSettings.mudFreq
-     || chainSettings.mudBypass != lastChainSettings.mudBypass
+     || chainSettings.mudGainDb != lastChainSettings.mudGainDb
      || chainSettings.mudExtremeActive != lastChainSettings.mudExtremeActive)
         updateMudFilters(chainSettings);
 
@@ -573,6 +619,23 @@ void GuitarToolsAudioProcessor::updateSmootherFromParams(int numSamplesToSkip, S
 
         smoother->skip(numSamplesToSkip);
     }
+
+    const auto resoGainDbTarget = resoActiveParam->get() ? (resoExtremeActiveParam->get() ? DefaultValues::resoExtremeGainDb : DefaultValues::resoGainDb) : 0.f;
+    const auto mudGainDbTarget = mudActiveParam->get() ? (mudExtremeActiveParam->get() ? DefaultValues::mudExtremeGainDb : DefaultValues::mudGainDb) : 0.f;
+
+    if (mode == SmootherUpdateMode::initialize)
+    {
+        resoGainDbSmoother.setCurrentAndTargetValue(resoGainDbTarget);
+        mudGainDbSmoother.setCurrentAndTargetValue(mudGainDbTarget);
+    }
+    else
+    {
+        resoGainDbSmoother.setTargetValue(resoGainDbTarget);
+        mudGainDbSmoother.setTargetValue(mudGainDbTarget);
+    }
+
+    resoGainDbSmoother.skip(numSamplesToSkip);
+    mudGainDbSmoother.skip(numSamplesToSkip);
 }
 
 void GuitarToolsAudioProcessor::updateGainState()

@@ -34,6 +34,8 @@ void GTMidBandCompressor::prepare(const juce::dsp::ProcessSpec& spec)
     bandLevelFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::RMS);
     bandLevelFilter.setAttackTime(levelTrackingTime);
     bandLevelFilter.setReleaseTime(levelTrackingTime);
+
+    activeAmount.reset(spec.sampleRate, activeRampSeconds);
 }
 
 void GTMidBandCompressor::setAmount(float newAmountProportion)
@@ -49,7 +51,7 @@ void GTMidBandCompressor::setAmount(float newAmountProportion)
 
 void GTMidBandCompressor::setActive(bool shouldBeActive)
 {
-    active = shouldBeActive;
+    activeAmount.setTargetValue(shouldBeActive ? 1.f : 0.f);
 }
 
 void GTMidBandCompressor::setExtremeMode(bool shouldBeExtreme)
@@ -84,7 +86,9 @@ void GTMidBandCompressor::process(juce::AudioBuffer<float>& buffer)
         const auto envelope = envelopeFilter.processSample(0, linkedInput);
         const auto bandLevel = juce::jmax(bandLevelFilter.processSample(0, linkedInput), levelFloorGain);
 
-        if (! active)
+        const auto activeProportion = activeAmount.getNextValue();
+
+        if (activeProportion == 0.f)
             continue;
 
         const auto threshold = bandLevel * thresholdOffsetGain;
@@ -96,7 +100,8 @@ void GTMidBandCompressor::process(juce::AudioBuffer<float>& buffer)
         if (extremeMode)
             overshootPower *= std::sqrt(overshootQuarterRoot);                   // overshoot^0.875, an 8:1 ratio
 
-        const auto gain = (envelope < threshold ? 1.f : 1.f / overshootPower) * makeupGain;
+        const auto compressorGain = (envelope < threshold ? 1.f : 1.f / overshootPower) * makeupGain;
+        const auto gain = 1.f + (compressorGain - 1.f) * activeProportion;
 
         for (int channel = 0; channel < numChannels; ++channel)
             midBandBuffer.setSample(channel, sample, midBandBuffer.getSample(channel, sample) * gain);

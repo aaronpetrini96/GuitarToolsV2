@@ -9,7 +9,7 @@
 #include <memory>
 
 #include "BinaryData.h"
-#include "../../Utils/GTLook.h"
+#include "../../Utils/AALook.h"
 
 class AANeveRadioButtons : public juce::Component
 {
@@ -63,8 +63,8 @@ public:
         {
             const auto textBounds = buttons[index]->getBounds().toFloat();
             const auto isSelected = buttons[index]->getToggleState();
-            const auto selectedFont = GTFonts::interBold (textBounds.getHeight() * 0.475f).withExtraKerningFactor(0.01f);
-            const auto unselectedFont = GTFonts::interMedium (textBounds.getHeight() * 0.475f).withExtraKerningFactor(0.01f);
+            const auto selectedFont = AAFonts::interBold (textBounds.getHeight() * 0.475f).withExtraKerningFactor(0.01f);
+            const auto unselectedFont = AAFonts::interMedium (textBounds.getHeight() * 0.475f).withExtraKerningFactor(0.01f);
             g.setColour (isSelected ? juce::Colours::black : juce::Colours::black.withAlpha (0.9f));
             g.setFont (isSelected ? selectedFont : unselectedFont);
             g.drawFittedText (nameText[index], textBounds.toNearestInt(), juce::Justification::centred, 1);

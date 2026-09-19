@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../../Utils/GTLook.h"
+#include "../../Utils/AALook.h"
 #include "../../Utils/AAParamUtils.h"
 #include "PluginProcessor.h"
 
@@ -55,7 +55,7 @@ public:
         const auto plateCorners      = plateHeight * 0.07f;
         const auto borderThickness  = plateHeight * 0.01f;
 
-        g.setGradientFill(juce::ColourGradient::vertical(juce::Colours::black.withAlpha(0.25f), juce::Colours::black.withAlpha(0.2f), plateArea));
+        g.setGradientFill(juce::ColourGradient::vertical(GTColors::fadersPlateGradientStart, GTColors::fadersPlateGradientEnd, plateArea));
         g.fillRoundedRectangle (plateArea, plateCorners);
         g.setColour(GTColors::dividerLinesEnd);
         g.drawRoundedRectangle(plateArea.reduced(borderThickness * 0.5f), plateCorners - borderThickness * 0.5f, borderThickness);
@@ -72,7 +72,7 @@ public:
         const auto switchLabelHeight = boundsFHeight * 0.042f;
         const auto switchLabelBounds = boundsF.withSizeKeepingCentre (faderWidth, switchLabelHeight).withBottomY(boundsFHeight - edgeOffset);
         for (auto* label : {&resoModeLabel, &mudModeLabel, &compModeLabel})
-            label->setFont (GTFonts::ibmPlexSansMedium (switchLabelHeight * 0.975f));
+            label->setFont (AAFonts::ibmPlexSansMedium (switchLabelHeight * 0.975f));
 
         mudModeLabel.setBounds (switchLabelBounds.toNearestInt());
         resoModeLabel.setBounds (switchLabelBounds.translated (-faderSpacing, 0.0f).toNearestInt());

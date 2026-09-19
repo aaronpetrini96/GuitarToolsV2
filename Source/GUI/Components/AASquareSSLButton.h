@@ -12,7 +12,7 @@
 #include <utility>
 
 #include "BinaryData.h"
-#include "../../Utils/GTLook.h"
+#include "../../Utils/AALook.h"
 
 class AASquareSSLButton : public juce::Component
 {
@@ -43,7 +43,7 @@ public:
         const auto textBounds = boundsF.withSizeKeepingCentre(boundsF.getWidth() * 0.65f, boundsF.getHeight() * 0.7f);
         const auto isSelected = button.getToggleState();
         const auto fontHeight = textBounds.getHeight() * (isSelected ? 0.275f : 0.28f);
-        g.setFont (isSelected ? GTFonts::interBold (fontHeight) : GTFonts::interSemiBold (fontHeight));
+        g.setFont (isSelected ? AAFonts::interBold (fontHeight) : AAFonts::interSemiBold (fontHeight));
         g.setColour (juce::Colours::black);
         g.drawFittedText (nameText, textBounds.toNearestInt(), juce::Justification::centred, 2);
     }

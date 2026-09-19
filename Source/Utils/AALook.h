@@ -7,7 +7,7 @@
 #include <juce_gui_extra/juce_gui_extra.h>
 #include "BinaryData.h"
 
-namespace  GTColors
+namespace  GTColors //project specific
 {
     inline juce::Colour transparent { juce::Colours::transparentBlack };
 
@@ -16,23 +16,36 @@ namespace  GTColors
     inline juce::Colour almostWhite {190, 190, 190};
     inline juce::Colour sectionTitleText {215, 215, 215};
     inline juce::Colour darkGrey {36, 36, 36};
+    inline juce::Colour activeNeonBlue { 64, 196, 255 };
 
     inline juce::Colour dividerLinesEnd{12, 12, 12};
     inline juce::Colour dividerLinesStart {5, 5, 5};
+
     inline juce::Colour mainPanelTop {58, 60,65};
     inline juce::Colour mainPanelBottom {42, 45,49};
-    inline juce::Colour activeNeonBlue { 64, 196, 255 };
+
+    inline juce::Colour headerPanelStart {12, 12, 12};
+    inline juce::Colour headerPanelEnd {22, 26, 36};
+
+    inline juce::Colour popupDarkBackground {20, 24, 34};
+
+    inline juce::Colour fadersPlateGradientStart {juce::Colours::black.withAlpha (0.25f)};
+    inline juce::Colour fadersPlateGradientEnd {juce::Colours::black.withAlpha (0.2f)};
 
     inline juce::Colour iconSVGColor {100, 100, 100};
     inline juce::Colour iconNormalColor {200, 200, 200};
-    inline juce::Colour iconDownColor { 64, 196, 255 };
     inline juce::Colour iconOverColor {120, 120, 120};
 
     inline juce::Colour presetBox {40, 47, 65};
-    inline juce::Colour presetPopupHighlight {42, 64, 96};
+    inline juce::Colour presetPopupHighlight {30, 50, 80};
+
+    inline juce::Colour infoPanelTop {36, 45, 81};
+    inline juce::Colour infoPanelBottom {26, 33, 60};
+    inline juce::Colour infoPanelSecondaryText {140, 152, 185};
+    inline juce::Colour infoPanelDivider {juce::Colour (190, 200, 225).withAlpha (0.27f)};
 }
 
-namespace UITools
+namespace AAUITools
 {
     inline void setIconButtonImages (juce::DrawableButton& button, const void* iconData, const int iconDataSize)
     {
@@ -64,7 +77,7 @@ namespace UITools
     }
 }
 
-namespace GTFonts
+namespace AAFonts
 {
     inline juce::Font ibmPlexSansCondensedSemiBold (const float fontHeight)
     {

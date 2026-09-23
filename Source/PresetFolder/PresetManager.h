@@ -2,12 +2,14 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
+#include <functional>
+
 #include "../PluginProcessor.h"
 
 class PresetManager
 {
 public:
-    PresetManager(GuitarToolsAudioProcessor& processor, juce::ComboBox& presetBox);
+    explicit PresetManager(GuitarToolsAudioProcessor& processor);
     
     enum class PresetType
     {
@@ -22,19 +24,11 @@ public:
     juce::File getUserPresetFile(const juce::String& presetName) const;
     juce::String getCurrentPresetName() const;
 
-    void presetSelected();
-    void refreshPresetList();
-    int getItemIdForText(const juce::ComboBox&, const juce::String&);
-    void applyPresetSelection(const juce::String&);
-    void displayCurrentPresetName();
-
     static juce::File getPresetFolder();
     static void installFactoryPresets();
 
-private:
-    void addPresetFolderToMenu (const juce::File& folder);
+    std::function<void()> onPresetNameChanged;
 
+private:
     GuitarToolsAudioProcessor& audioProcessor;
-    juce::ComboBox& presetBox;
-    juce::Array<juce::File> presetFiles;
 };

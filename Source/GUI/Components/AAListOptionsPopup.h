@@ -9,14 +9,15 @@
 #include <functional>
 
 #include "../../Utils/AALook.h"
+#include "../LAF/ListOptionsPopupLAF.h"
 
 class AAListOptionsPopup : public juce::Component
 {
 public:
     struct Item
     {
-        int itemID {0};
         juce::String text;
+        std::function<void()> onSelected;
         bool isEnabled {true};
         bool isSelected {false};
     };
@@ -24,6 +25,12 @@ public:
     AAListOptionsPopup()
     {
         setAlwaysOnTop (true);
+        setLookAndFeel (&listOptionsLAF);
+    }
+
+    ~AAListOptionsPopup() override
+    {
+        setLookAndFeel (nullptr);
     }
 
     void setItems (const juce::Array<Item>& newItems)
@@ -32,8 +39,16 @@ public:
 
         for (const auto& item : newItems)
         {
-            auto* row = rows.add (new RowButton (item));
-            row->onClick = [this, itemID = item.itemID] { itemClicked (itemID); };
+            auto* row = rows.add (new juce::TextButton (item.text));
+            row->setEnabled (item.isEnabled);
+            row->setToggleState (item.isSelected, juce::dontSendNotification);
+            row->onClick = [this, onSelected = item.onSelected]
+            {
+                setVisible (false);
+
+                if (onSelected != nullptr)
+                    onSelected();
+            };
             addAndMakeVisible (row);
         }
 
@@ -44,25 +59,7 @@ public:
 
     void paint (juce::Graphics& g) override
     {
-        const auto boundsF = getLocalBounds().toFloat();
-        const auto rowHeight = boundsF.getHeight() / (float) juce::jmax (1, rows.size());
-        const auto referenceWidth = rowHeight * 4.25f;
-        const auto cornerSize = referenceWidth * 0.055f;
-        const auto lineThickness = referenceWidth * 0.002f;
-
-        g.setGradientFill (juce::ColourGradient::vertical (GTColors::gradientNavyDark, 0.f, GTColors::gradientNavy, boundsF.getHeight()));
-        g.fillRoundedRectangle (boundsF, cornerSize);
-
-        if (drawRowDividers)
-        {
-            const auto dividerBounds = boundsF.withSizeKeepingCentre (boundsF.getWidth() * 0.9f, rowHeight * 0.06f);
-
-            for (int rowIndex = 1; rowIndex < rows.size(); ++rowIndex)
-                AAUITools::drawRoundedDivider (g, dividerBounds.withCentre ({ boundsF.getCentreX(), rowHeight * (float) rowIndex }));
-        }
-
-        g.setColour (GTColors::almostWhite);
-        g.drawRoundedRectangle (boundsF.reduced (lineThickness * 0.5f), cornerSize, lineThickness);
+        listOptionsLAF.drawListOptionsBackground (g, getLocalBounds().toFloat(), rows.size(), drawRowDividers);
     }
 
     void resized() override
@@ -74,39 +71,11 @@ public:
             rows[rowIndex]->setBounds (boundsF.withHeight (rowHeight).withY (rowHeight * (float) rowIndex).toNearestInt());
     }
 
-    std::function<void (int itemID)> onItemClicked;
     bool drawRowDividers {false};
 
 private:
-    class RowButton : public juce::Button
-    {
-    public:
-        explicit RowButton (const Item& item) : juce::Button (item.text)
-        {
-            setEnabled (item.isEnabled);
-            setToggleState (item.isSelected, juce::dontSendNotification);
-        }
-
-        void paintButton (juce::Graphics& g, const bool shouldDrawButtonAsHighlighted, bool) override
-        {
-            const auto isActive = getToggleState() || (shouldDrawButtonAsHighlighted && isEnabled());
-
-            g.setColour ((isActive ? GTColors::activeNeonBlue : GTColors::iconNormalColor).withMultipliedAlpha (isEnabled() ? 1.0f : 0.5f));
-
-            g.setFont (AAFonts::ibmPlexSansMedium ((float) getHeight() * 0.68f));
-            g.drawText (getButtonText(), getLocalBounds(), juce::Justification::centred, true);
-        }
-    };
-
-    void itemClicked (const int itemID)
-    {
-        setVisible (false);
-
-        if (onItemClicked != nullptr)
-            onItemClicked (itemID);
-    }
-
-    juce::OwnedArray<RowButton> rows;
+    ListOptionsPopupLAF listOptionsLAF;
+    juce::OwnedArray<juce::TextButton> rows;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AAListOptionsPopup)
 };

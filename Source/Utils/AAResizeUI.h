@@ -49,43 +49,35 @@ public:
         return {juce::roundToInt ((float) defaultWidth * effectiveScale), juce::roundToInt (defaultEditorHeight * effectiveScale)};
     }
 
-    juce::Array<AAListOptionsPopup::Item> getSizeOptions() const
+    juce::Array<AAListOptionsPopup::Item> getSizeOptions (std::function<void()> onSizeChanged)
     {
         juce::Array<AAListOptionsPopup::Item> sizeOptions;
 
-        for (int sizeIndex = 0; sizeIndex < sizeOptionsArray.size(); ++sizeIndex)
+        for (const auto& sizeOption : sizeOptionsArray)
         {
-            const auto& sizeOption = sizeOptionsArray.getReference (sizeIndex);
             const auto isCurrentSize = juce::approximatelyEqual (sizeOption.scale, currentScale);
-            sizeOptions.add (AAListOptionsPopup::Item {sizeIndex + 1, sizeOption.name, true, isCurrentSize});
+
+            sizeOptions.add ({sizeOption.name,
+                              [this, newScale = sizeOption.scale, onSizeChanged]
+                              {
+                                  if (juce::approximatelyEqual (newScale, currentScale))
+                                      return;
+
+                                  currentScale = newScale;
+
+                                  if (onSizeChanged != nullptr)
+                                      onSizeChanged();
+                              },
+                              true, isCurrentSize});
         }
 
         return sizeOptions;
     }
 
-    bool handleSizeOption (const int selectedItemID)
+    AAListOptionsPopup::Item getMakeDefaultOption() const
     {
-        const auto sizeIndex = selectedItemID - 1;
-
-        if (! juce::isPositiveAndBelow (sizeIndex, sizeOptionsArray.size()) || juce::approximatelyEqual (sizeOptionsArray.getReference (sizeIndex).scale, currentScale))
-            return false;
-
-        currentScale = sizeOptionsArray.getReference (sizeIndex).scale;
-        return true;
-    }
-
-    AAListOptionsPopup::Item getMakeDefaultOption (const int itemID) const
-    {
-        for (int sizeIndex = 0; sizeIndex < sizeOptionsArray.size(); ++sizeIndex)
-        {
-            if (juce::approximatelyEqual (sizeOptionsArray.getReference (sizeIndex).scale, currentScale))
-            {
-                const auto isAlreadyDefault = juce::approximatelyEqual (currentScale, getDefaultScale());
-                return {itemID, "Save UI Size", ! isAlreadyDefault};
-            }
-        }
-
-        return {itemID, "Save UI Size", false};
+        const auto isAlreadyDefault = juce::approximatelyEqual (currentScale, getDefaultScale());
+        return {"SAVE UI SIZE", [this] { makeCurrentSizeDefault(); }, ! isAlreadyDefault};
     }
 
     void makeCurrentSizeDefault() const
@@ -115,7 +107,7 @@ private:
         return static_cast<float> (userSettings.getDoubleValue ("DefaultUIScale", fallbackDefaultScale));
     }
 
-    juce::Array<SizeOption> sizeOptionsArray {SizeOption {"X-SMALL", 0.6f}, SizeOption {"SMALL", 0.8f}, SizeOption {"MEDIUM", 1.0f}, SizeOption {"LARGE", 1.2f}, SizeOption {"X-LARGE", 1.4f}, SizeOption {"HUGE", 1.75f}};
+    juce::Array<SizeOption> sizeOptionsArray {SizeOption {"X-SMALL", 0.6f}, SizeOption {"SMALL", 0.8f}, SizeOption {"DEFAULT", 1.0f}, SizeOption {"LARGE", 1.2f}, SizeOption {"X-LARGE", 1.4f}, SizeOption {"HUGE", 1.75f}};
     const float fallbackDefaultScale {1.0f};
     float& currentScale;
 

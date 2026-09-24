@@ -139,12 +139,14 @@ void GuitarToolsAudioProcessorEditor::paint (juce::Graphics& g)
     const auto boundsF = getLocalBounds().toFloat();
     const auto boundsFHeight = boundsF.getHeight();
 
+    g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
     g.drawImage (metalBackground, boundsF, juce::RectanglePlacement::fillDestination);
-
-    g.setGradientFill (juce::ColourGradient::vertical (GTColors::mainPanelTop.withAlpha(0.45f), 0.0f, GTColors::mainPanelBottom.brighter(0.12f).withAlpha(0.45f), boundsFHeight));
+    const auto alpha = 0.4f;
+    g.setGradientFill (juce::ColourGradient::vertical (GTColors::mainPanelTop.withAlpha(alpha), 0.0f, GTColors::mainPanelBottom.brighter(0.1f).withAlpha(alpha), boundsFHeight));
     g.fillRect (boundsF);
 
-    g.fillAll(juce::Colours::black.withAlpha(0.15f));
+    // g.fillAll(juce::Colours::black.withAlpha(0.12f));
+
 }
 
 void GuitarToolsAudioProcessorEditor::resized()

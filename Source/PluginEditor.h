@@ -13,8 +13,10 @@
 #include "GUI/Panels/SettingsOptionsPanel.h"
 #include "Utils/AAResizeUI.h"
 #include "GUI/Components/AAListOptionsPopup.h"
-#include "GUI/Components/AAPresetBrowser.h"
-#include "GUI/Components/AAPresetPopups.h"
+#include "PresetFolder/PresetManager.h"
+#include "PresetFolder/AAPresetBox.h"
+#include "PresetFolder/AAPresetBrowser.h"
+#include "PresetFolder/AAPresetPopups.h"
 //==============================================================================
 /**
 */
@@ -38,28 +40,29 @@ private:
     GuitarToolsAudioProcessor& audioProcessor;
     void showSettingsOptionsPopup();
     void showUISizeOptions();
-    void showPresetBrowser();
+    void showPopup (juce::Component& popup);
     void updateMainPanelAlpha();
     void componentVisibilityChanged (juce::Component& component) override;
     void updateEditorSize();
 
-    const float headerHeightRatio = 0.065f;
+    const float headerHeightRatio = 0.06f;
     float tooltipsHeightRatio = 0.55f;
-    AAResizeUI uiResize {audioProcessor.uiScale, 770, 660};
+    AAResizeUI uiResize {audioProcessor.uiScale, 700, 650};
 
-    HeaderPanel headerPanel {audioProcessor};
+    PresetManager presetManager {audioProcessor};
+    AAPresetBox presetBox {presetManager};
+    AAPresetBrowser presetBrowser {presetManager};
+    AASavePresetPopup savePresetPopup;
+    AADeletePresetPopup deletePresetPopup;
+    juce::File presetToDelete;
+    HeaderPanel headerPanel {audioProcessor, presetBox};
     MainPanel mainPanel {audioProcessor};
     InfoPanel infoPanel;
     TooltipsPanel tooltipsPanel;
     bool dismissInfoPanelOnMouseUp {false};
 
     SettingsOptionsPanel settingsOptionsPopup {uiResize, audioProcessor.showTooltips};
-    AAListOptionsPopup sizeOptionsPopup;
-    AAPresetBrowser presetBrowser {headerPanel.presetManager};
-    AASavePresetPopup savePresetPopup;
-    AADeletePresetPopup deletePresetPopup;
-    juce::File presetToDelete;
-    juce::DrawableButton resizeButton {"GUI Size", juce::DrawableButton::ImageFitted};
+    AAListOptionsPopup resizeOptionsPopup;
     juce::Image metalBackground = juce::ImageCache::getFromMemory (BinaryData::uiBackgroundTexture_png, BinaryData::uiBackgroundTexture_pngSize);
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuitarToolsAudioProcessorEditor)
 };

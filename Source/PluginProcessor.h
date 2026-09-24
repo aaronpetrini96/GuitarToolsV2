@@ -86,8 +86,6 @@ public:
     void loadDefaultPreset();
     void setCurrentPresetName(const juce::String& name) {currentPresetName = name;}
     juce::String getCurrentPresetName() const {return currentPresetName;}
-    void switchABState();
-    bool isStateAActive() const { return stateAActive; }
     //==============================================================================
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     juce::UndoManager undoManager { 100000, 100 };
@@ -99,9 +97,6 @@ public:
     bool showTooltips {false};
 
 private:
-    juce::ValueTree stateA, stateB;
-    bool stateAActive {true};
-
     //==============================================================================
 //    EQ PART
     //==============================================================================

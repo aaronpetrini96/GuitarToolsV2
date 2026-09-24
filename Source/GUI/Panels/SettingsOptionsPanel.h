@@ -13,19 +13,17 @@ public:
     SettingsOptionsPanel (AAResizeUI& resizeUIToUse, bool& showTooltipsToUse)
         : resizeUI (resizeUIToUse), showTooltips (showTooltipsToUse)
     {
-        drawRowDividers = true;
-        onItemClicked = [this] (const int itemID) { handleSettingsOption (itemID); };
     }
 
     void updateItems()
     {
         juce::Array<AAListOptionsPopup::Item> settingsOptions;
-        settingsOptions.add (AAListOptionsPopup::Item {1, showTooltips ? "Hide Tooltips" : "Show Tooltips"});
-        settingsOptions.add (resizeUI.getMakeDefaultOption (3));
-        settingsOptions.add (AAListOptionsPopup::Item {4, "Get the Manual"});
-        settingsOptions.add (AAListOptionsPopup::Item {5, "Report a Bug"});
-        settingsOptions.add (AAListOptionsPopup::Item {6, "Contact Me"});
-        settingsOptions.add (AAListOptionsPopup::Item {2, "About..."});
+        settingsOptions.add ({showTooltips ? "HIDE TOOLTIPS" : "SHOW TOOLTIPS", [this] { toggleTooltips(); }});
+        settingsOptions.add (resizeUI.getMakeDefaultOption());
+        settingsOptions.add ({"GET THE MANUAL", [] { openUserManual(); }});
+        settingsOptions.add ({"REPORT A BUG", [] { sendMail ("?subject=BugReport_GuitarTools2&body=Please include DAW used and the action that caused the problem. Thanks!"); }});
+        settingsOptions.add ({"CONTACT ME", [] { sendMail ({}); }});
+        settingsOptions.add ({"ABOUT...", [this] { if (onAboutClicked != nullptr) onAboutClicked(); }});
         setItems (settingsOptions);
     }
 
@@ -33,38 +31,25 @@ public:
     std::function<void()> onAboutClicked;
 
 private:
-    void handleSettingsOption (const int itemID)
+    void toggleTooltips()
     {
-        if (itemID == 1)
-        {
-            showTooltips = ! showTooltips;
+        showTooltips = ! showTooltips;
 
-            if (onTooltipsToggled != nullptr)
-                onTooltipsToggled();
-        }
-        else if (itemID == 2)
-        {
-            if (onAboutClicked != nullptr)
-                onAboutClicked();
-        }
-        else if (itemID == 3)
-        {
-            resizeUI.makeCurrentSizeDefault();
-        }
-        else if (itemID == 4)
-        {
-            const auto manualFile = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("GuitarTools2_User_Manual.pdf");
-            if (manualFile.replaceWithData (BinaryData::guitarTools2UserManual_pdf, BinaryData::guitarTools2UserManual_pdfSize))
-                manualFile.startAsProcess();
-        }
-        else if (itemID == 5)
-        {
-            juce::URL ("mailto:aaron.petrini96@gmail.com?subject=BugReport_GuitarTools2&body=Please include DAW used and the action that caused the problem. Thanks!").launchInDefaultBrowser();
-        }
-        else if (itemID == 6)
-        {
-            juce::URL ("mailto:aaron.petrini96@gmail.com").launchInDefaultBrowser();
-        }
+        if (onTooltipsToggled != nullptr)
+            onTooltipsToggled();
+    }
+
+    static void openUserManual()
+    {
+        const auto manualFile = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("GuitarTools2_User_Manual.pdf");
+
+        if (manualFile.replaceWithData (BinaryData::guitarTools2UserManual_pdf, BinaryData::guitarTools2UserManual_pdfSize))
+            manualFile.startAsProcess();
+    }
+
+    static void sendMail (const juce::String& mailQuery)
+    {
+        juce::URL ("mailto:aaron.petrini96@gmail.com" + mailQuery).launchInDefaultBrowser();
     }
 
     AAResizeUI& resizeUI;

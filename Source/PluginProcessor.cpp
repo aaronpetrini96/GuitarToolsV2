@@ -239,15 +239,6 @@ void GuitarToolsAudioProcessor::getStateInformation (juce::MemoryBlock& destData
     state.setProperty("CurrentPresetName", currentPresetName, nullptr);
     state.setProperty("UIScale", uiScale, nullptr);
     state.setProperty("ShowTooltips", showTooltips, nullptr);
-    state.setProperty ("StateAActive", stateAActive, nullptr);
-
-    const auto& inactiveState = stateAActive ? stateB : stateA;
-    if (inactiveState.isValid())
-    {
-        juce::ValueTree inactiveStateTree ("InactiveABState");
-        inactiveStateTree.appendChild (inactiveState.createCopy(), nullptr);
-        state.appendChild (inactiveStateTree, nullptr);
-    }
 
     std::unique_ptr<juce::XmlElement> xml (state.createXml());
     copyXmlToBinary(*xml, destData);
@@ -265,18 +256,6 @@ void GuitarToolsAudioProcessor::setStateInformation (const void* data, int sizeI
             uiScale = static_cast<float>(*uiScaleProp);
         if (auto* showTooltipsProp = state.getPropertyPointer("ShowTooltips"))
             showTooltips = static_cast<bool>(*showTooltipsProp);
-
-        stateAActive = static_cast<bool> (state.getProperty ("StateAActive", true));
-        stateA = {};
-        stateB = {};
-
-        const auto inactiveStateTree = state.getChildWithName ("InactiveABState");
-        if (inactiveStateTree.isValid())
-        {
-            auto& inactiveState = stateAActive ? stateB : stateA;
-            inactiveState = inactiveStateTree.getChild (0).createCopy();
-            state.removeChild (inactiveStateTree, nullptr);
-        }
 
         treeState.replaceState(state);
     }
@@ -303,33 +282,6 @@ void GuitarToolsAudioProcessor::loadPreset(const juce::File& file)
         treeState.replaceState(state);
     }
 }
-
-void GuitarToolsAudioProcessor::switchABState()
-{
-    auto& stateToStore = stateAActive ? stateA : stateB;
-    const auto& stateToLoad = stateAActive ? stateB : stateA;
-
-    stateToStore = treeState.copyState();
-    stateToStore.setProperty ("CurrentPresetName", currentPresetName, nullptr);
-
-    if (stateToLoad.isValid())
-    {
-        undoManager.beginNewTransaction();
-
-        for (const auto& storedParameter : stateToLoad)
-        {
-            const auto parameterID = storedParameter.getProperty ("id").toString();
-
-            if (parameterID != ParamIDs::getPluginBypassActiveName())
-                treeState.state.getChildWithProperty ("id", parameterID).setProperty ("value", storedParameter.getProperty ("value"), &undoManager);
-        }
-
-        currentPresetName = stateToLoad.getProperty ("CurrentPresetName").toString();
-    }
-
-    stateAActive = ! stateAActive;
-}
-
 
 //==============================================================================
 //==============================================================================

@@ -14,11 +14,14 @@ public:
     explicit AAVerticalSSLFader (juce::RangedAudioParameter& parameterToUse, const juce::String& suffix = {})
         : parameter (parameterToUse)
     {
-        jassert (thumbON.isValid() && thumbOFF.isValid() && trackImage.isValid());
+        jassert (thumbON.isValid() && thumbOFF.isValid());
+        // trackAspectRatio = (float) trackImage.getHeight() / (float) trackImage.getWidth();
+        thumbAspectRatio = (float) thumbOFF.getHeight() / (float) thumbOFF.getWidth();
+
         setSliderStyle (LinearVertical);
         setTextBoxStyle (NoTextBox, false, 0, 0);
         setSliderSnapsToMousePosition (false);
-        setMouseDragSensitivity(250);
+        setMouseDragSensitivity(300);
         setTextValueSuffix (suffix);
         setComponentID(parameter.getParameterID());
         attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, nullptr);
@@ -38,39 +41,33 @@ public:
         }
     }
 
-    void resized() override
-    {
-        juce::Slider::resized();
-
-        const auto boundsF = getLocalBounds().toFloat();
-        const auto slotAspectRatio = (float) trackImage.getHeight() / (float) trackImage.getWidth();
-        const auto slotWidth = boundsF.getHeight() / (slotAspectRatio + thumbToTrackWidthRatio * thumbAspectRatio);
-        const auto screwSize = slotWidth * screwToTrackWidthRatio;
-        const auto thumbWidth = slotWidth * thumbToTrackWidthRatio;
-        const auto thumbHeight = thumbWidth * thumbAspectRatio;
-        const auto screwGap = slotWidth * 0.25f;
-
-        slotBounds = boundsF.withSizeKeepingCentre (slotWidth, slotWidth * slotAspectRatio);
-        thumbBounds = boundsF.withSizeKeepingCentre (thumbWidth, thumbHeight);
-
-        const auto screwArea = boundsF.withSizeKeepingCentre (screwSize, screwSize);
-        topScrewBounds = screwArea.withBottomY (slotBounds.getY() - screwGap);
-        bottomScrewBounds = screwArea.withY (slotBounds.getBottom() + screwGap);
-
-        thumbTravel = { slotBounds.getY(), slotBounds.getBottom() };
-    }
-
     void paint (juce::Graphics& g) override
     {
         g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
-        g.setOpacity(0.95f);
-        g.drawImage (trackImage, slotBounds, juce::RectanglePlacement::fillDestination);
-        g.drawImage (screw, topScrewBounds, juce::RectanglePlacement::fillDestination);
-        g.drawImage (screw, bottomScrewBounds, juce::RectanglePlacement::fillDestination);
-        const auto thumbCY = thumbTravel.getEnd() -  static_cast<float>(valueToProportionOfLength(getValue())) * thumbTravel.getLength();
-        const auto positionedThumbBounds = thumbBounds.withCentre ({ thumbBounds.getCentreX(), thumbCY});
-        g.drawImage (thumbActive ? thumbON : thumbOFF, positionedThumbBounds, juce::RectanglePlacement::fillDestination);
+        // g.drawImage (trackImage, trackBounds, juce::RectanglePlacement::centred);
+
+        const auto thumbCY = thumbTravel.getEnd() - static_cast<float> (valueToProportionOfLength (getValue())) * thumbTravel.getLength();
+        g.drawImage (thumbActive ? thumbON : thumbOFF,
+                     thumbBounds.withCentre ({ thumbBounds.getCentreX(), thumbCY }),
+                     juce::RectanglePlacement::centred);
     }
+
+    void resized() override
+    {
+        juce::Slider::resized();
+        const auto b = getLocalBounds().toFloat();
+        const auto boundsF = b.withSizeKeepingCentre(b.getWidth(), b.getHeight());
+        const auto thumbHeight = boundsF.getHeight() * 0.2f;
+        const auto thumbWidth = thumbHeight / thumbAspectRatio;
+        // const auto trackHeight = boundsF.getHeight() - thumbHeight;
+        // const auto trackWidth = trackHeight / trackAspectRatio;
+
+        // trackBounds = boundsF.withSizeKeepingCentre (trackWidth, trackHeight);
+        thumbBounds = boundsF.withSizeKeepingCentre (thumbWidth, thumbHeight);
+        // thumbTravel = { trackBounds.getY(), trackBounds.getBottom() };
+        thumbTravel = { boundsF.getY() + thumbHeight * 0.5f, boundsF.getBottom() - thumbHeight * 0.5f };
+    }
+
 
 private:
 
@@ -88,21 +85,18 @@ private:
         juce::Slider::mouseDown (event);
     }
 
-    juce::Rectangle<float> slotBounds;
-    juce::Rectangle<float> topScrewBounds;
-    juce::Rectangle<float> bottomScrewBounds;
+    juce::Rectangle<float> trackBounds;
     juce::Rectangle<float> thumbBounds;
     juce::Range<float> thumbTravel;
     bool thumbActive {true};
 
-    juce::Image thumbOFF = juce::ImageCache::getFromMemory (BinaryData::thumbDarkGrey_png, BinaryData::thumbDarkGrey_pngSize);
-    juce::Image thumbON = juce::ImageCache::getFromMemory (BinaryData::thumbBlue_png, BinaryData::thumbBlue_pngSize);
-    juce::Image trackImage = juce::ImageCache::getFromMemory (BinaryData::faderTrackClippedShort_png, BinaryData::faderTrackClippedShort_pngSize);
-    juce::Image screw = juce::ImageCache::getFromMemory (BinaryData::screwDarkGreyv3_png, BinaryData::screwDarkGreyv3_pngSize);
+    juce::Image thumbOFF = juce::ImageCache::getFromMemory (BinaryData::thumbOff_trimmed_png, BinaryData::thumbOff_trimmed_pngSize);
+    juce::Image thumbON = juce::ImageCache::getFromMemory (BinaryData::thumbBlue2_png, BinaryData::thumbBlue2_pngSize);
+    // juce::Image trackImage = juce::ImageCache::getFromMemory (BinaryData::faderTrackClippedShorter_png, BinaryData::faderTrackClippedShorter_pngSize);
+    // juce::Image screw = juce::ImageCache::getFromMemory(BinaryData::screwDarkGreyv3_png, BinaryData::screwDarkGreyv3_pngSize);
 
-    const float thumbAspectRatio {1.5f}; // the thumb artwork must be drawn with this height to width ratio
-    const float thumbToTrackWidthRatio {2.75f};
-    const float screwToTrackWidthRatio {1.5f};
+    float trackAspectRatio {0.f};
+    float thumbAspectRatio {0.f};
 
     juce::RangedAudioParameter& parameter;
     std::unique_ptr<juce::SliderParameterAttachment> attachment;

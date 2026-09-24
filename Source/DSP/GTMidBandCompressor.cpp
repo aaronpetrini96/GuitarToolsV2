@@ -74,14 +74,15 @@ void GTMidBandCompressor::process(juce::AudioBuffer<float>& buffer)
 
     const auto numChannels = buffer.getNumChannels();
     const auto numSamples = buffer.getNumSamples();
-    auto& midBandBuffer = bandBuffers[1];
+    auto* const* midBandChannels = bandBuffers[1].getArrayOfWritePointers();
+
 
     for (int sample = 0; sample < numSamples; ++sample)
     {
         auto linkedInput = 0.f;
 
         for (int channel = 0; channel < numChannels; ++channel)
-            linkedInput = juce::jmax(linkedInput, std::abs(midBandBuffer.getSample(channel, sample)));
+            linkedInput = juce::jmax(linkedInput, std::abs(midBandChannels[channel][sample]));
 
         const auto envelope = envelopeFilter.processSample(0, linkedInput);
         const auto bandLevel = juce::jmax(bandLevelFilter.processSample(0, linkedInput), levelFloorGain);
@@ -92,45 +93,53 @@ void GTMidBandCompressor::process(juce::AudioBuffer<float>& buffer)
             continue;
 
         const auto threshold = bandLevel * thresholdOffsetGain;
-        const auto overshoot = envelope / threshold;
-        const auto overshootRoot = std::sqrt(overshoot);
-        const auto overshootQuarterRoot = std::sqrt(overshootRoot);
-        auto overshootPower = overshootRoot * overshootQuarterRoot;              // overshoot^0.75, a 4:1 ratio
+        auto compressorGain = makeupGain;
 
-        if (extremeMode)
-            overshootPower *= std::sqrt(overshootQuarterRoot);                   // overshoot^0.875, an 8:1 ratio
+        if (envelope >= threshold)
+        {
+            const auto overshoot = envelope / threshold;
+            const auto overshootRoot = std::sqrt(overshoot);
+            const auto overshootQuarterRoot = std::sqrt(overshootRoot);
+            auto overshootPower = overshootRoot * overshootQuarterRoot;              // overshoot^0.75, a 4:1 ratio
 
-        const auto compressorGain = (envelope < threshold ? 1.f : 1.f / overshootPower) * makeupGain;
+            if (extremeMode)
+                overshootPower *= std::sqrt(overshootQuarterRoot);                   // overshoot^0.875, an 8:1 ratio
+
+            compressorGain /= overshootPower;
+        }
+
         const auto gain = 1.f + (compressorGain - 1.f) * activeProportion;
 
         for (int channel = 0; channel < numChannels; ++channel)
-            midBandBuffer.setSample(channel, sample, midBandBuffer.getSample(channel, sample) * gain);
+            midBandChannels[channel][sample] *= gain;
     }
 
-    buffer.clear();
-
-    for (const auto& bandBuffer : bandBuffers)
-        for (int channel = 0; channel < numChannels; ++channel)
-            buffer.addFrom(channel, 0, bandBuffer, channel, 0, numSamples);
+    for (int channel = 0; channel < numChannels; ++channel)
+    {
+        buffer.copyFrom(channel, 0, bandBuffers[0], channel, 0, numSamples);
+        buffer.addFrom(channel, 0, bandBuffers[1], channel, 0, numSamples);
+        buffer.addFrom(channel, 0, bandBuffers[2], channel, 0, numSamples);
+    }
 }
 
 void GTMidBandCompressor::splitBands(const juce::AudioBuffer<float>& inputBuffer)
 {
-    for (auto& bandBuffer : bandBuffers)
-        bandBuffer.makeCopyOf(inputBuffer, true);
+    bandBuffers[0].makeCopyOf(inputBuffer, true);
+    bandBuffers[1].makeCopyOf(inputBuffer, true);
 
     auto lowBandBlock = juce::dsp::AudioBlock<float>(bandBuffers[0]);
     auto midBandBlock = juce::dsp::AudioBlock<float>(bandBuffers[1]);
-    auto highBandBlock = juce::dsp::AudioBlock<float>(bandBuffers[2]);
 
     auto lowBandContext = juce::dsp::ProcessContextReplacing<float>(lowBandBlock);
     auto midBandContext = juce::dsp::ProcessContextReplacing<float>(midBandBlock);
-    auto highBandContext = juce::dsp::ProcessContextReplacing<float>(highBandBlock);
 
     LP1.process(lowBandContext);
     AP2.process(lowBandContext);
     HP1.process(midBandContext);
     bandBuffers[2].makeCopyOf(bandBuffers[1], true);
     LP2.process(midBandContext);
+
+    auto highBandBlock = juce::dsp::AudioBlock<float>(bandBuffers[2]);
+    auto highBandContext = juce::dsp::ProcessContextReplacing<float>(highBandBlock);
     HP2.process(highBandContext);
 }

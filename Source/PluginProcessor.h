@@ -14,7 +14,6 @@
 #include <utility>
 #include <vector>
 
-
 #include "DSP/AALevelMatch.h"
 #include "DSP/GTMidBandCompressor.h"
 #include "Utils/AAParamUtils.h"
@@ -125,7 +124,7 @@ private:
 //    =====  UPDATE COEFFICIENTS =====
     
     using Coefficients = EQFilter::CoefficientsPtr; //alias for type needed to update coef
-    static void updateCoefficients(Coefficients& old, const Coefficients& replacements);
+    static void updateCoefficients(Coefficients& old, const std::array<float, 6>& replacements);
     void updateLowCutFilters(const ChainSettings& chainSettings);
     void updateHighCutFilters(const ChainSettings& chainSettings);
     void updateResoFilters(const ChainSettings& chainSettings);

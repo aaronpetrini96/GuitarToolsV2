@@ -25,18 +25,19 @@ namespace  GTColors //project specific
     inline juce::Colour mainPanelBottom {42, 45,49};
 
     inline juce::Colour headerPanelStart {12, 12, 12};
-    inline juce::Colour headerPanelEnd {22, 26, 36};
+    inline juce::Colour headerPanelEnd {26, 30, 50};
 
     inline juce::Colour popupDarkBackground {20, 24, 34};
+    inline juce::Colour popupOutline {juce::Colour (64, 196, 255).withAlpha (0.4f)};
 
-    inline juce::Colour fadersPlateGradientStart {juce::Colours::black.withAlpha (0.25f)};
-    inline juce::Colour fadersPlateGradientEnd {juce::Colours::black.withAlpha (0.2f)};
+    inline juce::Colour fadersPlateGradientStart {juce::Colours::black.withAlpha (0.175f)};
+    inline juce::Colour fadersPlateGradientEnd {juce::Colours::black.withAlpha (0.225f)};
 
     inline juce::Colour iconSVGColor {100, 100, 100};
     inline juce::Colour iconNormalColor {200, 200, 200};
     inline juce::Colour iconOverColor {120, 120, 120};
 
-    inline juce::Colour presetBox {40, 47, 65};
+    inline juce::Colour presetBox {35, 42, 60};
     inline juce::Colour presetPopupHighlight {30, 50, 80};
 
     inline juce::Colour infoPanelTop {36, 45, 81};
@@ -70,9 +71,9 @@ namespace AAUITools
         const auto outlineThickness = dividerThickness * 0.125f;
         const auto outlineExpansion = outlineThickness * 0.5f;
 
-        g.setColour (GTColors::dividerLinesEnd);
+        g.setColour (GTColors::dividerLinesStart);
         g.fillRoundedRectangle (dividerBounds, cornerSize);
-        g.setColour (GTColors::dividerLinesEnd.brighter (0.1f));
+        g.setColour (GTColors::dividerLinesStart.brighter (0.1f));
         g.drawRoundedRectangle (dividerBounds.expanded (outlineExpansion), cornerSize + outlineExpansion, outlineThickness);
     }
 }
@@ -120,4 +121,11 @@ namespace AAFonts
             BinaryData::Inter_18ptBold_ttf, BinaryData::Inter_18ptBold_ttfSize);
         return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
+
+    inline juce::Font futuraBold (const float fontHeight)
+    {
+        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (BinaryData::Futura_Bold_otf, BinaryData::Futura_Bold_otfSize);
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
+    }
+
 }

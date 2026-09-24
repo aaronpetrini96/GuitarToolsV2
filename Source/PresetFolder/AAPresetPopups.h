@@ -8,7 +8,7 @@
 
 #include <functional>
 
-#include "../LAF/PresetPopupLAF.h"
+#include "../GUI/LAF/PresetPopupLAF.h"
 
 class AASavePresetPopup : public juce::Component
 {
@@ -26,7 +26,7 @@ public:
             isConfirmingOverwrite = false;
             saveButton.setButtonText ("SAVE");
         };
-        nameEditor.setColour (juce::TextEditor::backgroundColourId, GTColors::gradientNavyDark);
+        nameEditor.setColour (juce::TextEditor::backgroundColourId, GTColors::headerPanelEnd);
         nameEditor.setColour (juce::TextEditor::textColourId, GTColors::almostWhite);
         nameEditor.setColour (juce::TextEditor::outlineColourId, GTColors::almostWhite);
         addAndMakeVisible (nameEditor);

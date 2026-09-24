@@ -8,8 +8,8 @@
 
 #include <functional>
 
-#include "../LAF/PresetBrowserLAF.h"
-#include "../../Utils/PresetManager.h"
+#include "../GUI/LAF/PresetBrowserLAF.h"
+#include "PresetManager.h"
 
 class AAPresetBrowser : public juce::Component
 {
@@ -98,15 +98,15 @@ public:
     void resized() override
     {
         const auto boundsF = getLocalBounds().toFloat();
-        const auto numVisibleRows = juce::jmin (maxVisibleRows, rows.size());
-        const auto rowHeight = boundsF.getHeight() / ((float) numVisibleRows + 1.0f);
+        const auto rowHeight = boundsF.getHeight() / 7.f;
+        const auto tabHeight = rowHeight;
         const auto tabWidth = boundsF.getWidth() * 0.5f;
 
-        defaultTabButton.setBounds (boundsF.withSize (tabWidth, rowHeight).toNearestInt());
+        defaultTabButton.setBounds (boundsF.withSize (tabWidth, tabHeight).toNearestInt());
         userTabButton.setBounds (defaultTabButton.getBounds().toFloat().withX (tabWidth).toNearestInt());
 
-        const auto listBounds = boundsF.withTop (rowHeight);
-        const auto scrollBarThickness = rows.size() > numVisibleRows ? rowHeight * 0.25f : 0.0f;
+        const auto listBounds = boundsF.withTop (tabHeight);
+        const auto scrollBarThickness = rowHeight * (float) rows.size() > listBounds.getHeight() ? rowHeight * 0.25f : 0.0f;
         viewport.setScrollBarThickness (juce::roundToInt (scrollBarThickness));
         viewport.setBounds (listBounds.toNearestInt());
 
@@ -123,7 +123,8 @@ public:
         }
     }
 
-    int maxVisibleRows {12};
+    float rowHeightPOH {0.125f};
+    float tabHeightRowRatio {1.f};
     std::function<void (const juce::File& presetFile)> onDeleteRequested;
     std::function<void()> onRowsChanged;
 
@@ -140,7 +141,7 @@ private:
     PresetManager::PresetType selectedPresetType {PresetManager::PresetType::factory};
     juce::Array<juce::File> presetFiles;
 
-    juce::TextButton defaultTabButton {"DEFAULT"}, userTabButton {"USER"};
+    juce::TextButton defaultTabButton {"Factory"}, userTabButton {"User"};
     juce::Component rowsHolder;
     juce::OwnedArray<juce::TextButton> rows, deleteButtons;
     juce::Viewport viewport;

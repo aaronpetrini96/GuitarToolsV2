@@ -51,6 +51,33 @@ void PresetManager::loadPresetFile(const juce::File& presetFile)
         onPresetNameChanged();
 }
 
+void PresetManager::loadAdjacentPreset(const int indexOffset)
+{
+    auto presetFiles = getPresetFiles (PresetType::factory);
+    presetFiles.addArray (getPresetFiles (PresetType::user));
+
+    const auto numPresets = presetFiles.size();
+
+    if (numPresets == 0)
+        return;
+
+    const auto currentPresetName = getCurrentPresetName();
+    auto currentIndex = -1;
+
+    for (int fileIndex = 0; fileIndex < numPresets; ++fileIndex)
+    {
+        if (presetFiles[fileIndex].getFileNameWithoutExtension() == currentPresetName)
+        {
+            currentIndex = fileIndex;
+            break;
+        }
+    }
+
+    const auto adjacentIndex = currentIndex < 0 ? (indexOffset > 0 ? 0 : numPresets - 1)
+                                                : (currentIndex + indexOffset + numPresets) % numPresets;
+    loadPresetFile (presetFiles[adjacentIndex]);
+}
+
 juce::Array<juce::File> PresetManager::getPresetFiles(const PresetType presetType) const
 {
     juce::Array<juce::File> files;
@@ -58,7 +85,7 @@ juce::Array<juce::File> PresetManager::getPresetFiles(const PresetType presetTyp
 
     if (presetType == PresetType::user)
     {
-        files = presetFolder.getChildFile ("User PresetFolder").findChildFiles (juce::File::findFiles, false, "*.xml");
+        files = presetFolder.getChildFile ("User Presets").findChildFiles (juce::File::findFiles, false, "*.xml");
         files.sort();
         return files;
     }
@@ -67,7 +94,7 @@ juce::Array<juce::File> PresetManager::getPresetFiles(const PresetType presetTyp
         if (const auto rootPresetFile = presetFolder.getChildFile (rootPresetFileName); rootPresetFile.existsAsFile())
             files.add (rootPresetFile);
 
-    auto factoryPresetFiles = presetFolder.getChildFile ("Factory PresetFolder").findChildFiles (juce::File::findFiles, false, "*.xml");
+    auto factoryPresetFiles = presetFolder.getChildFile ("Factory Presets").findChildFiles (juce::File::findFiles, false, "*.xml");
     factoryPresetFiles.sort();
     files.addArray (factoryPresetFiles);
 
@@ -76,7 +103,7 @@ juce::Array<juce::File> PresetManager::getPresetFiles(const PresetType presetTyp
 
 juce::File PresetManager::getUserPresetFile(const juce::String& presetName) const
 {
-    return getPresetFolder().getChildFile ("User PresetFolder").getChildFile (juce::File::createLegalFileName (presetName.trim()) + ".xml");
+    return getPresetFolder().getChildFile ("User Presets").getChildFile (juce::File::createLegalFileName (presetName.trim()) + ".xml");
 }
 
 juce::String PresetManager::getCurrentPresetName() const
@@ -92,13 +119,13 @@ juce::File PresetManager::getPresetFolder()
           #endif
            .getChildFile (JucePlugin_Manufacturer)
            .getChildFile (JucePlugin_Name)
-           .getChildFile ("PresetFolder");
+           .getChildFile ("Presets");
 }
 
 void PresetManager::installFactoryPresets()
 {
     const auto presetFolder = getPresetFolder();
-    const auto factoryPresetFolder = presetFolder.getChildFile ("Factory PresetFolder");
+    const auto factoryPresetFolder = presetFolder.getChildFile ("Factory Presets");
     factoryPresetFolder.createDirectory();
 
     for (int resourceIndex = 0; resourceIndex < BinaryData::namedResourceListSize; ++resourceIndex)

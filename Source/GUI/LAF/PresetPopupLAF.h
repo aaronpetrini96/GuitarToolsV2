@@ -8,7 +8,21 @@
 class PresetPopupLAF : public juce::LookAndFeel_V4
 {
 public:
-    PresetPopupLAF() = default;
+    enum ColourIds
+    {
+        backgroundColourId = 0x2a30001,
+        textColourId       = 0x2a30002,
+        outlineColourId    = 0x2a30003,
+        highlightColourId  = 0x2a30004
+    };
+
+    PresetPopupLAF()
+    {
+        setColour (backgroundColourId, GTColors::presetBox.darker(0.1f));
+        setColour (textColourId, GTColors::sectionTitleText);
+        setColour (outlineColourId, GTColors::headerPanelEnd);
+        setColour (highlightColourId, GTColors::presetPopupHighlight);
+    }
 
     static PresetPopupLAF* get()
     {
@@ -18,16 +32,18 @@ public:
 
     void drawPopupBackground (juce::Graphics& g, juce::Rectangle<float> bounds)
     {
-        const auto cornerSize = bounds.getWidth() * 0.02f;
-        const auto outlineThickness = bounds.getWidth() * 0.001f;
-        g.setGradientFill (juce::ColourGradient::vertical (GTColors::gradientNavyDark, bounds.getY(), GTColors::gradientNavy, bounds.getBottom()));
+        const auto cornerSize = bounds.getWidth() * 0.03f;
+        // const auto outlineThickness = bounds.getWidth() * outlineThicknessPOW;
+        const auto backgroundColour = findColour (backgroundColourId);
+        // const auto outlineColour = findColour (outlineColourId);
+        g.setColour (backgroundColour);
         g.fillRoundedRectangle (bounds, cornerSize);
 
-        g.setColour (GTColors::sectionTitleText);
-        g.drawRoundedRectangle (bounds.reduced (outlineThickness * 0.5f), cornerSize, outlineThickness);
+        // g.setColour (outlineColour);
+        // g.drawRoundedRectangle (bounds.reduced (outlineThickness * 0.5f), cornerSize, outlineThickness);
     }
 
-    void drawButtonBackground (juce::Graphics&, juce::Button&, const juce::Colour&, bool, bool) override
+    void drawButtonBackground (juce::Graphics& g, juce::Button& button, const juce::Colour&, bool , bool) override
     {
     }
 
@@ -35,11 +51,21 @@ public:
     {
         const auto boundsF = button.getLocalBounds().toFloat();
         const auto fontHeight = boundsF.getHeight() * 0.675f;
+        const auto textColour = findColour (textColourId);
 
-        g.setColour ((shouldDrawButtonAsHighlighted ? GTColors::sectionTitleText.withBrightness(2.f) : GTColors::sectionTitleText).withMultipliedAlpha (button.isEnabled() ? 1.0f : 0.5f));
+        if (shouldDrawButtonAsHighlighted)
+        {
+            g.setColour (findColour (highlightColourId));
+            g.fillRoundedRectangle (boundsF, boundsF.getHeight() * highlightCornerSizePOH);
+        }
+
+        g.setColour ((shouldDrawButtonAsHighlighted ? textColour.withBrightness(2.f) : textColour).withMultipliedAlpha (button.isEnabled() ? 1.0f : 0.5f));
         g.setFont (AAFonts::interMedium (fontHeight));
         g.drawFittedText (button.getButtonText(), boundsF.reduced (boundsF.getWidth() * 0.05f, boundsF.getHeight() * 0.04f).toNearestInt(), juce::Justification::centred, 1);
     }
+
+    float outlineThicknessPOW {0.014f};
+    float highlightCornerSizePOH {0.22f};
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PresetPopupLAF)

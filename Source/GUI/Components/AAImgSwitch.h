@@ -27,12 +27,24 @@ public:
         toggleSwitch.setColour (juce::DrawableButton::backgroundOnColourId, GTColors::transparent);
         addAndMakeVisible (toggleSwitch);
 
+        label.setJustificationType (juce::Justification::centredTop);
+        label.setColour (juce::Label::textColourId, GTColors::almostWhite.withAlpha (0.9f));
+        label.setInterceptsMouseClicks (false, false);
+        addAndMakeVisible (label);
+
         createAttachment (nullptr);
     }
 
     void resized() override
     {
-        toggleSwitch.setBounds (getLocalBounds());
+        const auto boundsF = getLocalBounds().toFloat();
+        const auto switchHeight = boundsF.getHeight() * 0.6f;
+        const auto switchWidth = switchHeight * imgAspectRatio;
+        const auto labelBounds = boundsF.withTop (switchHeight);
+
+        toggleSwitch.setBounds (boundsF.withSizeKeepingCentre (switchWidth, switchHeight).withY (0.f).toNearestInt());
+        label.setFont (AAFonts::ibmPlexSansMedium (labelBounds.getHeight() * 0.575f));
+        label.setBounds (labelBounds.toNearestInt());
     }
 
     void setUndoManager (juce::UndoManager& undoManager)
@@ -45,6 +57,11 @@ public:
         toggleSwitch.setTooltip (newTooltip);
     }
 
+    void setLabelText (const juce::String& newText)
+    {
+        label.setText (newText, juce::dontSendNotification);
+    }
+
     float imgAspectRatio {1.0f};
 
 private:
@@ -55,9 +72,10 @@ private:
     }
 
 
-    std::unique_ptr<juce::Drawable> imgPosition1 {juce::Drawable::createFromImageData(BinaryData::_1_png, BinaryData::_1_pngSize)};
-    std::unique_ptr<juce::Drawable> imgPosition2 {juce::Drawable::createFromImageData(BinaryData::_2_png, BinaryData::_2_pngSize)};
+    std::unique_ptr<juce::Drawable> imgPosition1 {juce::Drawable::createFromImageData(BinaryData::toggleSwitchLeft_png, BinaryData::toggleSwitchLeft_pngSize)};
+    std::unique_ptr<juce::Drawable> imgPosition2 {juce::Drawable::createFromImageData(BinaryData::toggleSwitchRight_png, BinaryData::toggleSwitchRight_pngSize)};
     juce::DrawableButton toggleSwitch {"Switch", juce::DrawableButton::ImageFitted};
+    juce::Label label;
     juce::RangedAudioParameter& parameter;
     std::unique_ptr<juce::ButtonParameterAttachment> attachment;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AAImgSwitch)

@@ -13,6 +13,7 @@
 #include "GUI/Components/AANeveRadioButtons.h"
 #include "GUI/Components/AASquareSSLButton.h"
 #include "GUI/Components/AAIconAndTextButton.h"
+#include "GUI/Components/AAImgSwitch.h"
 
 
 class MainPanel : public juce::Component
@@ -22,9 +23,13 @@ public:
 
     void paint (juce::Graphics& g) override;
     void resized() override;
+    void resizeLevelsSection(const juce::Rectangle<float>&);
+    void resizeKnobs(const juce::Rectangle<float>&);
+    void resizeMagicButtons(const juce::Rectangle<float>&);
 
     float sectionTitleH {0};
     float dividerThickness{0.f};
+    float sideSectionPOW {0.32f};
 
 private:
     GuitarToolsAudioProcessor& audioProcessor;
@@ -35,10 +40,10 @@ private:
     juce::Rectangle<float> cutFiltersArea, buttonsArea, shelfFiltersArea, plateBounds, magicDividerBounds;
     juce::Label cutFiltersGroupLabel {{}, "TONE RANGE"}, magicButtonsGroupLabel {{}, "CLEAN-UP"}, shelfFiltersGroupLabel {{}, "COLOR"};
 
-    AALightStrokeKnob lowCutFreqKnob {*audioProcessor.treeState.getParameter (ParamIDs::getLowCutFreqName()), "LOW CUT", true, false, false};
-    AALightStrokeKnob highCutFreqKnob {*audioProcessor.treeState.getParameter (ParamIDs::getHighCutFreqName()), "HIGH CUT", true, false, true};
-    AALightStrokeKnob lowShelfGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getDepthGainName()), "DEPTH", true, true, false};
-    AALightStrokeKnob highShelfGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getPresenceGainName()), "PRESENCE", true, true, false};
+    AALightStrokeKnob lowCutFreqKnob {*audioProcessor.treeState.getParameter (ParamIDs::getLowCutFreqName()), "LOW CUT", false, false};
+    AALightStrokeKnob highCutFreqKnob {*audioProcessor.treeState.getParameter (ParamIDs::getHighCutFreqName()), "HIGH CUT", false, true};
+    AALightStrokeKnob lowShelfGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getDepthGainName()), "DEPTH", true, false};
+    AALightStrokeKnob highShelfGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getPresenceGainName()), "PRESENCE", true, false};
 
     AANeveRadioButtons presenceFreqButtons {*audioProcessor.treeState.getParameter (ParamIDs::getPresenceModeName()), {"A", "B", "C", "D"}};
     AANeveRadioButtons depthFreqButtons {*audioProcessor.treeState.getParameter (ParamIDs::getDepthModeName()), {"A", "B", "C", "D"}};
@@ -57,6 +62,10 @@ private:
     AASquareSSLButton mudActiveButton {*audioProcessor.treeState.getParameter (ParamIDs::getMudActiveName()), mudBypassLabel.getText()};
     AASquareSSLButton compActiveButton {*audioProcessor.treeState.getParameter (ParamIDs::getCompActiveName()), compBypassLabel.getText()};
 
+    AAImgSwitch resoModeSwitch {*audioProcessor.treeState.getParameter (ParamIDs::getResoExtremeActiveName())};
+    AAImgSwitch compModeSwitch {*audioProcessor.treeState.getParameter (ParamIDs::getCompExtremeActiveName())};
+    AAImgSwitch mudModeSwitch {*audioProcessor.treeState.getParameter (ParamIDs::getMudExtremeActiveName())};
+
     juce::Label inputGainLabel {{}, "IN"};
     juce::Label outputGainLabel {{}, "OUT"};
     AANotchSSLKnob inputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getInputGainName()), &inputGainLabel};
@@ -66,6 +75,7 @@ private:
     AAIconAndTextButton levelMatchControl {*audioProcessor.treeState.getParameter (ParamIDs::getLoudnessMatchActiveName()), BinaryData::linkON_svg, BinaryData::linkON_svgSize, "MATCH", "MATCHED"};
 
     FadersPlatePanel fadersPlatePanel {audioProcessor};
+    juce::Image screwA = juce::ImageCache::getFromMemory (BinaryData::allenKeyScrewDarkGrey_png, BinaryData::allenKeyScrewDarkGrey_pngSize);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainPanel)
 };

@@ -25,7 +25,7 @@ public:
         for (auto* label : { &nameLabel, &valueLabel })
         {
             label->setInterceptsMouseClicks (false, false);
-            label->setColour (juce::Label::textColourId, GTColors::almostWhite.withAlpha(0.9f));
+            label->setColour (juce::Label::textColourId, GTColors::sectionTitleText);
             label->setJustificationType(juce::Justification::centred);
             addAndMakeVisible (*label);
         }
@@ -44,42 +44,50 @@ public:
     {
         const auto boundsF = getLocalBounds().toFloat();
         const auto fontBounds = boundsF.withHeight (boundsF.getHeight() * 0.14f);
-
-        nameLabel.setFont (AAFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.7f));
+        nameLabel.setFont (AAFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.675f));
         nameLabel.setBounds (fontBounds.toNearestInt());
-        valueLabel.setFont (AAFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.67f));
+        valueLabel.setFont (AAFonts::interMedium (fontBounds.getHeight() * 0.625f));
         valueLabel.setBounds (fontBounds.withBottomY (boundsF.getHeight()).toNearestInt());
     }
 
     void paint (juce::Graphics& g) override
     {
         const auto boundsF = getLocalBounds().toFloat();
+        //========   KNOB IMAGE  ========//
         const auto imageBounds = boundsF.reduced (boundsF.getWidth() * knobReducePOW);
-
         g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
-        g.setOpacity (0.8f);
-        g.drawImage (knobImage, imageBounds, juce::RectanglePlacement::fillDestination);
+        g.drawImage (knobImage, imageBounds, juce::RectanglePlacement::centred);
 
-        const auto radiusReference = imageBounds.getWidth() * 0.25f;
+        const auto activeColor = GTColors::activeNeonBlue.withAlpha (0.9f);
+        const auto offColor = GTColors::dividerLinesEnd.withAlpha (0.9f);;
+        //========   POINTS DRAWING  ========//
+        const auto radiusReference = imageBounds.getWidth() * 0.255;
         const auto centre = imageBounds.getCentre();
-
         const juce::PathStrokeType stroke (radiusReference * 0.075f, juce::PathStrokeType::mitered, juce::PathStrokeType::butt);
-        const auto sliderPos = static_cast<float> (valueToProportionOfLength (getValue()));
-
-        const auto angle = startAngle + sliderPos * (endAngle - startAngle);
+        const auto angle = startAngle + static_cast<float> (valueToProportionOfLength (getValue())) * (endAngle - startAngle);
         const auto midAngle = (startAngle + endAngle) * 0.5f;
-        auto fillAngleRange = juce::Range<float> { startAngle, angle };
 
+        auto fillAngleRange = juce::Range<float> { startAngle, angle };
         if (drawFromMiddle)
             fillAngleRange = { juce::jmin (angle, midAngle), juce::jmax (angle, midAngle) };
-        else if (fillFromEnd)
+        if (fillFromEnd)
             fillAngleRange = { angle, endAngle };
 
         const auto arcRadius = radiusReference * 1.5f;
-        paintLightDots (g, centre, arcRadius, radiusReference, fillAngleRange);
+        const auto dotRadius = radiusReference * 0.05f;
+        for (auto dotIndex = 0; dotIndex < numberOfDots; ++dotIndex)
+        {
+            const auto dotProportion = static_cast<float> (dotIndex) / static_cast<float> (numberOfDots - 1);
+            const auto dotAngle = startAngle + dotProportion * (endAngle - startAngle);
+            const juce::Point<float> dotDirection (std::sin (dotAngle), -std::cos (dotAngle));
+            const auto dotCentre = centre + dotDirection * arcRadius * 0.77f;
+            const auto isLit = dotAngle >= fillAngleRange.getStart() && dotAngle <= fillAngleRange.getEnd();
+            g.setColour (isLit ? activeColor: offColor);
+            g.fillEllipse (dotCentre.x - dotRadius, dotCentre.y - dotRadius, dotRadius * 2.0f, dotRadius * 2.0f);
+        }
 
-        g.setColour (GTColors::activeNeonBlue);
-
+        //========   TICK PAINTING  ========//
+        g.setColour (activeColor);
         const juce::Point<float> tickDirection (std::sin (angle), -std::cos (angle));
         juce::Path tick;
         tick.startNewSubPath (centre + tickDirection * (radiusReference * 0.4f));
@@ -88,28 +96,6 @@ public:
     }
 
 private:
-    void createAttachment (juce::UndoManager* undoManager)
-    {
-        attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, undoManager);
-    }
-
-    void paintLightDots (juce::Graphics& g, juce::Point<float> centre, float arcRadius, float radiusReference, juce::Range<float> fillAngleRange)
-    {
-        const auto dotRadius = radiusReference * 0.05f;
-
-        for (auto dotIndex = 0; dotIndex < numberOfDots; ++dotIndex)
-        {
-            const auto dotProportion = static_cast<float> (dotIndex) / static_cast<float> (numberOfDots - 1);
-            const auto dotAngle = startAngle + dotProportion * (endAngle - startAngle);
-            const juce::Point<float> dotDirection (std::sin (dotAngle), -std::cos (dotAngle));
-            const auto dotCentre = centre + dotDirection * arcRadius * 0.77f;
-
-            const auto isLit = dotAngle >= fillAngleRange.getStart() && dotAngle <= fillAngleRange.getEnd();
-            g.setColour (isLit ? GTColors::activeNeonBlue : GTColors::dividerLinesStart);
-            g.fillEllipse (dotCentre.x - dotRadius, dotCentre.y - dotRadius, dotRadius * 2.0f, dotRadius * 2.0f);
-        }
-    }
-
     void valueChanged() override
     {
         updateValueLabelText();
@@ -139,15 +125,15 @@ private:
         valueLabel.setText (valueText + "%", juce::dontSendNotification);
     }
 
-    juce::Image knobImage = juce::ImageCache::getFromMemory (BinaryData::knob_preview3_png, BinaryData::knob_preview3_pngSize);
 
-    juce::RangedAudioParameter& parameter;
-    const bool drawFromMiddle;
-    const bool fillFromEnd;
-
+    // juce::Image knobImage = juce::ImageCache::getFromMemory(BinaryData::knob_preview3_png, BinaryData::knob_preview3_pngSize);
+    juce::Image knobImage = juce::ImageCache::getFromMemory(BinaryData::knob_preview3Shadow_png, BinaryData::knob_preview3Shadow_pngSize);
     juce::Label nameLabel;
     juce::Label valueLabel;
+    juce::RangedAudioParameter& parameter;
 
+    const bool drawFromMiddle;
+    const bool fillFromEnd;
     const float startAngle { 1.25f * juce::MathConstants<float>::pi };
     const float endAngle { 2.75f * juce::MathConstants<float>::pi };
     const int numberOfDots { 13 };

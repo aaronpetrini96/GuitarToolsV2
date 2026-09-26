@@ -32,26 +32,28 @@ public:
 
         textLabel.setJustificationType (juce::Justification::centredTop);
         textLabel.setInterceptsMouseClicks (false, false);
-        textLabel.setMinimumHorizontalScale (1.f);
+        textLabel.setBorderSize(juce::BorderSize<int> (0));
         addAndMakeVisible (textLabel);
 
-        createAttachment (nullptr);
+        attachment = std::make_unique<juce::ButtonParameterAttachment> (parameter, *this, nullptr);
+        attachment->sendInitialUpdate();
         updateLabel();
     }
 
     void setUndoManager (juce::UndoManager& undoManager)
     {
-        createAttachment (&undoManager);
+        attachment = std::make_unique<juce::ButtonParameterAttachment> (parameter, *this, &undoManager);
+        attachment->sendInitialUpdate();
     }
 
     void resized() override
     {
         const auto boundsF = getLocalBounds().toFloat();
-        const auto iconSize = boundsF.getHeight() * 0.5f;
+        const auto iconSize = boundsF.getHeight() * 0.6f;
         const auto textBounds = boundsF.withTop (iconSize);
 
         iconBounds = boundsF.withSizeKeepingCentre (iconSize, iconSize).withY (0.f);
-        textLabel.setFont (AAFonts::ibmPlexSansMedium (textBounds.getHeight() * labelFontPOH));
+        textLabel.setFont (AAFonts::ibmPlexSansMedium (textBounds.getHeight() * 0.5f));
         textLabel.setBounds (textBounds.toNearestInt());
     }
 
@@ -61,18 +63,10 @@ public:
         auto* icon = isOn ? iconOn.get() : (shouldDrawButtonAsHighlighted ? iconOver.get() : iconOff.get());
 
         if (icon != nullptr)
-            icon->drawWithin (g, iconBounds, juce::RectanglePlacement::centred, 1.0f);
+            icon->drawWithin (g, iconBounds, juce::RectanglePlacement::centred, 0.85f);
     }
-
-    float labelFontPOH {0.65f};
 
 private:
-    void createAttachment (juce::UndoManager* undoManager)
-    {
-        attachment = std::make_unique<juce::ButtonParameterAttachment> (parameter, *this, undoManager);
-        attachment->sendInitialUpdate();
-    }
-
     void buttonStateChanged() override
     {
         updateLabel();
@@ -81,8 +75,8 @@ private:
     void updateLabel()
     {
         const auto isOn = getToggleState() || isDown();
-        const auto textColour = isOn ? GTColors::activeNeonBlue
-                                     : (isOver() ? GTColors::iconOverColor : GTColors::almostWhite.withAlpha (0.9f));
+        const auto textColour = isOn ? GTColors::activeNeonBlue : (isOver() ? GTColors::iconOverColor : GTColors::almostWhite.withAlpha (0.9f));
+
 
         textLabel.setText (getToggleState() ? onText : offText, juce::dontSendNotification);
         textLabel.setColour (juce::Label::textColourId, textColour);

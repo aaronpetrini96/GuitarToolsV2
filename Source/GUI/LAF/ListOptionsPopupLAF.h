@@ -19,18 +19,18 @@ public:
     ListOptionsPopupLAF()
     {
         setColour (backgroundColourId, GTColors::presetBox.darker(0.1f));
-        setColour (outlineColourId, GTColors::headerPanelEnd);
-        setColour (dividerColourId, GTColors::headerPanelStart.withAlpha (0.9f));
+        setColour (outlineColourId, GTColors::dividerLinesStart);
+        setColour (dividerColourId, GTColors::dividerLinesStart);
         setColour (highlightColourId, GTColors::presetPopupHighlight);
-        setColour (juce::TextButton::textColourOffId, GTColors::iconNormalColor);
+        setColour (juce::TextButton::textColourOffId, GTColors::sectionTitleText);
         setColour (juce::TextButton::textColourOnId, GTColors::activeNeonBlue);
     }
 
-    void drawListOptionsBackground (juce::Graphics& g, juce::Rectangle<float> bounds, const int numRows, const bool drawRowDividers) const
+    void drawListOptionsBackground (juce::Graphics& g, juce::Rectangle<float> bounds, const int numRows, const bool drawRowDividers)
     {
-        const auto rowHeight = bounds.getHeight() / (float) juce::jmax (1, numRows);
-        const auto cornerSize = bounds.getHeight() * 0.05f;
-        const auto outlineThickness = bounds.getHeight() * outlineThicknessPOH;
+        const auto rowHeight = bounds.getHeight() / static_cast<float>(juce::jmax(1, numRows));
+        const auto cornerSize = bounds.getHeight() * cornerSizePOH;
+        outlineThickness = rowHeight * outlineThicknessPOH;
 
         g.setColour (findColour (backgroundColourId));
         g.fillRoundedRectangle(bounds, cornerSize);
@@ -59,15 +59,23 @@ public:
         if (shouldDrawButtonAsHighlighted)
         {
             g.setColour (findColour (highlightColourId));
-            g.fillRoundedRectangle (boundsF, cornerSize);
+            g.fillRoundedRectangle (boundsF.reduced(outlineThickness, outlineThickness * 0.5f), cornerSize);
         }
 
-        g.setColour ((shouldDrawButtonAsHighlighted ? textColour.withBrightness (2.f) : textColour).withMultipliedAlpha (button.isEnabled() ? 1.0f : 0.4f));
-        g.setFont (AAFonts::ibmPlexSansMedium ((float) button.getHeight() * textPOH));
+        g.setColour (shouldDrawButtonAsHighlighted ? textColour.withBrightness (2.f) : textColour);
+        if (!button.isEnabled())
+            g.setColour (textColour.withAlpha (0.3f));
+        g.setFont (AAFonts::montserratMedium (boundsF.getHeight() * textPOH));
         g.drawText (button.getButtonText(), button.getLocalBounds(), juce::Justification::centred, true);
     }
 
-    float outlineThicknessPOH {0.012f};
-    float textPOH {0.75f};
+    // float cornerSizePOH {0.05f};
+    float cornerSizePOH {0.0f};
+    float outlineThicknessPOH {0.07f};
+    float textPOH {0.65f};
     float highlightCornerSizePOH {0.22f};
+
+private:
+    float outlineThickness {0.f};
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ListOptionsPopupLAF)
 };

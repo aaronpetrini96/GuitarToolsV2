@@ -16,19 +16,20 @@ public:
         activeColourId          = 0x2a20004,
         textColourId            = 0x2a20005,
         tabTextColourId         = 0x2a20006,
-        tabTextHoverColourId    = 0x2a20007
+        tabTextHoverColourId    = 0x2a20007,
+        outlineColourId         = 0x2a20008
     };
 
     PresetBrowserLAF()
     {
         setColour (backgroundColourId, GTColors::presetBox.darker(0.1f));
-        setColour (dividerColourId, GTColors::headerPanelStart);
+        setColour (dividerColourId, GTColors::dividerLinesStart);
         setColour (highlightColourId, GTColors::presetPopupHighlight);
         setColour (activeColourId, GTColors::activeNeonBlue);
         setColour (textColourId, GTColors::sectionTitleText);
         setColour (tabTextColourId, GTColors::sectionTitleText);
-        setColour (tabTextHoverColourId, GTColors::almostWhite);
-        setColour (juce::ScrollBar::thumbColourId, GTColors::iconOverColor);
+        setColour (tabTextHoverColourId, GTColors::sectionTitleText.brighter(2.f));
+        setColour (outlineColourId, GTColors::dividerLinesStart);
     }
 
     static PresetBrowserLAF* get()
@@ -37,27 +38,28 @@ public:
         return &instance;
     }
 
-    void drawMenuListBackground (juce::Graphics& g, juce::Rectangle<float> bounds)
+    void drawMenuListBackground (juce::Graphics& g, juce::Rectangle<float> bounds, const float numRows)
     {
         //bounds
-        const auto cornerSize = bounds.getWidth() * menuCornerSizePOW;
-        // const auto outlineThickness = bounds.getWidth() * outlineThicknessPOW;
+        const auto rowHeight = bounds.getHeight() / numRows;
+        const auto cornerSize = bounds.getHeight() * menuCornerSizePOH;
+        outlineThickness = rowHeight * outlineThicknessPOH;
 
         //Colors
         const auto backgroundColour = findColour (backgroundColourId);
-        // const auto outlineColour = findColour (dividerColourId);
+        const auto outlineColour = findColour (outlineColourId);
 
         g.setColour (backgroundColour);
         g.fillRoundedRectangle (bounds, cornerSize);
 
-        // g.setColour (outlineColour);
-        // g.drawRoundedRectangle (bounds.reduced (outlineThickness * 0.5f), cornerSize, outlineThickness);
+        g.setColour (outlineColour);
+        g.drawRoundedRectangle (bounds.reduced (outlineThickness * 0.5f), cornerSize, outlineThickness);
     }
 
     void drawMenuListHeader (juce::Graphics& g, juce::Rectangle<float> bounds, const juce::String& text)
     {
         //bounds
-        const auto fontHeight = bounds.getHeight() * 0.75f;
+        const auto fontHeight = bounds.getHeight() * tabTextFontPOH;
         //Colors
         const auto textColour = findColour (textColourId);
         g.setColour (textColour);
@@ -69,40 +71,27 @@ public:
     {
         //bounds
         const auto boundsF = button.getLocalBounds().toFloat();
-        // const auto dividerThickness = boundsF.getHeight() * dividerThicknessPOH;
-        const auto underlineThickness = boundsF.getHeight() * underlineThicknessPOH;
+        const auto cornerSize = boundsF.getHeight() * highlightCornerSizePOH;
 
         //bool checkers
         const auto isTabButton = button.getConnectedEdgeFlags() != 0;
-        // const auto isRightTabButton = (button.getConnectedEdgeFlags() & juce::Button::ConnectedOnLeft) != 0;
-        // const auto isFirstRow = button.getY() == 0;
         const auto isSelected = button.getToggleState();
 
-        //Colors
-        const auto dividerColour = findColour (dividerColourId);
-        const auto highlightColour = findColour (highlightColourId);
-        const auto activeColour = findColour (activeColourId);
-
-        g.setColour (dividerColour);
-
-        if (! isTabButton)
+        if (isTabButton)
         {
-            // if (! isFirstRow)
-            //     g.fillRect (boundsF.withHeight (dividerThickness));
-            return;
+            g.setColour (isSelected ? findColour (highlightColourId).darker(-0.12f) : GTColors::headerPanelEnd.darker(0.12f));
+            g.fillRect(boundsF);
+            g.setColour (findColour(outlineColourId));
+            const auto tabOutlineBounds = boundsF.withTrimmedLeft (button.isConnectedOnLeft() ? -outlineThickness * 0.5f : 0.0f)
+                                                 .withTrimmedRight (button.isConnectedOnRight() ? -outlineThickness * 0.5f : 0.0f);
+            g.drawRect (tabOutlineBounds, outlineThickness);
         }
 
-        // if (isRightTabButton)
-        //     g.fillRect (boundsF.withWidth (dividerThickness));
-
-        if (isHighlighted)
+        if (!isTabButton && isHighlighted)
         {
-            g.setColour (highlightColour);
-            g.fillRect (boundsF);
+            g.setColour (findColour(highlightColourId));
+            g.fillRoundedRectangle (boundsF.reduced(outlineThickness, outlineThickness * 0.5f), cornerSize);
         }
-
-        g.setColour (isSelected ? activeColour : dividerColour);
-        g.fillRect (boundsF.withTop (boundsF.getBottom() - underlineThickness));
     }
 
     void drawButtonText (juce::Graphics& g, juce::TextButton& button, bool isHighlighted, bool) override
@@ -117,31 +106,25 @@ public:
         const auto isEnabled = button.isEnabled();
 
         //Colors
-        const auto highlightColour = findColour (highlightColourId);
-        const auto tabButtonTextColour = findColour (isSelected ? textColourId : (isHighlighted ? tabTextHoverColourId : tabTextColourId)).withMultipliedAlpha (isEnabled ? 1.0f : 0.4f);
+        const auto tabButtonTextColour = findColour (tabTextColourId).withMultipliedAlpha (isEnabled ? 1.f : 0.4f);
         const auto presetTextColour = findColour (isSelected ? activeColourId : textColourId);
-        const auto buttonTextColour = isTabButton ? tabButtonTextColour : (isHighlighted ? presetTextColour.withBrightness (2.f) : presetTextColour);
-        const auto fontHeight = boundsF.getHeight() * (isTabButton ? tabTextFontPOH : presetFontPOH);
+        const auto buttonTextColour = isTabButton ? tabButtonTextColour : presetTextColour;
 
-        if (! isTabButton && isHighlighted)
-        {
-            g.setColour (highlightColour);
-            g.fillRoundedRectangle (boundsF, cornerSize);
-        }
-
-        g.setColour (buttonTextColour);
-        g.setFont (AAFonts::interMedium (fontHeight));
-        g.drawFittedText (button.getButtonText(), boundsF.toNearestInt(), juce::Justification::centred, 1);
+        g.setColour (isHighlighted ? buttonTextColour.withBrightness(2.f) : buttonTextColour);
+        const auto tabFont = AAFonts::montserratMedium(boundsF.getHeight() * tabTextFontPOH);
+        g.setFont (isTabButton ? tabFont : AAFonts::montserratMedium (boundsF.getHeight() * presetFontPOH));
+        g.drawText (button.getButtonText(), button.getLocalBounds(), juce::Justification::centred, true);
     }
 
-    float presetFontPOH {0.5f};
-    float tabTextFontPOH {0.5f};
-    float menuCornerSizePOW {0.03f};
-    float outlineThicknessPOW {0.012f};
+    float presetFontPOH {0.65f};
+    float tabTextFontPOH {0.55f};
+    float menuCornerSizePOH {0.0f};
+    float outlineThicknessPOH {0.07f};
     float highlightCornerSizePOH {0.22f};
     float dividerThicknessPOH {0.065f};
-    float underlineThicknessPOH {0.075f};
+    float underlineThicknessPOH {0.01f};
 
 private:
+    float outlineThickness {0.0f};
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PresetBrowserLAF)
 };

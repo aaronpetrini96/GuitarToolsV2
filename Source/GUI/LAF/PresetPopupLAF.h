@@ -20,7 +20,7 @@ public:
     {
         setColour (backgroundColourId, GTColors::presetBox.darker(0.1f));
         setColour (textColourId, GTColors::sectionTitleText);
-        setColour (outlineColourId, GTColors::headerPanelEnd);
+        setColour (outlineColourId, GTColors::dividerLinesStart);
         setColour (highlightColourId, GTColors::presetPopupHighlight);
     }
 
@@ -32,25 +32,21 @@ public:
 
     void drawPopupBackground (juce::Graphics& g, juce::Rectangle<float> bounds)
     {
-        const auto cornerSize = bounds.getWidth() * 0.03f;
-        // const auto outlineThickness = bounds.getWidth() * outlineThicknessPOW;
-        const auto backgroundColour = findColour (backgroundColourId);
-        // const auto outlineColour = findColour (outlineColourId);
-        g.setColour (backgroundColour);
+        const auto cornerSize = bounds.getWidth() * 0.0f;
+        const auto outlineThickness = bounds.getWidth() * outlineThicknessPOW;
+        g.setColour (findColour (backgroundColourId));
         g.fillRoundedRectangle (bounds, cornerSize);
 
-        // g.setColour (outlineColour);
-        // g.drawRoundedRectangle (bounds.reduced (outlineThickness * 0.5f), cornerSize, outlineThickness);
+        g.setColour (findColour (outlineColourId));
+        g.drawRoundedRectangle (bounds.reduced (outlineThickness * 0.5f), cornerSize, outlineThickness);
     }
 
-    void drawButtonBackground (juce::Graphics& g, juce::Button& button, const juce::Colour&, bool , bool) override
-    {
-    }
+    void drawButtonBackground (juce::Graphics&, juce::Button&, const juce::Colour&, bool , bool) override { }
 
     void drawButtonText (juce::Graphics& g, juce::TextButton& button, bool shouldDrawButtonAsHighlighted, bool) override
     {
         const auto boundsF = button.getLocalBounds().toFloat();
-        const auto fontHeight = boundsF.getHeight() * 0.675f;
+        const auto fontHeight = boundsF.getHeight() * fontPOH;
         const auto textColour = findColour (textColourId);
 
         if (shouldDrawButtonAsHighlighted)
@@ -60,13 +56,23 @@ public:
         }
 
         g.setColour ((shouldDrawButtonAsHighlighted ? textColour.withBrightness(2.f) : textColour).withMultipliedAlpha (button.isEnabled() ? 1.0f : 0.5f));
-        g.setFont (AAFonts::interMedium (fontHeight));
+        g.setFont (AAFonts::ibmPlexSansMedium (fontHeight));
         g.drawFittedText (button.getButtonText(), boundsF.reduced (boundsF.getWidth() * 0.05f, boundsF.getHeight() * 0.04f).toNearestInt(), juce::Justification::centred, 1);
     }
 
-    float outlineThicknessPOW {0.014f};
-    float highlightCornerSizePOH {0.22f};
+    void fillTextEditorBackground (juce::Graphics& g, int width, int height, juce::TextEditor& textEditor) override
+    {
+        const auto boundsF = juce::Rectangle<int> (width, height).toFloat();
+        g.setColour (textEditor.findColour (juce::TextEditor::backgroundColourId));
+        g.fillRoundedRectangle (boundsF, boundsF.getHeight() * textEditorCornerSizePOH);
+    }
 
+    void drawTextEditorOutline (juce::Graphics&, int, int, juce::TextEditor&) override { }
+
+    float outlineThicknessPOW {0.012f};
+    float highlightCornerSizePOH {0.22f};
+    float textEditorCornerSizePOH {0.225f};
+    float fontPOH {0.65f};
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PresetPopupLAF)
 };

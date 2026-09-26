@@ -9,8 +9,8 @@
 #include <functional>
 
 #include "BinaryData.h"
-#include "../Utils/AALook.h"
-#include "PresetManager.h"
+#include "../../Utils/AALook.h"
+#include "../../PresetFolder/PresetManager.h"
 
 class PresetBoxLAF : public juce::LookAndFeel_V4
 {
@@ -32,7 +32,7 @@ public:
         const auto boundsF = button.getLocalBounds().toFloat();
 
         g.setColour (GTColors::sectionTitleText);
-        g.setFont (AAFonts::interMedium (boundsF.getHeight() * 0.65f));
+        g.setFont (AAFonts::montserratMedium (boundsF.getHeight() * 0.65f));
         g.drawFittedText (button.getButtonText(), boundsF.toNearestInt(), juce::Justification::centred, 1);
     }
 
@@ -57,11 +57,6 @@ public:
         rightArrowButton.onClick = [this] { presetManager.loadAdjacentPreset (1); };
         addAndMakeVisible (leftArrowButton);
         addAndMakeVisible (rightArrowButton);
-
-        AAUITools::setIconButtonImages (savePresetButton, BinaryData::saveIcon_svg, BinaryData::saveIcon_svgSize);
-        savePresetButton.setTooltip ("Save preset");
-        savePresetButton.onClick = [this] { if (onSaveClicked != nullptr) onSaveClicked(); };
-        addAndMakeVisible (savePresetButton);
     }
 
     ~AAPresetBox() override
@@ -91,32 +86,19 @@ public:
         const auto nameButtonBounds = boundsF.withSizeKeepingCentre (boundsFWidth * 0.575f, boundsFHeight);
         nameButton.setBounds (nameButtonBounds.toNearestInt());
 
-        const auto arrowSize = boundsFHeight * 0.6f;
+        const auto arrowSize = boundsFHeight * 0.7f;
         const auto arrowBounds = nameButtonBounds.withSizeKeepingCentre (arrowSize, arrowSize);
         leftArrowButton.setBounds (arrowBounds.withRightX (nameButtonBounds.getX()).toNearestInt());
         rightArrowButton.setBounds (arrowBounds.withX (nameButtonBounds.getRight()).toNearestInt());
-
-        const auto saveIconSize = boundsFHeight;
-        const auto saveButtonBounds = boundsF.withSizeKeepingCentre(saveIconSize, saveIconSize).withRightX (boundsFWidth * 0.975f);
-        savePresetButton.setBounds (saveButtonBounds.toNearestInt());
-
-        // const auto dividerThickness = boundsFHeight * 0.03f;
-        // dividerBounds = juce::Rectangle<float> (dividerThickness, arrowSize).withCentre({(float)savePresetButton.getX() * JUCE_LIVE_CONSTANT(0.99f), boundsF.getCentreY()});
     }
 
     std::function<void()> onNameClicked;
-    std::function<void()> onSaveClicked;
-
-
 
 private:
     PresetManager& presetManager;
-
     juce::TextButton nameButton;
     juce::DrawableButton leftArrowButton {"Previous preset", juce::DrawableButton::ImageFitted};
     juce::DrawableButton rightArrowButton {"Next preset", juce::DrawableButton::ImageFitted};
-    juce::DrawableButton savePresetButton {"Save", juce::DrawableButton::ImageFitted};
-    // juce::Rectangle<float> dividerBounds;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AAPresetBox)
 };

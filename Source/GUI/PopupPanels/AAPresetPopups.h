@@ -8,7 +8,7 @@
 
 #include <functional>
 
-#include "../GUI/LAF/PresetPopupLAF.h"
+#include "../LAF/PresetPopupLAF.h"
 
 class AASavePresetPopup : public juce::Component
 {
@@ -18,6 +18,11 @@ public:
         setAlwaysOnTop (true);
         setLookAndFeel (PresetPopupLAF::get());
 
+        titleLabel.setJustificationType (juce::Justification::centred);
+        titleLabel.setColour (juce::Label::textColourId, GTColors::sectionTitleText);
+        titleLabel.setInterceptsMouseClicks (false, false);
+        addAndMakeVisible (titleLabel);
+
         nameEditor.setJustification (juce::Justification::centred);
         nameEditor.setInputRestrictions (24);
         nameEditor.onTextChange = [this]
@@ -26,9 +31,8 @@ public:
             isConfirmingOverwrite = false;
             saveButton.setButtonText ("SAVE");
         };
-        nameEditor.setColour (juce::TextEditor::backgroundColourId, GTColors::headerPanelEnd);
-        nameEditor.setColour (juce::TextEditor::textColourId, GTColors::almostWhite);
-        nameEditor.setColour (juce::TextEditor::outlineColourId, GTColors::almostWhite);
+        nameEditor.setColour (juce::TextEditor::backgroundColourId, GTColors::presetBox);
+        nameEditor.setColour (juce::TextEditor::textColourId, GTColors::sectionTitleText);
         addAndMakeVisible (nameEditor);
 
         saveButton.onClick = [this]
@@ -78,11 +82,15 @@ public:
         const auto boundsFWidth = boundsF.getWidth();
         const auto boundsFHeight = boundsF.getHeight();
         const auto lineHeight = boundsFHeight * 0.2f;
+        const auto fontHeight = lineHeight * PresetPopupLAF::get()->fontPOH;
 
-        nameEditor.setFont (AAFonts::interMedium (lineHeight * 0.6f));
-        nameEditor.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.3f).toNearestInt());
+        titleLabel.setFont (AAFonts::interMedium (fontHeight));
+        titleLabel.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.1f).toNearestInt());
 
-        const auto buttonsBounds = boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.6f);
+        nameEditor.applyFontToAllText (AAFonts::montserratMedium (fontHeight));
+        nameEditor.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.4f).toNearestInt());
+
+        const auto buttonsBounds = boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.7f);
         saveButton.setBounds (buttonsBounds.withWidth (buttonsBounds.getWidth() * 0.45f).toNearestInt());
         cancelButton.setBounds (saveButton.getBounds().toFloat().withRightX (buttonsBounds.getRight()).toNearestInt());
     }
@@ -91,6 +99,7 @@ public:
     std::function<bool (const juce::String& presetName)> presetExists;
 
 private:
+    juce::Label titleLabel {"titleLabel", "SAVE PRESET"};
     juce::TextEditor nameEditor;
     juce::TextButton saveButton {"SAVE"}, cancelButton {"CANCEL"};
     bool isConfirmingOverwrite {false};
@@ -105,6 +114,11 @@ public:
     {
         setAlwaysOnTop (true);
         setLookAndFeel (PresetPopupLAF::get());
+
+        titleLabel.setJustificationType (juce::Justification::centred);
+        titleLabel.setColour (juce::Label::textColourId, GTColors::sectionTitleText);
+        titleLabel.setInterceptsMouseClicks (false, false);
+        addAndMakeVisible (titleLabel);
 
         messageLabel.setJustificationType (juce::Justification::centred);
         messageLabel.setColour (juce::Label::textColourId, GTColors::almostWhite);
@@ -140,11 +154,15 @@ public:
         const auto boundsFWidth = boundsF.getWidth();
         const auto boundsFHeight = boundsF.getHeight();
         const auto lineHeight = boundsFHeight * 0.2f;
+        const auto fontHeight = lineHeight * PresetPopupLAF::get()->fontPOH;
 
-        messageLabel.setFont (AAFonts::interMedium (lineHeight * 0.6f));
-        messageLabel.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.9f, lineHeight).withY (boundsFHeight * 0.3f).toNearestInt());
+        titleLabel.setFont (AAFonts::interMedium (fontHeight));
+        titleLabel.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.1f).toNearestInt());
 
-        const auto buttonsBounds = boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.6f);
+        messageLabel.setFont (AAFonts::interMedium (fontHeight));
+        messageLabel.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.9f, lineHeight).withY (boundsFHeight * 0.4f).toNearestInt());
+
+        const auto buttonsBounds = boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.7f);
         deleteButton.setBounds (buttonsBounds.withWidth (buttonsBounds.getWidth() * 0.45f).toNearestInt());
         cancelButton.setBounds (deleteButton.getBounds().toFloat().withRightX (buttonsBounds.getRight()).toNearestInt());
     }
@@ -152,6 +170,7 @@ public:
     std::function<void()> onConfirm;
 
 private:
+    juce::Label titleLabel {"titleLabel", "DELETE PRESET"};
     juce::Label messageLabel {"messageLabel", ""};
     juce::TextButton deleteButton {"DELETE"}, cancelButton {"CANCEL"};
 

@@ -73,8 +73,10 @@ public:
 
     bool drawRowDividers {false};
 
-private:
+protected:
     ListOptionsPopupLAF listOptionsLAF;
+
+private:
     juce::OwnedArray<juce::TextButton> rows;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AAListOptionsPopup)

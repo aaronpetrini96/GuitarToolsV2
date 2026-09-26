@@ -30,14 +30,19 @@ public:
         const auto boundsF = getLocalBounds().toFloat();
         const auto boundsFHeight = boundsF.getHeight();
         const auto boundsFWidth = boundsF.getWidth();
-        g.setGradientFill(juce::ColourGradient::vertical(GTColors::infoPanelTop, 0.f, GTColors::infoPanelBottom, boundsFHeight));
-        g.fillRect(boundsF);
+
+        g.fillAll(juce::Colours::black);
+        g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
+        g.drawImage(back, boundsF, juce::RectanglePlacement::stretchToFit);
+
+        // g.setGradientFill(juce::ColourGradient::vertical(GTColors::infoPanelTop, 0.f, GTColors::infoPanelBottom, boundsFHeight));
+        // g.fillRect(boundsF);
         // g.setColour (GTColors::presetBox);
         // g.drawRoundedRectangle (boundsF.reduced (borderThickness * 0.5f), cardCorners - borderThickness * 0.5f, borderThickness);
 
-        const auto logoAPSize = boundsFHeight * JUCE_LIVE_CONSTANT(0.2f);
+        const auto logoAPSize = boundsFHeight * 0.4f;
         const auto apLogoBounds = boundsF.withSizeKeepingCentre(logoAPSize, logoAPSize).withY(boundsFHeight * 0.055f);
-        g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
+
         g.drawImage(apLogo, apLogoBounds, juce::RectanglePlacement::fillDestination, false);
 
         const auto gtLogoHeight = boundsFHeight * 0.125f;
@@ -54,7 +59,7 @@ public:
         g.setGradientFill(dividerGradient);
         g.fillRect(dividerBounds);
 
-        const auto versionTextHeight = boundsFHeight * 0.047f;
+        const auto versionTextHeight = boundsFHeight * 0.055f;
         const auto copyrightTextHeight = versionTextHeight * 0.8f;
         const auto versionBounds = gtLogoBounds.withSizeKeepingCentre(gtLogoWidth, versionTextHeight).withY(dividerBounds.getBottom() + boundsFHeight * 0.055f);
         const auto copyrightBounds = versionBounds.withHeight(copyrightTextHeight).withY(versionBounds.getBottom() + boundsFHeight * 0.035f);
@@ -79,6 +84,7 @@ public:
 private:
     juce::DrawableButton closeButton {"closeButton", juce::DrawableButton::ImageFitted};
     juce::Image apLogo {juce::ImageCache::getFromMemory(BinaryData::logoAP_png, BinaryData::logoAP_pngSize)};
-    juce::Image gtLogo {juce::ImageCache::getFromMemory(BinaryData::guitarTools2Logo_png, BinaryData::guitarTools2Logo_pngSize)};
+    juce::Image gtLogo {juce::ImageCache::getFromMemory(BinaryData::guitarTools2Logo2_png, BinaryData::guitarTools2Logo2_pngSize)};
+    juce::Image back {juce::ImageCache::getFromMemory(BinaryData::infoBlueBack_png, BinaryData::infoBlueBack_pngSize)};
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (InfoPanel)
 };

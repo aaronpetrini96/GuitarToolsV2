@@ -24,10 +24,9 @@ struct ChainSettings
     float lowCutFreq {0}, highCutFreq{0};
     float resoFreq {0}, mudFreq {0}, presenceFreq {0}, depthFreq{0};
     float presenceGain {0}, depthGain{0}, presenceResonance {0}, depthResonance {0};
-    int presenceIndex{0}, depthIndex{0};
     float resoGainDb {0.f}, mudGainDb {0.f};
     Slope lowCutSlope {Slope::Slope_12}, highCutSlope {Slope::Slope_12};
-    bool resoExtremeActive{false}, mudExtremeActive{false};
+    float resoQ {0.f}, mudQ {0.f};
 };
 
 class GTFilters

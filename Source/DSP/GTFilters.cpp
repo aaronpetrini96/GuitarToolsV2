@@ -2,7 +2,6 @@
 // Created by Aaron Petrini on 26/09/2026.
 //
 #include "GTFilters.h"
-#include "Utils/AAParamUtils.h"
 
 void GTFilters::prepare(const juce::dsp::ProcessSpec& spec, const ChainSettings& chainSettings)
 {
@@ -61,28 +60,24 @@ void GTFilters::update(const ChainSettings& chainSettings, bool forceUpdate)
     if (forceUpdate
      || ! juce::approximatelyEqual(chainSettings.resoFreq, lastChainSettings.resoFreq)
      || ! juce::approximatelyEqual(chainSettings.resoGainDb, lastChainSettings.resoGainDb)
-     || chainSettings.resoExtremeActive != lastChainSettings.resoExtremeActive)
-    {
-        const auto resoQ = chainSettings.resoExtremeActive ? DefaultValues::resoExtremeQ : DefaultValues::resoQ;
-        setCoefficients<Reso>(ArrayCoefficients::makePeakFilter(sampleRate, chainSettings.resoFreq, resoQ, juce::Decibels::decibelsToGain(chainSettings.resoGainDb)));
-    }
+     || ! juce::approximatelyEqual(chainSettings.resoQ, lastChainSettings.resoQ))
+        setCoefficients<Reso>(ArrayCoefficients::makePeakFilter(sampleRate, chainSettings.resoFreq, chainSettings.resoQ, juce::Decibels::decibelsToGain(chainSettings.resoGainDb)));
 
     if (forceUpdate
      || ! juce::approximatelyEqual(chainSettings.mudFreq, lastChainSettings.mudFreq)
      || ! juce::approximatelyEqual(chainSettings.mudGainDb, lastChainSettings.mudGainDb)
-     || chainSettings.mudExtremeActive != lastChainSettings.mudExtremeActive)
-    {
-        const auto mudQ = chainSettings.mudExtremeActive ? DefaultValues::mudExtremeQ : DefaultValues::mudQ;
-        setCoefficients<Mud>(ArrayCoefficients::makePeakFilter(sampleRate, chainSettings.mudFreq, mudQ, juce::Decibels::decibelsToGain(chainSettings.mudGainDb)));
-    }
+     || ! juce::approximatelyEqual(chainSettings.mudQ, lastChainSettings.mudQ))
+        setCoefficients<Mud>(ArrayCoefficients::makePeakFilter(sampleRate, chainSettings.mudFreq, chainSettings.mudQ, juce::Decibels::decibelsToGain(chainSettings.mudGainDb)));
 
     if (forceUpdate
-     || chainSettings.presenceIndex != lastChainSettings.presenceIndex
+     || ! juce::approximatelyEqual(chainSettings.presenceFreq, lastChainSettings.presenceFreq)
+     || ! juce::approximatelyEqual(chainSettings.presenceResonance, lastChainSettings.presenceResonance)
      || ! juce::approximatelyEqual(chainSettings.presenceGain, lastChainSettings.presenceGain))
         setCoefficients<Presence>(ArrayCoefficients::makeHighShelf(sampleRate, chainSettings.presenceFreq, chainSettings.presenceResonance, juce::Decibels::decibelsToGain(chainSettings.presenceGain)));
 
     if (forceUpdate
-     || chainSettings.depthIndex != lastChainSettings.depthIndex
+     || ! juce::approximatelyEqual(chainSettings.depthFreq, lastChainSettings.depthFreq)
+     || ! juce::approximatelyEqual(chainSettings.depthResonance, lastChainSettings.depthResonance)
      || ! juce::approximatelyEqual(chainSettings.depthGain, lastChainSettings.depthGain))
         setCoefficients<Depth>(ArrayCoefficients::makeLowShelf(sampleRate, chainSettings.depthFreq, chainSettings.depthResonance, juce::Decibels::decibelsToGain(chainSettings.depthGain)));
 

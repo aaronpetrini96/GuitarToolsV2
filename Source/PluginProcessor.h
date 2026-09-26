@@ -112,7 +112,15 @@ private:
     depthGainParamSmoother,
     compAmountParamSmoother;
 
-    juce::SmoothedValue<float> resoGainDbSmoother, mudGainDbSmoother;
+    juce::SmoothedValue<float>
+    resoGainDbSmoother,
+    mudGainDbSmoother,
+    resoQSmoother,
+    mudQSmoother,
+    presenceFreqSmoother,
+    presenceResonanceSmoother,
+    depthFreqSmoother,
+    depthResonanceSmoother;
 
     std::vector<std::pair<juce::AudioParameterFloat*, juce::SmoothedValue<float>*>> smootherBindings;
 

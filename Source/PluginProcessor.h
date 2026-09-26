@@ -16,28 +16,8 @@
 
 #include "DSP/AALevelMatch.h"
 #include "DSP/GTMidBandCompressor.h"
+#include "DSP/GTFilters.h"
 #include "Utils/AAParamUtils.h"
-
-
-enum Slope
-{
-    Slope_12,
-    Slope_24,
-    Slope_36,
-    Slope_48,
-};
-
-
-struct ChainSettings
-{
-    float lowCutFreq {0}, highCutFreq{0};
-    float resoFreq {0}, mudFreq {0}, presenceFreq {0}, depthFreq{0};
-    float presenceGain {0}, depthGain{0}, presenceResonance {0}, depthResonance {0};
-    int presenceIndex{0}, depthIndex{0};
-    float resoGainDb {0.f}, mudGainDb {0.f};
-    Slope lowCutSlope {Slope::Slope_12}, highCutSlope {Slope::Slope_12};
-    bool resoExtremeActive{false}, mudExtremeActive{false};
-};
 
 //==============================================================================
 /**
@@ -102,33 +82,8 @@ private:
 //    EQ PART
     //==============================================================================
     
-//    Declare Filter types and Process Chains
-    using EQFilter = juce::dsp::IIR::Filter<float>;
-    using CutFilter = juce::dsp::ProcessorChain<EQFilter, EQFilter, EQFilter, EQFilter>;
-    using MonoChain = juce::dsp::ProcessorChain<CutFilter, CutFilter, EQFilter, EQFilter, EQFilter, EQFilter>;
-    MonoChain leftChain, rightChain;
-
-    enum ChainPositions
-    {
-        LowCut,
-        HighCut,
-        Reso,
-        Mud,
-        Presence,
-        Depth
-    };
-//    =====  UPDATE COEFFICIENTS =====
-    static void updateCoefficients(EQFilter::CoefficientsPtr& old, const std::array<float, 6>& replacements);
-    void updateLowCutFilters(const ChainSettings& chainSettings);
-    void updateHighCutFilters(const ChainSettings& chainSettings);
-    void updateResoFilters(const ChainSettings& chainSettings);
-    void updateMudFilters(const ChainSettings& chainSettings);
-    void updatePresenceFilters(const ChainSettings& chainSettings);
-    void updateDepthFilters(const ChainSettings& chainSettings);
-    void updateFilters();
-    void prepareFilters(const ChainSettings& chainSettings);
+    GTFilters filters;
     ChainSettings getChainSettings() const;
-    ChainSettings lastChainSettings;
 
 
 // PARAMETER POINTERS
@@ -162,23 +117,6 @@ private:
     std::vector<std::pair<juce::AudioParameterFloat*, juce::SmoothedValue<float>*>> smootherBindings;
 
 
-
-    template<int Index, typename ChainType, typename CoefficientType>
-    void updateCutStage(ChainType& chain, const CoefficientType& cutCoefficients, const Slope& slope)
-    {
-        const auto stageIsUsed = Index <= static_cast<int>(slope);
-
-        updateCoefficients(chain.template get<Index>().coefficients, stageIsUsed ? cutCoefficients[Index] : std::array<float, 6> {1.f, 0.f, 0.f, 1.f, 0.f, 0.f});
-    }
-
-    template<typename ChainType, typename CoefficientType>
-    void updateCutFilter(ChainType& chain, const CoefficientType& cutCoefficients, const Slope& slope)
-    {
-        updateCutStage<0>(chain, cutCoefficients, slope);
-        updateCutStage<1>(chain, cutCoefficients, slope);
-        updateCutStage<2>(chain, cutCoefficients, slope);
-        updateCutStage<3>(chain, cutCoefficients, slope);
-    }
 
     //==============================================================================
 //    COMPRESSOR PART

@@ -42,6 +42,8 @@ private:
     float levelFloorGain {juce::Decibels::decibelsToGain(levelFloorDb)};
     juce::LinearSmoothedValue<float> activeAmount {0.f};
     bool extremeMode {false};
+    float extremeMakeupGain {1.f};
+    juce::LinearSmoothedValue<float> extremeAmount {0.f};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GTMidBandCompressor)
 };

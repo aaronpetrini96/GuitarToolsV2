@@ -36,6 +36,7 @@ void GTMidBandCompressor::prepare(const juce::dsp::ProcessSpec& spec)
     bandLevelFilter.setReleaseTime(levelTrackingTime);
 
     activeAmount.reset(spec.sampleRate, activeRampSeconds);
+    extremeAmount.reset(spec.sampleRate, activeRampSeconds);
 }
 
 void GTMidBandCompressor::setAmount(float newAmountProportion)
@@ -43,10 +44,10 @@ void GTMidBandCompressor::setAmount(float newAmountProportion)
     amountProportion = juce::jlimit(0.f, 1.f, newAmountProportion);
 
     const auto thresholdOffsetDb = amountProportion * maxThresholdOffsetDb;
-    const auto currentRatio = extremeMode ? extremeRatio : ratio;
+    makeupGain = juce::Decibels::decibelsToGain(thresholdOffsetDb * (1.f - 1.f / ratio));
+    extremeMakeupGain = juce::Decibels::decibelsToGain(thresholdOffsetDb * (1.f - 1.f / extremeRatio));
 
     thresholdOffsetGain = juce::Decibels::decibelsToGain(-thresholdOffsetDb);
-    makeupGain = juce::Decibels::decibelsToGain(thresholdOffsetDb * (1.f - 1.f / currentRatio));
 }
 
 void GTMidBandCompressor::setActive(bool shouldBeActive)
@@ -62,7 +63,7 @@ void GTMidBandCompressor::setExtremeMode(bool shouldBeExtreme)
     extremeMode = shouldBeExtreme;
     envelopeFilter.setAttackTime(extremeMode ? extremeAttackMs : attackMs);
     envelopeFilter.setReleaseTime(extremeMode ? extremeReleaseMs : releaseMs);
-    setAmount(amountProportion);
+    extremeAmount.setTargetValue(extremeMode ? 1.f : 0.f);
 }
 
 void GTMidBandCompressor::process(juce::AudioBuffer<float>& buffer)
@@ -88,12 +89,13 @@ void GTMidBandCompressor::process(juce::AudioBuffer<float>& buffer)
         const auto bandLevel = juce::jmax(bandLevelFilter.processSample(0, linkedInput), levelFloorGain);
 
         const auto activeProportion = activeAmount.getNextValue();
+        const auto extremeProportion = extremeAmount.getNextValue();
 
         if (activeProportion == 0.f)
             continue;
 
         const auto threshold = bandLevel * thresholdOffsetGain;
-        auto compressorGain = makeupGain;
+        auto compressorGain = makeupGain + (extremeMakeupGain - makeupGain) * extremeProportion;
 
         if (envelope >= threshold)
         {
@@ -102,8 +104,8 @@ void GTMidBandCompressor::process(juce::AudioBuffer<float>& buffer)
             const auto overshootQuarterRoot = std::sqrt(overshootRoot);
             auto overshootPower = overshootRoot * overshootQuarterRoot;              // overshoot^0.75, a 4:1 ratio
 
-            if (extremeMode)
-                overshootPower *= std::sqrt(overshootQuarterRoot);                   // overshoot^0.875, an 8:1 ratio
+            if (extremeProportion > 0.f)
+                overshootPower *= 1.f + (std::sqrt(overshootQuarterRoot) - 1.f) * extremeProportion;                // overshoot^0.875, an 8:1 ratio
 
             compressorGain /= overshootPower;
         }

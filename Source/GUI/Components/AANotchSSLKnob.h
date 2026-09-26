@@ -25,12 +25,12 @@ public:
         setMouseDragSensitivity (300);
         setRotaryParameters (startAngle, endAngle, true);
         setComponentID (parameter.getParameterID());
-        createAttachment (nullptr);
+        attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, nullptr);
     }
 
     void setUndoManager (juce::UndoManager& undoManager)
     {
-        createAttachment (&undoManager);
+        attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, &undoManager);
     }
 
     void mouseDrag (const juce::MouseEvent& e) override
@@ -101,11 +101,6 @@ public:
 
 
 private:
-
-    void createAttachment (juce::UndoManager* undoManager)
-    {
-        attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, undoManager);
-    }
 
     void paintLightDots (juce::Graphics& g, juce::Point<float> centre, float dotRingRadius, float dotRadius, float angle)
     {

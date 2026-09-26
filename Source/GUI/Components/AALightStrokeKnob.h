@@ -31,13 +31,13 @@ public:
         }
         nameLabel.setText (nameText, juce::dontSendNotification);
 
-        createAttachment (nullptr);
+        attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, nullptr);
         updateValueLabelText();
     }
 
     void setUndoManager (juce::UndoManager& undoManager)
     {
-        createAttachment (&undoManager);
+        attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, &undoManager);
     }
 
     void resized() override

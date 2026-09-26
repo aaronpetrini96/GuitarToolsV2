@@ -492,30 +492,30 @@ void GuitarToolsAudioProcessor::updateFilters()
 {
     const auto chainSettings = getChainSettings();
 
-    if (chainSettings.lowCutFreq != lastChainSettings.lowCutFreq
+    if (! juce::approximatelyEqual(chainSettings.lowCutFreq, lastChainSettings.lowCutFreq)
      || chainSettings.lowCutSlope != lastChainSettings.lowCutSlope)
         updateLowCutFilters(chainSettings);
 
-    if (chainSettings.highCutFreq != lastChainSettings.highCutFreq
+    if (! juce::approximatelyEqual(chainSettings.highCutFreq, lastChainSettings.highCutFreq)
      || chainSettings.highCutSlope != lastChainSettings.highCutSlope)
         updateHighCutFilters(chainSettings);
 
-    if (chainSettings.resoFreq != lastChainSettings.resoFreq
-     || chainSettings.resoGainDb != lastChainSettings.resoGainDb
+    if (! juce::approximatelyEqual(chainSettings.resoFreq, lastChainSettings.resoFreq)
+     || ! juce::approximatelyEqual(chainSettings.resoGainDb, lastChainSettings.resoGainDb)
      || chainSettings.resoExtremeActive != lastChainSettings.resoExtremeActive)
         updateResoFilters(chainSettings);
 
-    if (chainSettings.mudFreq != lastChainSettings.mudFreq
-     || chainSettings.mudGainDb != lastChainSettings.mudGainDb
+    if (! juce::approximatelyEqual(chainSettings.mudFreq, lastChainSettings.mudFreq)
+     || ! juce::approximatelyEqual(chainSettings.mudGainDb, lastChainSettings.mudGainDb)
      || chainSettings.mudExtremeActive != lastChainSettings.mudExtremeActive)
         updateMudFilters(chainSettings);
 
     if (chainSettings.presenceIndex != lastChainSettings.presenceIndex
-     || chainSettings.presenceGain != lastChainSettings.presenceGain)
+     || ! juce::approximatelyEqual(chainSettings.presenceGain, lastChainSettings.presenceGain))
         updatePresenceFilters(chainSettings);
 
     if (chainSettings.depthIndex != lastChainSettings.depthIndex
-     || chainSettings.depthGain != lastChainSettings.depthGain)
+     || ! juce::approximatelyEqual(chainSettings.depthGain, lastChainSettings.depthGain))
         updateDepthFilters(chainSettings);
 
     lastChainSettings = chainSettings;

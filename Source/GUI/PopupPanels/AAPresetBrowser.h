@@ -92,7 +92,7 @@ public:
     void paint (juce::Graphics& g) override
     {
         if (auto* presetBrowserLAF = dynamic_cast<PresetBrowserLAF*> (&getLookAndFeel()))
-            presetBrowserLAF->drawMenuListBackground (g, getLocalBounds().toFloat());
+            presetBrowserLAF->drawMenuListBackground (g, getLocalBounds().toFloat(), getNumRows());
     }
 
     void resized() override

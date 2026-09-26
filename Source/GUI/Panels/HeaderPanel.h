@@ -25,9 +25,10 @@ public:
     std::function<void()> onInfoClicked;
     std::function<void()> onBypassChanged;
     std::function<void()> onSettingsClicked;
-    std::function<void()> onResizeClicked;
+    std::function<void()> onSaveClicked;
+    // std::function<void()> onResizeClicked;
     juce::DrawableButton settingsButton {"Settings", juce::DrawableButton::ImageFitted};
-    juce::DrawableButton resizeButton {"GUI Size", juce::DrawableButton::ImageFitted};
+    // juce::DrawableButton resizeButton {"GUI Size", juce::DrawableButton::ImageFitted};
     juce::DrawableButton bypassButton {"Bypass", juce::DrawableButton::ImageFitted};
 
 private:
@@ -39,6 +40,7 @@ private:
 
     juce::DrawableButton undoButton {"Undo", juce::DrawableButton::ImageFitted};
     juce::DrawableButton redoButton {"Redo", juce::DrawableButton::ImageFitted};
+    juce::DrawableButton savePresetButton {"Save", juce::DrawableButton::ImageFitted};
 
     juce::AudioProcessorValueTreeState::ButtonAttachment bypassAttachment;
     juce::UndoManager& undoManager;

@@ -93,12 +93,12 @@ void MainPanel::paint(juce::Graphics& g)
 {
     const auto boundsF = getLocalBounds().toFloat();
 
-    dividerThickness = boundsF.getHeight() * 0.007f;
+    dividerThickness = boundsF.getHeight() * 0.006f;
     const auto dividerHalf = dividerThickness / 2.0f;
     const auto dividerGap = dividerThickness * 5.f;
-
-    const auto verticalDividerBounds = boundsF.withSizeKeepingCentre (dividerThickness, boundsF.getHeight() - dividerGap * 0.25f);
-    // const auto verticalDividerBounds = boundsF.withSizeKeepingCentre (dividerThickness, boundsF.getHeight() - dividerGap * 0.5f);
+    // AAUITools::drawRoundedDivider (g, boundsF.withHeight(dividerThickness));
+    // AAUITools::drawRoundedDivider (g, boundsF.withHeight(dividerThickness).withBottomY(boundsF.getHeight()));
+    const auto verticalDividerBounds = boundsF.withSizeKeepingCentre (dividerThickness, boundsF.getHeight() - dividerGap);
     AAUITools::drawRoundedDivider (g, verticalDividerBounds.withCentre ({cutFiltersArea.getRight() , verticalDividerBounds.getCentreY() }));
     AAUITools::drawRoundedDivider (g, verticalDividerBounds.withCentre ({ shelfFiltersArea.getX(), verticalDividerBounds.getCentreY() }));
 
@@ -106,10 +106,16 @@ void MainPanel::paint(juce::Graphics& g)
         AAUITools::drawRoundedDivider (g, sectionArea.withSizeKeepingCentre (sectionArea.getWidth() - dividerHalf - dividerGap, dividerThickness).withY (sectionTitleH - dividerHalf));
 
     AAUITools::drawRoundedDivider(g, buttonsArea.withSizeKeepingCentre(buttonsArea.getWidth() - dividerGap, dividerThickness).withY(sectionTitleH - dividerHalf));
-    AAUITools::drawRoundedDivider (g, magicDividerBounds);
 
-    const auto screwSize = boundsF.getHeight() * 0.033f;
-    g.drawImage(screwA, boundsF.withSize(screwSize, screwSize).withCentre({screwSize, screwSize}), juce::RectanglePlacement::fillDestination);
+    // AAUITools::drawRoundedDivider (g, boundsF.withSize (boundsF.getWidth()/* - dividerHalf - dividerGap*/, dividerThickness).withY (sectionTitleH - dividerHalf));
+    AAUITools::drawRoundedDivider (g, magicDividerBounds.withSizeKeepingCentre(buttonsArea.getWidth() - dividerHalf - dividerGap , magicDividerBounds.getHeight()));
+
+    // const auto screwSize = boundsF.getHeight() * 0.033f;
+    // const auto screwBounds = boundsF.withSize(screwSize, screwSize);
+    // g.drawImage(screw, screwBounds.withCentre({screwSize, screwSize}), juce::RectanglePlacement::centred);
+    // g.drawImage(screw, screwBounds.withCentre({boundsF.getWidth() - screwSize, screwSize}), juce::RectanglePlacement::centred);
+    // g.drawImage(screw, screwBounds.withCentre({boundsF.getWidth() - screwSize, boundsF.getHeight() - screwSize}), juce::RectanglePlacement::centred);
+    // g.drawImage(screw, screwBounds.withCentre({screwSize, boundsF.getHeight() - screwSize}), juce::RectanglePlacement::centred);
 }
 
 void MainPanel::resized()
@@ -157,7 +163,7 @@ void MainPanel::resizeKnobs(const juce::Rectangle<float>& boundsF)
     lowShelfGainKnob.setBounds (knobBounds.withCentre ({shelfFiltersArea.getCentreX(), topKnobsCY}).toNearestInt());
     highShelfGainKnob.setBounds (knobBounds.withCentre ({shelfFiltersArea.getCentreX(), bottomKnobsCY}).toNearestInt());
 
-    const auto knobButtonsWidth = knobSizeReference * 0.725f;
+    const auto knobButtonsWidth = knobSizeReference * 0.75f;
     const auto knobButtonsHeight = knobButtonsWidth / lowCutSlopeButtons.getImageAspectRatio();
     const auto knobButtonsGap = (knobSizeReference + knobButtonsHeight) * 0.535f;
     const auto knobButtonsTopCY = topKnobsCY + knobButtonsGap;
@@ -217,6 +223,7 @@ void MainPanel::resizeLevelsSection(const juce::Rectangle<float>& boundsF)
     inputGainLabel.setBounds    (gainKnobBounds.withCentre({inputGainKnob.getBounds().toFloat().getCentre()}).withY(gainLabelY) .toNearestInt());
     outputGainLabel.setBounds   (gainKnobBounds.withCentre({outputGainKnob.getBounds().toFloat().getCentre()}).withY(gainLabelY) .toNearestInt());
 
-    const auto matchBounds = gainLabelBounds.withSize (gainKnobSize, gainLabelBounds.getHeight() * 2.0f).withCentre ({gainKnobsArea.getCentreX(), gainKnobCY + gainLabelBounds.getHeight() * 0.5f});
+    const auto matchY = gainKnobCY * JUCE_LIVE_CONSTANT(1.053f);
+    const auto matchBounds = gainLabelBounds.withSizeKeepingCentre (gainKnobSize * 0.6f, gainLabelBounds.getHeight() * 2.0f).withY(matchY);
     levelMatchControl.setBounds (matchBounds.toNearestInt());
 }

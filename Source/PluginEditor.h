@@ -45,15 +45,16 @@ private:
     void componentVisibilityChanged (juce::Component& component) override;
     void updateEditorSize();
 
-    const float headerHeightRatio = 0.06f;
-    float tooltipsHeightRatio = 0.55f;
-    AAResizeUI uiResize {audioProcessor.uiScale, 700, 650};
+    const float headerHeightRatio = 0.0575f;
+    float tooltipsHeightRatio = 0.6f;
+    AAResizeUI uiResize {audioProcessor.uiScale, 800, 743};
 
     PresetManager presetManager {audioProcessor};
     AAPresetBox presetBox {presetManager};
     AAPresetBrowser presetBrowser {presetManager};
-    AASavePresetPopup savePresetPopup;
-    AADeletePresetPopup deletePresetPopup;
+    AAPresetPopup savePresetPopup {AAPresetPopup::Action::save};
+    AAPresetPopup deletePresetPopup {AAPresetPopup::Action::remove};
+    juce::Component modalBlocker;
     juce::File presetToDelete;
     HeaderPanel headerPanel {audioProcessor, presetBox};
     MainPanel mainPanel {audioProcessor};
@@ -63,6 +64,7 @@ private:
 
     SettingsOptionsPanel settingsOptionsPopup {uiResize, audioProcessor.showTooltips};
     AAListOptionsPopup resizeOptionsPopup;
-    juce::Image metalBackground = juce::ImageCache::getFromMemory (BinaryData::uiBackgroundTexture_png, BinaryData::uiBackgroundTexture_pngSize);
+    juce::DrawableButton resizeButton {"GUI Size", juce::DrawableButton::ImageFitted};
+    juce::Image greyBackground = juce::ImageCache::getFromMemory (BinaryData::clearGrey2_3000_png, BinaryData::clearGrey2_3000_pngSize);
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuitarToolsAudioProcessorEditor)
 };

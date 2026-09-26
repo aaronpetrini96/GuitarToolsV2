@@ -123,9 +123,6 @@ void GuitarToolsAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 
 //==============================================================================
 //    EQ Section
-    auto monospec = spec;
-    monospec.numChannels = 1;
-
     for (const auto& [param, smoother] : smootherBindings)
         smoother->reset(sampleRate, DefaultValues::parameterSmoothingTime);
 
@@ -134,12 +131,7 @@ void GuitarToolsAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 
     updateSmootherFromParams(1, SmootherUpdateMode::initialize);
 
-    const auto chainSettings = getChainSettings();
-    prepareFilters(chainSettings);
-    lastChainSettings = chainSettings;
-
-    leftChain.prepare(monospec);
-    rightChain.prepare(monospec);
+    filters.prepare(spec, getChainSettings());
 
 //==============================================================================
 }
@@ -189,7 +181,7 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     midBandCompressor.setAmount(compAmountParamSmoother.getCurrentValue() / DefaultValues::compAmountRangeEnd);
     midBandCompressor.setActive(compActiveParam->get());
     midBandCompressor.setExtremeMode(compExtremeActiveParam->get());
-    updateFilters();
+    filters.update(getChainSettings());
 
     const auto bypassActive = pluginBypassActiveParam->get(); // Update smoothed bypass target
     smoothedBypassValue.setTargetValue(bypassActive ? 0.0f : 1.0f);
@@ -201,18 +193,7 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     midBandCompressor.process(buffer);
 
 //========================    EQ part    ========================
-    const juce::dsp::AudioBlock<float> block {buffer};
-
-    auto leftBlock = block.getSingleChannelBlock(0);
-    juce::dsp::ProcessContextReplacing<float> leftContext {leftBlock};
-    leftChain.process(leftContext);
-
-    if (totalNumInputChannels > 1)
-    {
-        auto rightBlock = block.getSingleChannelBlock(1);
-        juce::dsp::ProcessContextReplacing<float> rightContext {rightBlock};
-        rightChain.process(rightContext);
-    }
+    filters.process(buffer);
     
     levelMatch.update (dryBuffer, buffer);
     applyGain(buffer, outputGain);
@@ -403,126 +384,6 @@ ChainSettings GuitarToolsAudioProcessor::getChainSettings() const
     settings.depthResonance = DefaultValues::depthResonanceByMode[(size_t) juce::jlimit (0, 3, settings.depthIndex)];
 
     return settings;
-}
-
-void GuitarToolsAudioProcessor::prepareFilters(const ChainSettings& chainSettings)
-{
-    updateLowCutFilters(chainSettings);
-    updateHighCutFilters(chainSettings);
-    updateResoFilters(chainSettings);
-    updateMudFilters(chainSettings);
-    updatePresenceFilters(chainSettings);
-    updateDepthFilters(chainSettings);
-}
-
-//==============================================================================
-void GuitarToolsAudioProcessor::updateCoefficients(EQFilter::CoefficientsPtr& old, const std::array<float, 6>& replacements)
-{
-    *old = replacements;
-}
-//==============================================================================
-void GuitarToolsAudioProcessor::updateResoFilters(const ChainSettings& chainSettings)
-{
-    const auto resoQ = chainSettings.resoExtremeActive ? DefaultValues::resoExtremeQ : DefaultValues::resoQ;
-    const auto resoGain = juce::Decibels::decibelsToGain(chainSettings.resoGainDb);
-    const auto resoCoefficients = juce::dsp::IIR::ArrayCoefficients<float>::makePeakFilter(getSampleRate(), chainSettings.resoFreq, resoQ, resoGain);
-
-    updateCoefficients(leftChain.get<ChainPositions::Reso>().coefficients, resoCoefficients);
-    updateCoefficients(rightChain.get<ChainPositions::Reso>().coefficients, resoCoefficients);
-}
-//==============================================================================
-void GuitarToolsAudioProcessor::updateMudFilters(const ChainSettings& chainSettings)
-{
-    const auto mudQ = chainSettings.mudExtremeActive ? DefaultValues::mudExtremeQ : DefaultValues::mudQ;
-    const auto mudGain = juce::Decibels::decibelsToGain(chainSettings.mudGainDb);
-    const auto mudCoefficients = juce::dsp::IIR::ArrayCoefficients<float>::makePeakFilter(getSampleRate(), chainSettings.mudFreq, mudQ, mudGain);
-
-    updateCoefficients(leftChain.get<ChainPositions::Mud>().coefficients, mudCoefficients);
-    updateCoefficients(rightChain.get<ChainPositions::Mud>().coefficients, mudCoefficients);
-}
-//==============================================================================
-void GuitarToolsAudioProcessor::updatePresenceFilters(const ChainSettings& chainSettings)
-{
-    const auto presCoefficients = juce::dsp::IIR::ArrayCoefficients<float>::makeHighShelf(getSampleRate(), chainSettings.presenceFreq, chainSettings.presenceResonance, juce::Decibels::decibelsToGain(chainSettings.presenceGain));
-
-    updateCoefficients(leftChain.get<ChainPositions::Presence>().coefficients, presCoefficients);
-    updateCoefficients(rightChain.get<ChainPositions::Presence>().coefficients, presCoefficients);
-}
-//==============================================================================
-void GuitarToolsAudioProcessor::updateDepthFilters(const ChainSettings& chainSettings)
-{
-    const auto depthCoefficients = juce::dsp::IIR::ArrayCoefficients<float>::makeLowShelf(getSampleRate(), chainSettings.depthFreq, chainSettings.depthResonance, juce::Decibels::decibelsToGain(chainSettings.depthGain));
-
-    updateCoefficients(leftChain.get<ChainPositions::Depth>().coefficients, depthCoefficients);
-    updateCoefficients(rightChain.get<ChainPositions::Depth>().coefficients, depthCoefficients);
-}
-//==============================================================================
-void GuitarToolsAudioProcessor::updateLowCutFilters(const ChainSettings& chainSettings)
-{
-    const auto order = (chainSettings.lowCutSlope + 1) * 2;
-    std::array<std::array<float, 6>, 4> lowCutCoefficients {};
-
-    for (int stage = 0; stage <= chainSettings.lowCutSlope; ++stage)
-    {
-        const auto stageQ = 1.0 / (2.0 * std::cos((2.0 * stage + 1.0) * juce::MathConstants<double>::pi / (order * 2.0)));
-        lowCutCoefficients[static_cast<size_t>(stage)] = juce::dsp::IIR::ArrayCoefficients<float>::makeHighPass(getSampleRate(), chainSettings.lowCutFreq, static_cast<float>(stageQ));
-    }
-
-    auto& leftLowCut = leftChain.get<ChainPositions::LowCut>();
-    auto& rightLowCut = rightChain.get<ChainPositions::LowCut>();
-    updateCutFilter(leftLowCut, lowCutCoefficients, chainSettings.lowCutSlope);
-    updateCutFilter(rightLowCut, lowCutCoefficients, chainSettings.lowCutSlope);
-}
-//==============================================================================
-void GuitarToolsAudioProcessor::updateHighCutFilters(const ChainSettings& chainSettings)
-{
-    const auto order = (chainSettings.highCutSlope + 1) * 2;
-    std::array<std::array<float, 6>, 4> highCutCoefficients {};
-
-    for (int stage = 0; stage <= chainSettings.highCutSlope; ++stage)
-    {
-        const auto stageQ = 1.0 / (2.0 * std::cos((2.0 * stage + 1.0) * juce::MathConstants<double>::pi / (order * 2.0)));
-        highCutCoefficients[static_cast<size_t>(stage)] = juce::dsp::IIR::ArrayCoefficients<float>::makeLowPass(getSampleRate(), chainSettings.highCutFreq, static_cast<float>(stageQ));
-    }
-
-    auto& leftHighCut = leftChain.get<ChainPositions::HighCut>();
-    auto& rightHighCut = rightChain.get<ChainPositions::HighCut>();
-    updateCutFilter(leftHighCut, highCutCoefficients, chainSettings.highCutSlope);
-    updateCutFilter(rightHighCut, highCutCoefficients, chainSettings.highCutSlope);
-}
-
-//==============================================================================
-void GuitarToolsAudioProcessor::updateFilters()
-{
-    const auto chainSettings = getChainSettings();
-
-    if (! juce::approximatelyEqual(chainSettings.lowCutFreq, lastChainSettings.lowCutFreq)
-     || chainSettings.lowCutSlope != lastChainSettings.lowCutSlope)
-        updateLowCutFilters(chainSettings);
-
-    if (! juce::approximatelyEqual(chainSettings.highCutFreq, lastChainSettings.highCutFreq)
-     || chainSettings.highCutSlope != lastChainSettings.highCutSlope)
-        updateHighCutFilters(chainSettings);
-
-    if (! juce::approximatelyEqual(chainSettings.resoFreq, lastChainSettings.resoFreq)
-     || ! juce::approximatelyEqual(chainSettings.resoGainDb, lastChainSettings.resoGainDb)
-     || chainSettings.resoExtremeActive != lastChainSettings.resoExtremeActive)
-        updateResoFilters(chainSettings);
-
-    if (! juce::approximatelyEqual(chainSettings.mudFreq, lastChainSettings.mudFreq)
-     || ! juce::approximatelyEqual(chainSettings.mudGainDb, lastChainSettings.mudGainDb)
-     || chainSettings.mudExtremeActive != lastChainSettings.mudExtremeActive)
-        updateMudFilters(chainSettings);
-
-    if (chainSettings.presenceIndex != lastChainSettings.presenceIndex
-     || ! juce::approximatelyEqual(chainSettings.presenceGain, lastChainSettings.presenceGain))
-        updatePresenceFilters(chainSettings);
-
-    if (chainSettings.depthIndex != lastChainSettings.depthIndex
-     || ! juce::approximatelyEqual(chainSettings.depthGain, lastChainSettings.depthGain))
-        updateDepthFilters(chainSettings);
-
-    lastChainSettings = chainSettings;
 }
 
 void GuitarToolsAudioProcessor::loadDefaultPreset()

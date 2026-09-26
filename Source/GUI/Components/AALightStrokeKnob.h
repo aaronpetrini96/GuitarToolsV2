@@ -7,7 +7,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <cmath>
 #include <memory>
-#include "../../Utils/AALook.h"
+#include "../../AALook.h"
 
 class AALightStrokeKnob : public juce::Slider
 {

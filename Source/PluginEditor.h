@@ -8,15 +8,15 @@
 #include "PluginProcessor.h"
 #include "GUI/Panels/TooltipsPanel.h"
 #include "GUI/Panels/HeaderPanel.h"
-#include "GUI/Panels/InfoPanel.h"
+#include "GUI/PopupPanels/InfoPanel.h"
 #include "GUI/Panels/MainPanel.h"
-#include "GUI/Panels/SettingsOptionsPanel.h"
+#include "GUI/PopupPanels/SettingsOptionsPanel.h"
 #include "Utils/AAResizeUI.h"
-#include "GUI/Components/AAListOptionsPopup.h"
-#include "PresetFolder/PresetManager.h"
-#include "PresetFolder/AAPresetBox.h"
-#include "PresetFolder/AAPresetBrowser.h"
-#include "PresetFolder/AAPresetPopups.h"
+#include "GUI/PopupPanels/AAListOptionsPopup.h"
+#include "Utils/PresetManager.h"
+#include "GUI/Components/AAPresetBox.h"
+#include "GUI/PopupPanels/AAPresetBrowser.h"
+#include "GUI/PopupPanels/AAPresetPopups.h"
 //==============================================================================
 /**
 */

@@ -9,7 +9,7 @@
 #include <cmath>
 #include <memory>
 
-#include "../../Utils/AALook.h"
+#include "../../AALook.h"
 
 class AANotchSSLKnob : public juce::Slider
 {

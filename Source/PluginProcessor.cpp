@@ -176,24 +176,34 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 
     dryBuffer.makeCopyOf(buffer, true); // Save a dry copy before processing
 
-    updateSmootherFromParams(buffer.getNumSamples(), SmootherUpdateMode::liveInRealTime);
     updateGainState();
-    midBandCompressor.setAmount(compAmountParamSmoother.getCurrentValue() / DefaultValues::compAmountRangeEnd);
     midBandCompressor.setActive(compActiveParam->get());
     midBandCompressor.setExtremeMode(compExtremeActiveParam->get());
-    filters.update(getChainSettings());
 
     const auto bypassActive = pluginBypassActiveParam->get(); // Update smoothed bypass target
     smoothedBypassValue.setTargetValue(bypassActive ? 0.0f : 1.0f);
 
+    constexpr int parameterUpdateInterval {32};
+    const auto numSamples = buffer.getNumSamples();
+
+    for (int chunkStart {0}; chunkStart < numSamples; chunkStart += parameterUpdateInterval)
+    {
+        const auto chunkLength = juce::jmin(parameterUpdateInterval, numSamples - chunkStart);
+        juce::AudioBuffer<float> chunk {buffer.getArrayOfWritePointers(), buffer.getNumChannels(), chunkStart, chunkLength};
+
+        updateSmootherFromParams(chunkLength, SmootherUpdateMode::liveInRealTime);
+        midBandCompressor.setAmount(compAmountParamSmoother.getCurrentValue() / DefaultValues::compAmountRangeEnd);
+        filters.update(getChainSettings());
+
 //========================    LEVELS part    ========================
-    applyGain(buffer, inputGain);
+        applyGain(chunk, inputGain);
 
 //========================    COMP part    ========================
-    midBandCompressor.process(buffer);
+        midBandCompressor.process(chunk);
 
 //========================    EQ part    ========================
-    filters.process(buffer);
+        filters.process(chunk);
+    }
     
     levelMatch.update (dryBuffer, buffer);
     applyGain(buffer, outputGain);

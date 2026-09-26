@@ -1,7 +1,5 @@
 #include "GTMidBandCompressor.h"
 
-#include <cmath>
-
 void GTMidBandCompressor::prepare(const juce::dsp::ProcessSpec& spec)
 {
     using FilterType = juce::dsp::LinkwitzRileyFilterType;

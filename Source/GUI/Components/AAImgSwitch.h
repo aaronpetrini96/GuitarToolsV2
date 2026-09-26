@@ -32,7 +32,8 @@ public:
         label.setInterceptsMouseClicks (false, false);
         addAndMakeVisible (label);
 
-        createAttachment (nullptr);
+        attachment = std::make_unique<juce::ButtonParameterAttachment> (parameter, toggleSwitch, nullptr);
+        attachment->sendInitialUpdate();
     }
 
     void resized() override
@@ -49,7 +50,8 @@ public:
 
     void setUndoManager (juce::UndoManager& undoManager)
     {
-        createAttachment (&undoManager);
+        attachment = std::make_unique<juce::ButtonParameterAttachment> (parameter, toggleSwitch, &undoManager);
+        attachment->sendInitialUpdate();
     }
 
     void setTooltip (const juce::String& newTooltip)
@@ -65,12 +67,6 @@ public:
     float imgAspectRatio {1.0f};
 
 private:
-    void createAttachment (juce::UndoManager* undoManager)
-    {
-        attachment = std::make_unique<juce::ButtonParameterAttachment> (parameter, toggleSwitch, undoManager);
-        attachment->sendInitialUpdate();
-    }
-
 
     std::unique_ptr<juce::Drawable> imgPosition1 {juce::Drawable::createFromImageData(BinaryData::toggleSwitchLeft_png, BinaryData::toggleSwitchLeft_pngSize)};
     std::unique_ptr<juce::Drawable> imgPosition2 {juce::Drawable::createFromImageData(BinaryData::toggleSwitchRight_png, BinaryData::toggleSwitchRight_pngSize)};

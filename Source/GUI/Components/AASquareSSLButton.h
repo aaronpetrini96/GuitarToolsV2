@@ -32,7 +32,8 @@ public:
         };
         addAndMakeVisible (button);
 
-        createAttachment (nullptr);
+        attachment = std::make_unique<juce::ButtonParameterAttachment> (parameter, button, nullptr);
+        attachment->sendInitialUpdate();
     }
 
     void paintOverChildren (juce::Graphics& g) override
@@ -62,7 +63,8 @@ public:
 
     void setUndoManager (juce::UndoManager& undoManager)
     {
-        createAttachment (&undoManager);
+        attachment = std::make_unique<juce::ButtonParameterAttachment> (parameter, button, &undoManager);
+        attachment->sendInitialUpdate();
     }
 
     void setTooltip (const juce::String& newTooltip)
@@ -73,14 +75,8 @@ public:
     std::function<void()> onClick;
 
 private:
-    void createAttachment (juce::UndoManager* undoManager)
-    {
-        attachment = std::make_unique<juce::ButtonParameterAttachment> (parameter, button, undoManager);
-        attachment->sendInitialUpdate();
-    }
-
-    std::unique_ptr<juce::Drawable> buttonOn = juce::Drawable::createFromImageData (BinaryData::defON2_png, BinaryData::defON2_pngSize);
-    std::unique_ptr<juce::Drawable> buttonOff = juce::Drawable::createFromImageData (BinaryData::defOff_png, BinaryData::defOff_pngSize);
+    std::unique_ptr<juce::Drawable> buttonOn = juce::Drawable::createFromImageData (BinaryData::defON2Neutral_png, BinaryData::defON2Neutral_pngSize);
+    std::unique_ptr<juce::Drawable> buttonOff = juce::Drawable::createFromImageData (BinaryData::defOffNeutral_png, BinaryData::defOffNeutral_pngSize);
     juce::DrawableButton button {{}, juce::DrawableButton::ImageFitted};
     juce::RangedAudioParameter& parameter;
     juce::String nameText;

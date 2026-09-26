@@ -127,6 +127,7 @@ private:
     void updatePresenceFilters(const ChainSettings& chainSettings);
     void updateDepthFilters(const ChainSettings& chainSettings);
     void updateFilters();
+    void prepareFilters(const ChainSettings& chainSettings);
     ChainSettings getChainSettings() const;
     ChainSettings lastChainSettings;
 

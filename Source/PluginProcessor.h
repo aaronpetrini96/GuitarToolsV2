@@ -58,6 +58,7 @@ public:
    #endif
 
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+    juce::AudioProcessorParameter* getBypassParameter() const override { return pluginBypassActiveParam; }
 
     //==============================================================================
     juce::AudioProcessorEditor* createEditor() override;
@@ -132,6 +133,7 @@ private:
     ChainSettings lastChainSettings;
 
 
+// PARAMETER POINTERS
     juce::AudioParameterFloat* lowCutFreqParam {nullptr};
     juce::AudioParameterChoice* lowCutSlopeParam {nullptr};
     juce::AudioParameterFloat* highCutFreqParam {nullptr};
@@ -147,6 +149,7 @@ private:
     juce::AudioParameterChoice* depthModeParam {nullptr};
     juce::AudioParameterFloat* depthGainParam {nullptr};
 
+    //SMOOTHERS
     juce::SmoothedValue<float>
     lowCutFreqParamSmoother,
     highCutFreqParamSmoother,
@@ -167,15 +170,7 @@ private:
     {
         const auto stageIsUsed = Index <= static_cast<int>(slope);
 
-        if (stageIsUsed)
-        {
-            if (chain.template isBypassed<Index>())
-                chain.template get<Index>().reset();
-
-            updateCoefficients(chain.template get<Index>().coefficients, cutCoefficients[Index]);
-        }
-
-        chain.template setBypassed<Index>(! stageIsUsed);
+        updateCoefficients(chain.template get<Index>().coefficients, stageIsUsed ? cutCoefficients[Index] : std::array<float, 6> {1.f, 0.f, 0.f, 1.f, 0.f, 0.f});
     }
 
     template<typename ChainType, typename CoefficientType>
@@ -226,7 +221,7 @@ private:
 
     /// PARAM FUNCTIONS
     void linkParameters();
-    template<typename ParamType, typename Params, typename Funcs> // <-- new
+    template<typename ParamType, typename Params, typename Funcs>
     void initCachedParams(Params paramsArray, Funcs funcsArray)
     {
         for (size_t i = 0; i < paramsArray.size(); ++i)

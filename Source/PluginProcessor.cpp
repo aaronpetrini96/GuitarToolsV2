@@ -101,19 +101,23 @@ void GuitarToolsAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     spec.numChannels = static_cast<juce::uint32>(getTotalNumInputChannels());
     
     smoothedBypassValue.reset(sampleRate, DefaultValues::parameterSmoothingTime);
-    
+    smoothedBypassValue.setCurrentAndTargetValue(pluginBypassActiveParam->get() ? 0.f : 1.f);
+
 //==============================================================================
 //    Compressor Section
+    midBandCompressor.setActive(compActiveParam->get());
+    midBandCompressor.setExtremeMode(compExtremeActiveParam->get());
     midBandCompressor.prepare(spec);
 
 //==============================================================================
 //    Levels Section
+    levelMatch.prepare(spec);
+    updateGainState();
+
     inputGain.prepare(spec);
     inputGain.setRampDurationSeconds(DefaultValues::parameterSmoothingTime);
     outputGain.prepare(spec);
     outputGain.setRampDurationSeconds(DefaultValues::parameterSmoothingTime);
-
-    levelMatch.prepare(spec);
 
     dryBuffer.setSize(static_cast<int>(spec.numChannels), numSamples);
 
@@ -212,19 +216,19 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     
     levelMatch.update (dryBuffer, buffer);
     applyGain(buffer, outputGain);
-    
 
-    for (int n {0}; n < buffer.getNumSamples(); ++n)     // Smooth crossfade
+    for (int ch {0}; ch < buffer.getNumChannels(); ++ch)     // Smooth crossfade
     {
-        const auto mix = smoothedBypassValue.getNextValue();
-        for (int ch {0}; ch < buffer.getNumChannels(); ++ch)
+        auto channelBypassValue = smoothedBypassValue;
+        auto* wet = buffer.getWritePointer(ch);
+        const auto* dry = dryBuffer.getReadPointer(ch);
+        for (int n {0}; n < buffer.getNumSamples(); ++n)
         {
-            auto* wet = buffer.getWritePointer(ch);
-            const auto* dry = dryBuffer.getReadPointer(ch);
+            const auto mix = channelBypassValue.getNextValue();
             wet[n] = wet[n] * mix + dry[n] * (1.f - mix);
         }
     }
-
+    smoothedBypassValue.skip(buffer.getNumSamples());
 }
 
 //==============================================================================
@@ -523,11 +527,11 @@ void GuitarToolsAudioProcessor::updateFilters()
 
 void GuitarToolsAudioProcessor::loadDefaultPreset()
 {
-    const auto defaultPresetFile = PresetManager::getPresetFolder().getChildFile ("Start From Here.xml");
+    const auto defaultPresetFile = PresetManager::getPresetFolder().getChildFile ("DefaultStarter.xml");
     if (! defaultPresetFile.existsAsFile())
         return;
     loadPreset (defaultPresetFile);
-    currentPresetName = "Start From Here";
+    currentPresetName = "DefaultStarter";
 }
 
 //==============================================================================

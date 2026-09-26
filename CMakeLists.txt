@@ -32,8 +32,7 @@ juce_add_binary_data(GuitarToolsData SOURCES ${GUITARTOOLS_RESOURCE_FILES})
 
 juce_add_plugin(GuitarTools
     VERSION ${PROJECT_VERSION}
-    COMPANY_NAME "Aaron Petrini"
-    COMPANY_WEBSITE "www.AaronPetrini.com"
+    COMPANY_NAME "AP Audio"
     BUNDLE_ID com.AaronPetrini.GuitarTools2
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT FALSE

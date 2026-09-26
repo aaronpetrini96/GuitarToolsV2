@@ -77,7 +77,7 @@ public:
     AAListOptionsPopup::Item getMakeDefaultOption() const
     {
         const auto isAlreadyDefault = juce::approximatelyEqual (currentScale, getDefaultScale());
-        return {"SAVE UI SIZE", [this] { makeCurrentSizeDefault(); }, ! isAlreadyDefault};
+        return {"Save UI Size", [this] { makeCurrentSizeDefault(); }, ! isAlreadyDefault};
     }
 
     void makeCurrentSizeDefault() const
@@ -107,7 +107,7 @@ private:
         return static_cast<float> (userSettings.getDoubleValue ("DefaultUIScale", fallbackDefaultScale));
     }
 
-    juce::Array<SizeOption> sizeOptionsArray {SizeOption {"X-SMALL", 0.6f}, SizeOption {"SMALL", 0.8f}, SizeOption {"DEFAULT", 1.0f}, SizeOption {"LARGE", 1.2f}, SizeOption {"X-LARGE", 1.4f}, SizeOption {"HUGE", 1.75f}};
+    juce::Array<SizeOption> sizeOptionsArray {SizeOption {"X-Small", 0.6f}, SizeOption {"Small", 0.8f}, SizeOption {"Default", 1.0f}, SizeOption {"Large", 1.2f}, SizeOption {"X-Large", 1.4f}, SizeOption {"Huge", 1.75f}};
     const float fallbackDefaultScale {1.0f};
     float& currentScale;
 

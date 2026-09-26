@@ -416,7 +416,7 @@ void GuitarToolsAudioProcessor::prepareFilters(const ChainSettings& chainSetting
 }
 
 //==============================================================================
-void GuitarToolsAudioProcessor::updateCoefficients(Coefficients& old, const std::array<float, 6>& replacements)
+void GuitarToolsAudioProcessor::updateCoefficients(EQFilter::CoefficientsPtr& old, const std::array<float, 6>& replacements)
 {
     *old = replacements;
 }

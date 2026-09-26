@@ -118,9 +118,7 @@ private:
         Depth
     };
 //    =====  UPDATE COEFFICIENTS =====
-    
-    using Coefficients = EQFilter::CoefficientsPtr; //alias for type needed to update coef
-    static void updateCoefficients(Coefficients& old, const std::array<float, 6>& replacements);
+    static void updateCoefficients(EQFilter::CoefficientsPtr& old, const std::array<float, 6>& replacements);
     void updateLowCutFilters(const ChainSettings& chainSettings);
     void updateHighCutFilters(const ChainSettings& chainSettings);
     void updateResoFilters(const ChainSettings& chainSettings);
@@ -205,9 +203,6 @@ private:
     juce::AudioBuffer<float> dryBuffer {};
 
     void updateGainState();
-
-
-
 
 
     template<typename T, typename U>

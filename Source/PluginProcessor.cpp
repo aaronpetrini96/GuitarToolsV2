@@ -126,8 +126,9 @@ void GuitarToolsAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     for (const auto& [param, smoother] : smootherBindings)
         smoother->reset(sampleRate, DefaultValues::parameterSmoothingTime);
 
-    resoGainDbSmoother.reset(sampleRate, DefaultValues::parameterSmoothingTime);
-    mudGainDbSmoother.reset(sampleRate, DefaultValues::parameterSmoothingTime);
+    for (auto* smoother : {&resoGainDbSmoother, &mudGainDbSmoother, &resoQSmoother, &mudQSmoother,
+                           &presenceFreqSmoother, &presenceResonanceSmoother, &depthFreqSmoother, &depthResonanceSmoother})
+        smoother->reset(sampleRate, DefaultValues::parameterSmoothingTime);
 
     updateSmootherFromParams(1, SmootherUpdateMode::initialize);
 
@@ -378,20 +379,18 @@ ChainSettings GuitarToolsAudioProcessor::getChainSettings() const
 
     settings.resoFreq = resoFreqParamSmoother.getCurrentValue();
     settings.resoGainDb = resoGainDbSmoother.getCurrentValue();
-    settings.resoExtremeActive = resoExtremeActiveParam->get();
+    settings.resoQ = resoQSmoother.getCurrentValue();
     settings.mudFreq = mudFreqParamSmoother.getCurrentValue();
     settings.mudGainDb = mudGainDbSmoother.getCurrentValue();
-    settings.mudExtremeActive = mudExtremeActiveParam->get();
+    settings.mudQ = mudQSmoother.getCurrentValue();
 
-    settings.presenceIndex = presenceModeParam->getIndex();
     settings.presenceGain = presenceGainParamSmoother.getCurrentValue();
-    settings.presenceFreq = DefaultValues::presenceFreqByMode[(size_t) juce::jlimit (0, 3, settings.presenceIndex)];
-    settings.presenceResonance = DefaultValues::presenceResonanceByMode[(size_t) juce::jlimit (0, 3, settings.presenceIndex)];
+    settings.presenceFreq = presenceFreqSmoother.getCurrentValue();
+    settings.presenceResonance = presenceResonanceSmoother.getCurrentValue();
 
-    settings.depthIndex = depthModeParam->getIndex();
     settings.depthGain = depthGainParamSmoother.getCurrentValue();
-    settings.depthFreq = DefaultValues::depthFreqByMode[(size_t) juce::jlimit (0, 3, settings.depthIndex)];
-    settings.depthResonance = DefaultValues::depthResonanceByMode[(size_t) juce::jlimit (0, 3, settings.depthIndex)];
+    settings.depthFreq = depthFreqSmoother.getCurrentValue();
+    settings.depthResonance = depthResonanceSmoother.getCurrentValue();
 
     return settings;
 }
@@ -467,32 +466,32 @@ void GuitarToolsAudioProcessor::linkParameters()
 
 void GuitarToolsAudioProcessor::updateSmootherFromParams(int numSamplesToSkip, SmootherUpdateMode mode)
 {
-    for (const auto& [param, smoother] : smootherBindings)
+    const auto updateSmoother = [mode, numSamplesToSkip] (juce::SmoothedValue<float>& smoother, float targetValue)
     {
         if (mode == SmootherUpdateMode::initialize)
-            smoother->setCurrentAndTargetValue(param->get());
+            smoother.setCurrentAndTargetValue(targetValue);
         else
-            smoother->setTargetValue(param->get());
+            smoother.setTargetValue(targetValue);
 
-        smoother->skip(numSamplesToSkip);
-    }
+        smoother.skip(numSamplesToSkip);
+    };
 
-    const auto resoGainDbTarget = resoActiveParam->get() ? (resoExtremeActiveParam->get() ? DefaultValues::resoExtremeGainDb : DefaultValues::resoGainDb) : 0.f;
-    const auto mudGainDbTarget = mudActiveParam->get() ? (mudExtremeActiveParam->get() ? DefaultValues::mudExtremeGainDb : DefaultValues::mudGainDb) : 0.f;
+    for (const auto& [param, smoother] : smootherBindings)
+        updateSmoother(*smoother, param->get());
 
-    if (mode == SmootherUpdateMode::initialize)
-    {
-        resoGainDbSmoother.setCurrentAndTargetValue(resoGainDbTarget);
-        mudGainDbSmoother.setCurrentAndTargetValue(mudGainDbTarget);
-    }
-    else
-    {
-        resoGainDbSmoother.setTargetValue(resoGainDbTarget);
-        mudGainDbSmoother.setTargetValue(mudGainDbTarget);
-    }
+    const auto resoExtremeActive = resoExtremeActiveParam->get();
+    const auto mudExtremeActive = mudExtremeActiveParam->get();
+    const auto presenceIndex = static_cast<size_t>(juce::jlimit(0, 3, presenceModeParam->getIndex()));
+    const auto depthIndex = static_cast<size_t>(juce::jlimit(0, 3, depthModeParam->getIndex()));
 
-    resoGainDbSmoother.skip(numSamplesToSkip);
-    mudGainDbSmoother.skip(numSamplesToSkip);
+    updateSmoother(resoGainDbSmoother, resoActiveParam->get() ? (resoExtremeActive ? DefaultValues::resoExtremeGainDb : DefaultValues::resoGainDb) : 0.f);
+    updateSmoother(mudGainDbSmoother, mudActiveParam->get() ? (mudExtremeActive ? DefaultValues::mudExtremeGainDb : DefaultValues::mudGainDb) : 0.f);
+    updateSmoother(resoQSmoother, resoExtremeActive ? DefaultValues::resoExtremeQ : DefaultValues::resoQ);
+    updateSmoother(mudQSmoother, mudExtremeActive ? DefaultValues::mudExtremeQ : DefaultValues::mudQ);
+    updateSmoother(presenceFreqSmoother, DefaultValues::presenceFreqByMode[presenceIndex]);
+    updateSmoother(presenceResonanceSmoother, DefaultValues::presenceResonanceByMode[presenceIndex]);
+    updateSmoother(depthFreqSmoother, DefaultValues::depthFreqByMode[depthIndex]);
+    updateSmoother(depthResonanceSmoother, DefaultValues::depthResonanceByMode[depthIndex]);
 }
 
 void GuitarToolsAudioProcessor::updateGainState()

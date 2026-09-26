@@ -6,7 +6,7 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
-#include "../GUI/Components/AAListOptionsPopup.h"
+#include "../GUI/PopupPanels/AAListOptionsPopup.h"
 
 class AAResizeUI
 {

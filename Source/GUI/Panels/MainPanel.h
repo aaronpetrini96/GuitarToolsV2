@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../../Utils/AALook.h"
+#include "../../AALook.h"
 #include "../../Utils/AAParamUtils.h"
 #include "PluginProcessor.h"
 #include "FadersPlatePanel.h"
@@ -75,7 +75,8 @@ private:
     AAIconAndTextButton levelMatchControl {*audioProcessor.treeState.getParameter (ParamIDs::getLoudnessMatchActiveName()), BinaryData::linkON_svg, BinaryData::linkON_svgSize, "MATCH", "MATCHED"};
 
     FadersPlatePanel fadersPlatePanel {audioProcessor};
-    juce::Image screwA = juce::ImageCache::getFromMemory (BinaryData::allenKeyScrewDarkGrey_png, BinaryData::allenKeyScrewDarkGrey_pngSize);
+    // juce::Image screwA = juce::ImageCache::getFromMemory (BinaryData::allenKeyScrewDarkGrey_png, BinaryData::allenKeyScrewDarkGrey_pngSize);
+    // juce::Image screw = juce::ImageCache::getFromMemory (BinaryData::screwDarkGrey_png, BinaryData::screwDarkGrey_pngSize);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainPanel)
 };

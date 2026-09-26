@@ -6,9 +6,9 @@
 
 #include "PluginProcessor.h"
 #include "BinaryData.h"
-#include "../../Utils/AALook.h"
+#include "../../AALook.h"
 #include "../../Utils/AAParamUtils.h"
-#include "../../PresetFolder/AAPresetBox.h"
+#include "../Components/AAPresetBox.h"
 
 class HeaderPanel : public juce::Component,
                     private juce::ChangeListener

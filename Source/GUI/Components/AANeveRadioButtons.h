@@ -9,7 +9,7 @@
 #include <memory>
 
 #include "BinaryData.h"
-#include "../../Utils/AALook.h"
+#include "../../AALook.h"
 
 class AANeveRadioButtons : public juce::Component
 {

@@ -10,7 +10,7 @@
 #include <memory>
 #include <utility>
 
-#include "../../Utils/AALook.h"
+#include "../../AALook.h"
 
 class AAIconAndTextButton : public juce::Button
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../Utils/AALook.h"
+#include "../../AALook.h"
 #include <functional>
 
 class InfoPanel : public juce::Component

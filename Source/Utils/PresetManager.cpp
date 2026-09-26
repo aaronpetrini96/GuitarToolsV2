@@ -1,4 +1,4 @@
-#include "PresetFolder/PresetManager.h"
+#include "PresetManager.h"
 #include "BinaryData.h"
 
 static const juce::StringArray rootPresetFileNames {"DefaultStarter.xml"};

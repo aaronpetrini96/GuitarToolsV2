@@ -9,8 +9,8 @@
 #include <functional>
 
 #include "BinaryData.h"
-#include "../../Utils/AALook.h"
-#include "../../PresetFolder/PresetManager.h"
+#include "../../AALook.h"
+#include "../../Utils/PresetManager.h"
 
 class PresetBoxLAF : public juce::LookAndFeel_V4
 {

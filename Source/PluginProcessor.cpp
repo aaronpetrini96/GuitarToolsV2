@@ -121,9 +121,6 @@ void GuitarToolsAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 //    EQ Section
     auto monospec = spec;
     monospec.numChannels = 1;
-    leftChain.prepare(monospec);
-    rightChain.prepare(monospec);
-    lastChainSettings = ChainSettings{};
 
     for (const auto& [param, smoother] : smootherBindings)
         smoother->reset(sampleRate, DefaultValues::parameterSmoothingTime);
@@ -132,7 +129,14 @@ void GuitarToolsAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     mudGainDbSmoother.reset(sampleRate, DefaultValues::parameterSmoothingTime);
 
     updateSmootherFromParams(1, SmootherUpdateMode::initialize);
-    updateFilters();
+
+    const auto chainSettings = getChainSettings();
+    prepareFilters(chainSettings);
+    lastChainSettings = chainSettings;
+
+    leftChain.prepare(monospec);
+    rightChain.prepare(monospec);
+
 //==============================================================================
 }
 
@@ -395,6 +399,16 @@ ChainSettings GuitarToolsAudioProcessor::getChainSettings() const
     settings.depthResonance = DefaultValues::depthResonanceByMode[(size_t) juce::jlimit (0, 3, settings.depthIndex)];
 
     return settings;
+}
+
+void GuitarToolsAudioProcessor::prepareFilters(const ChainSettings& chainSettings)
+{
+    updateLowCutFilters(chainSettings);
+    updateHighCutFilters(chainSettings);
+    updateResoFilters(chainSettings);
+    updateMudFilters(chainSettings);
+    updatePresenceFilters(chainSettings);
+    updateDepthFilters(chainSettings);
 }
 
 //==============================================================================

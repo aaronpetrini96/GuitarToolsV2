@@ -1,7 +1,7 @@
-#include "PresetManager.h"
+#include "PresetFolder/PresetManager.h"
 #include "BinaryData.h"
 
-static const juce::StringArray rootPresetFileNames {"Start From Here.xml", "Reset To Default.xml"};
+static const juce::StringArray rootPresetFileNames {"DefaultStarter.xml"};
 
 PresetManager::PresetManager(GuitarToolsAudioProcessor& processor) : audioProcessor(processor)
 {

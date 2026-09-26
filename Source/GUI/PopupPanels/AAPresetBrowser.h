@@ -8,8 +8,8 @@
 
 #include <functional>
 
-#include "../GUI/LAF/PresetBrowserLAF.h"
-#include "PresetManager.h"
+#include "../LAF/PresetBrowserLAF.h"
+#include "../../PresetManager.h"
 
 class AAPresetBrowser : public juce::Component
 {
@@ -21,7 +21,7 @@ public:
         setLookAndFeel (PresetBrowserLAF::get());
 
         viewport.setViewedComponent (&rowsHolder, false);
-        viewport.setScrollBarsShown (true, false);
+        viewport.setScrollBarsShown (false, false);
         addAndMakeVisible (viewport);
 
         defaultTabButton.setToggleState (true, juce::dontSendNotification);
@@ -87,7 +87,7 @@ public:
         setPresetType (PresetManager::PresetType::user);
     }
 
-    int getNumRows() const { return rows.size(); }
+    float getNumRows() const { return (float) rows.size() + tabHeightRowRatio; }
 
     void paint (juce::Graphics& g) override
     {
@@ -98,19 +98,17 @@ public:
     void resized() override
     {
         const auto boundsF = getLocalBounds().toFloat();
-        const auto rowHeight = boundsF.getHeight() / 7.f;
-        const auto tabHeight = rowHeight;
+        const auto rowHeight = boundsF.getHeight() / getNumRows();
+        const auto tabHeight = rowHeight * tabHeightRowRatio;
         const auto tabWidth = boundsF.getWidth() * 0.5f;
 
         defaultTabButton.setBounds (boundsF.withSize (tabWidth, tabHeight).toNearestInt());
-        userTabButton.setBounds (defaultTabButton.getBounds().toFloat().withX (tabWidth).toNearestInt());
+        userTabButton.setBounds (boundsF.withHeight (tabHeight).withLeft (tabWidth).toNearestInt());
 
         const auto listBounds = boundsF.withTop (tabHeight);
-        const auto scrollBarThickness = rowHeight * (float) rows.size() > listBounds.getHeight() ? rowHeight * 0.25f : 0.0f;
-        viewport.setScrollBarThickness (juce::roundToInt (scrollBarThickness));
         viewport.setBounds (listBounds.toNearestInt());
 
-        const auto rowWidth = boundsF.getWidth() - scrollBarThickness;
+        const auto rowWidth = boundsF.getWidth();
         rowsHolder.setSize (juce::roundToInt (rowWidth), juce::roundToInt (rowHeight * (float) rows.size()));
 
         for (int rowIndex = 0; rowIndex < rows.size(); ++rowIndex)
@@ -123,8 +121,8 @@ public:
         }
     }
 
-    float rowHeightPOH {0.125f};
-    float tabHeightRowRatio {1.f};
+
+    float tabHeightRowRatio {1.1f};
     std::function<void (const juce::File& presetFile)> onDeleteRequested;
     std::function<void()> onRowsChanged;
 
@@ -141,7 +139,7 @@ private:
     PresetManager::PresetType selectedPresetType {PresetManager::PresetType::factory};
     juce::Array<juce::File> presetFiles;
 
-    juce::TextButton defaultTabButton {"Factory"}, userTabButton {"User"};
+    juce::TextButton defaultTabButton {"Factory"}, userTabButton {"User Presets"};
     juce::Component rowsHolder;
     juce::OwnedArray<juce::TextButton> rows, deleteButtons;
     juce::Viewport viewport;

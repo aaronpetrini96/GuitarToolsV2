@@ -25,10 +25,9 @@ namespace  GTColors //project specific
     inline juce::Colour mainPanelBottom {42, 45,49};
 
     inline juce::Colour headerPanelStart {12, 12, 12};
-    inline juce::Colour headerPanelEnd {26, 30, 50};
+    inline juce::Colour headerPanelEnd {24, 27, 45};
 
     inline juce::Colour popupDarkBackground {20, 24, 34};
-    inline juce::Colour popupOutline {juce::Colour (64, 196, 255).withAlpha (0.4f)};
 
     inline juce::Colour fadersPlateGradientStart {juce::Colours::black.withAlpha (0.175f)};
     inline juce::Colour fadersPlateGradientEnd {juce::Colours::black.withAlpha (0.225f)};
@@ -39,6 +38,9 @@ namespace  GTColors //project specific
 
     inline juce::Colour presetBox {35, 42, 60};
     inline juce::Colour presetPopupHighlight {30, 50, 80};
+    inline juce::Colour tabButtonBackground {17, 19, 31};
+    inline juce::Colour presetBlue {45, 57, 92};
+    inline juce::Colour outlinePopup {73, 83, 102};
 
     inline juce::Colour infoPanelTop {36, 45, 81};
     inline juce::Colour infoPanelBottom {26, 33, 60};
@@ -71,9 +73,10 @@ namespace AAUITools
         const auto outlineThickness = dividerThickness * 0.125f;
         const auto outlineExpansion = outlineThickness * 0.5f;
 
-        g.setColour (GTColors::dividerLinesStart);
+        // g.setColour (GTColors::dividerLinesStart);
+        g.setColour (juce::Colours::black);
         g.fillRoundedRectangle (dividerBounds, cornerSize);
-        g.setColour (GTColors::dividerLinesStart.brighter (0.1f));
+        g.setColour (juce::Colours::black.brighter (0.1f));
         g.drawRoundedRectangle (dividerBounds.expanded (outlineExpansion), cornerSize + outlineExpansion, outlineThickness);
     }
 }
@@ -119,6 +122,13 @@ namespace AAFonts
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::Inter_18ptBold_ttf, BinaryData::Inter_18ptBold_ttfSize);
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
+    }
+
+    inline juce::Font montserratMedium (const float fontHeight)
+    {
+        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
+            BinaryData::MontserratMedium_ttf, BinaryData::MontserratMedium_ttfSize);
         return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 

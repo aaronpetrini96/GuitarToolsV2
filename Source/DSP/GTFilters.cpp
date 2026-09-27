@@ -7,6 +7,10 @@ void GTFilters::prepare(const juce::dsp::ProcessSpec& spec, const ChainSettings&
 {
     sampleRate = spec.sampleRate;
     numChannels = static_cast<int>(spec.numChannels);
+
+    for (auto& slopeGlide : cutSlopeGlides)
+        slopeGlide.reset(sampleRate, slopeGlideSeconds);
+
     update(chainSettings, true);
 
     auto monoSpec = spec;
@@ -23,17 +27,9 @@ void GTFilters::setCoefficients(const std::array<float, 6>& coefficients)
 }
 
 template<int Position>
-void GTFilters::updateCutFilter(float frequency, Slope slope, bool isHighPass)
+void GTFilters::setCutCoefficients(const CutCoefficients& stageCoefficients)
 {
-    std::array<std::array<float, 6>, 4> stageCoefficients;
-    stageCoefficients.fill({1.f, 0.f, 0.f, 1.f, 0.f, 0.f});
-
-    for (size_t stage = 0; stage <= static_cast<size_t>(slope); ++stage)
-    {
-        const auto stageQ = getButterworthStageQ(slope, stage);
-        stageCoefficients[stage] = isHighPass ? ArrayCoefficients::makeHighPass(sampleRate, frequency, stageQ)
-                                              : ArrayCoefficients::makeLowPass(sampleRate, frequency, stageQ);
-    }
+    cutCoefficients[Position] = stageCoefficients;
 
     for (auto* chain : {&leftChain, &rightChain})
     {
@@ -45,17 +41,64 @@ void GTFilters::updateCutFilter(float frequency, Slope slope, bool isHighPass)
     }
 }
 
+template<int Position>
+void GTFilters::updateCutFilter(float frequency, Slope slope, bool isHighPass, bool glideToSlope)
+{
+    auto& targetCoefficients = cutTargetCoefficients[Position];
+    targetCoefficients.fill({1.f, 0.f, 0.f, 1.f, 0.f, 0.f});
+
+    for (size_t stage = 0; stage <= static_cast<size_t>(slope); ++stage)
+    {
+        const auto stageQ = getButterworthStageQ(slope, stage);
+        targetCoefficients[stage] = isHighPass ? ArrayCoefficients::makeHighPass(sampleRate, frequency, stageQ)
+                                               : ArrayCoefficients::makeLowPass(sampleRate, frequency, stageQ);
+    }
+
+    auto& slopeGlide = cutSlopeGlides[Position];
+
+    if (glideToSlope)
+    {
+        cutGlideStartCoefficients[Position] = cutCoefficients[Position];
+        slopeGlide.setCurrentAndTargetValue(0.f);
+        slopeGlide.setTargetValue(1.f);
+    }
+    else if (! slopeGlide.isSmoothing())
+        setCutCoefficients<Position>(targetCoefficients);
+}
+
+template<int Position>
+void GTFilters::glideCutFilter(int numSamples)
+{
+    auto& slopeGlide = cutSlopeGlides[Position];
+
+    if (! slopeGlide.isSmoothing())
+        return;
+
+    const auto glideAmount = slopeGlide.skip(numSamples);
+    const auto& startCoefficients = cutGlideStartCoefficients[Position];
+    const auto& targetCoefficients = cutTargetCoefficients[Position];
+
+    CutCoefficients stageCoefficients;
+    for (size_t stage = 0; stage < stageCoefficients.size(); ++stage)
+        for (size_t index = 0; index < stageCoefficients[stage].size(); ++index)
+            stageCoefficients[stage][index] = juce::jmap(glideAmount, startCoefficients[stage][index], targetCoefficients[stage][index]);
+
+    setCutCoefficients<Position>(stageCoefficients);
+}
+
 void GTFilters::update(const ChainSettings& chainSettings, bool forceUpdate)
 {
     if (forceUpdate
      || ! juce::approximatelyEqual(chainSettings.lowCutFreq, lastChainSettings.lowCutFreq)
      || chainSettings.lowCutSlope != lastChainSettings.lowCutSlope)
-        updateCutFilter<LowCut>(chainSettings.lowCutFreq, chainSettings.lowCutSlope, true);
+        updateCutFilter<LowCut>(chainSettings.lowCutFreq, chainSettings.lowCutSlope, true,
+                                ! forceUpdate && chainSettings.lowCutSlope != lastChainSettings.lowCutSlope);
 
     if (forceUpdate
      || ! juce::approximatelyEqual(chainSettings.highCutFreq, lastChainSettings.highCutFreq)
      || chainSettings.highCutSlope != lastChainSettings.highCutSlope)
-        updateCutFilter<HighCut>(chainSettings.highCutFreq, chainSettings.highCutSlope, false);
+        updateCutFilter<HighCut>(chainSettings.highCutFreq, chainSettings.highCutSlope, false,
+                                 ! forceUpdate && chainSettings.highCutSlope != lastChainSettings.highCutSlope);
 
     if (forceUpdate
      || ! juce::approximatelyEqual(chainSettings.resoFreq, lastChainSettings.resoFreq)
@@ -86,6 +129,9 @@ void GTFilters::update(const ChainSettings& chainSettings, bool forceUpdate)
 
 void GTFilters::process(juce::AudioBuffer<float>& buffer)
 {
+    glideCutFilter<LowCut>(buffer.getNumSamples());
+    glideCutFilter<HighCut>(buffer.getNumSamples());
+
     const juce::dsp::AudioBlock<float> block {buffer};
 
     auto leftBlock = block.getSingleChannelBlock(0);

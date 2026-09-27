@@ -43,6 +43,7 @@ private:
     using ArrayCoefficients = juce::dsp::IIR::ArrayCoefficients<float>;
     using CutFilter = juce::dsp::ProcessorChain<EQFilter, EQFilter, EQFilter, EQFilter>;
     using MonoChain = juce::dsp::ProcessorChain<CutFilter, CutFilter, EQFilter, EQFilter, EQFilter, EQFilter>;
+    using CutCoefficients = std::array<std::array<float, 6>, 4>;
 
     enum ChainPositions
     {
@@ -58,9 +59,19 @@ private:
     void setCoefficients(const std::array<float, 6>& coefficients);
 
     template<int Position>
-    void updateCutFilter(float frequency, Slope slope, bool isHighPass);
+    void setCutCoefficients(const CutCoefficients& stageCoefficients);
+
+    template<int Position>
+    void updateCutFilter(float frequency, Slope slope, bool isHighPass, bool glideToSlope);
+
+    template<int Position>
+    void glideCutFilter(int numSamples);
+
+    static constexpr double slopeGlideSeconds {0.05};
 
     MonoChain leftChain, rightChain;
+    std::array<CutCoefficients, 2> cutCoefficients, cutGlideStartCoefficients, cutTargetCoefficients;
+    std::array<juce::LinearSmoothedValue<float>, 2> cutSlopeGlides;
     ChainSettings lastChainSettings;
     double sampleRate {44100.0};
     int numChannels {2};

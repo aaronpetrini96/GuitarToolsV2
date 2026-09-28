@@ -124,13 +124,12 @@ GuitarToolsAudioProcessorEditor::GuitarToolsAudioProcessorEditor (GuitarToolsAud
     updateEditorSize();
 }
 
-GuitarToolsAudioProcessorEditor::~GuitarToolsAudioProcessorEditor()
-{}
+GuitarToolsAudioProcessorEditor::~GuitarToolsAudioProcessorEditor() = default;
 
 void GuitarToolsAudioProcessorEditor::updateMainPanelAlpha()
 {
     if (infoPanel.isVisible() || headerPanel.isBypassed() || modalBlocker.isVisible())
-        mainPanel.setAlpha (0.4f);
+        mainPanel.setAlpha (0.3f);
     else
         mainPanel.setAlpha (1.0f);
 }
@@ -163,10 +162,8 @@ void GuitarToolsAudioProcessorEditor::paint (juce::Graphics& g)
 {
     g.fillAll(juce::Colours::black);
     const auto boundsF = getLocalBounds().toFloat();
-
-    g.setOpacity(0.475f);
     g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
-    g.drawImage (greyBackground, boundsF, juce::RectanglePlacement::fillDestination);
+    g.drawImage(backgroundWithDividers, imageBounds, juce::RectanglePlacement::fillDestination);
 }
 
 void GuitarToolsAudioProcessorEditor::resized()
@@ -180,7 +177,8 @@ void GuitarToolsAudioProcessorEditor::resized()
     headerPanel.setBounds (boundsF.withHeight (headerH).toNearestInt());
     tooltipsPanel.setBounds (boundsF.withHeight (tooltipsPanelH).withY (contentHeight).toNearestInt());
 
-    const auto mainPanelBounds = boundsF.withHeight (contentHeight - headerH).withY (headerH);
+    imageBounds = boundsF.withHeight (contentHeight - headerH).withY (headerH);
+    const auto mainPanelBounds = imageBounds.withSizeKeepingCentre(imageBounds.getWidth(), imageBounds.getHeight() * 0.98f);
     mainPanel.sectionTitleH = mainPanelBounds.getHeight() * 0.07f;
     mainPanel.setBounds (mainPanelBounds.toNearestInt());
 

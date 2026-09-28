@@ -46,6 +46,12 @@ namespace  GTColors //project specific
     inline juce::Colour infoPanelBottom {26, 33, 60};
     inline juce::Colour infoPanelSecondaryText {140, 152, 185};
     inline juce::Colour infoPanelDivider {juce::Colour (190, 200, 225).withAlpha (0.27f)};
+
+    inline juce::Colour meterUnlit {juce::Colours::black};
+    inline juce::Colour meterGreen {60, 200, 80};
+    inline juce::Colour meterYellow {235, 200, 40};
+    inline juce::Colour meterRed {235, 50, 40};
+    inline juce::Colour meterSegmentLine {juce::Colours::black.withAlpha (0.35f)};
 }
 
 namespace AAUITools
@@ -69,15 +75,17 @@ namespace AAUITools
     inline void drawRoundedDivider (juce::Graphics& g, const juce::Rectangle<float> dividerBounds)
     {
         const auto dividerThickness = juce::jmin (dividerBounds.getWidth(), dividerBounds.getHeight());
-        const auto cornerSize = dividerThickness * 0.5f;
-        const auto outlineThickness = dividerThickness * 0.125f;
-        const auto outlineExpansion = outlineThickness * 0.5f;
-
-        // g.setColour (GTColors::dividerLinesStart);
+        const auto cornerSize = dividerThickness * 0.25f;
         g.setColour (juce::Colours::black);
         g.fillRoundedRectangle (dividerBounds, cornerSize);
-        g.setColour (juce::Colours::black.brighter (0.1f));
-        g.drawRoundedRectangle (dividerBounds.expanded (outlineExpansion), cornerSize + outlineExpansion, outlineThickness);
+    }
+
+    inline void drawDivider (juce::Graphics& g, const juce::Rectangle<float> dividerBounds, const float alpha = 1.f)
+    {
+        const auto color = juce::Colours::black.withAlpha (alpha);
+        const auto dividerThickness = juce::jmin (dividerBounds.getWidth(), dividerBounds.getHeight());
+        g.setColour (color);
+        g.fillRect (dividerBounds);
     }
 }
 
@@ -129,6 +137,13 @@ namespace AAFonts
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::MontserratMedium_ttf, BinaryData::MontserratMedium_ttfSize);
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
+    }
+
+    inline juce::Font montserratLight (const float fontHeight)
+    {
+        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
+            BinaryData::MontserratLight_ttf, BinaryData::MontserratLight_ttfSize);
         return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 

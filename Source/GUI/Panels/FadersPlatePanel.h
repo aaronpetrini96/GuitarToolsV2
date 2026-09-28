@@ -29,28 +29,24 @@ public:
     void paint(juce::Graphics& g) override
     {
         const auto boundsF = getLocalBounds().toFloat();
-        const auto cornerSize = boundsF.getHeight() * 0.05f;
-        const auto border = boundsF.getHeight() * 0.007f;
-        g.setGradientFill(juce::ColourGradient::vertical(GTColors::fadersPlateGradientEnd, 0.f, GTColors::fadersPlateGradientStart, boundsF.getHeight()));
-        g.fillRoundedRectangle(boundsF, cornerSize);
         g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
         for (const auto& trackBounds : {resoTrackBounds, mudTrackBounds, compTrackBounds})
-            g.drawImage(trackImage, trackBounds, juce::RectanglePlacement::stretchToFit);
+            g.drawImage(trackImage, trackBounds, juce::RectanglePlacement::centred);
 
         if (screw.isValid())
         {
-            const auto screwSize = boundsF.getHeight() * 0.055f;
             const auto screwBounds = boundsF.withSize(screwSize, screwSize);
-            const auto screwGap = screwSize;
-            g.drawImage(screw, screwBounds.withCentre({screwGap, screwGap}), juce::RectanglePlacement::stretchToFit);
-            g.drawImage(screw, screwBounds.withCentre({boundsF.getWidth() - screwGap, screwGap}), juce::RectanglePlacement::stretchToFit);
-            const auto bottomCY = boundsF.getHeight() - screwGap;
-            g.drawImage(screw, screwBounds.withCentre({screwGap,                      bottomCY}), juce::RectanglePlacement::stretchToFit);
-            g.drawImage(screw, screwBounds.withCentre({boundsF.getWidth() - screwGap, bottomCY}), juce::RectanglePlacement::stretchToFit);
+            const auto screwGap = screwSize * 1.3f;
+            const auto screwsTopCY = screwGap;
+            const auto screwsBottomCY = boundsF.getHeight() - screwGap;
+            const auto faderCentreX = faderBounds.getCentreX();
+            g.drawImage(screw, screwBounds.withCentre({faderCentreX,                screwsTopCY}), imgPlacement);
+            g.drawImage(screw, screwBounds.withCentre({faderCentreX,                screwsBottomCY}), imgPlacement);
+            g.drawImage(screw, screwBounds.withCentre({faderCentreX - faderSpacing, screwsTopCY}), imgPlacement);
+            g.drawImage(screw, screwBounds.withCentre({faderCentreX - faderSpacing, screwsBottomCY}), imgPlacement);
+            g.drawImage(screw, screwBounds.withCentre({faderCentreX + faderSpacing, screwsTopCY}), imgPlacement);
+            g.drawImage(screw, screwBounds.withCentre({faderCentreX + faderSpacing, screwsBottomCY}), imgPlacement);
         }
-
-        // g.setColour(GTColors::dividerLinesEnd);
-        // g.drawRoundedRectangle(boundsF.reduced(border * 0.5f), cornerSize, border);
     }
 
     void resized() override
@@ -59,17 +55,18 @@ public:
         const auto boundsFHeight = boundsF.getHeight();
         const auto boundsFWidth = boundsF.getWidth();
 
-        faderBounds = boundsF.withSizeKeepingCentre(boundsFWidth * 0.3f , boundsFHeight * 0.925f);
+        faderBounds = boundsF.withSizeKeepingCentre(boundsFWidth * 0.3f , boundsFHeight);
         mudFreqFader.setBounds (faderBounds.toNearestInt());
         resoFreqFader.setBounds (faderBounds.translated(-faderSpacing, 0.f).toNearestInt());
         compAmountFader.setBounds (faderBounds.translated(faderSpacing, 0.f).toNearestInt());
 
-        const auto trackHeight = faderBounds.getHeight() * 0.9f;
+        const auto trackHeight = boundsFHeight * 0.795f;
         const auto trackWidth = trackHeight * (float) trackImage.getWidth() / (float) trackImage.getHeight();
         const auto trackBounds = faderBounds.withSizeKeepingCentre(trackWidth, trackHeight);
         mudTrackBounds = trackBounds;
         resoTrackBounds = trackBounds.translated(-faderSpacing, 0.f);
         compTrackBounds = trackBounds.translated(faderSpacing, 0.f);
+        screwSize = trackWidth * 2.f;
     }
 
     void setFaderSpacing (const float newFaderSpacing)
@@ -83,9 +80,11 @@ public:
     AAVerticalSSLFader resoFreqFader, mudFreqFader, compAmountFader;
 
 private:
+    const juce::RectanglePlacement imgPlacement {juce::RectanglePlacement::fillDestination};
     float faderSpacing {0.f};
+    float screwSize{0.f};
     juce::Rectangle<float> faderBounds;
-    juce::Image screw {juce::ImageCache::getFromMemory(BinaryData::screwDarkGreyv3_png, BinaryData::screwDarkGreyv3_pngSize)};
+    juce::Image screw {juce::ImageCache::getFromMemory(BinaryData::screwDirty_png, BinaryData::screwDirty_pngSize)};
     juce::Image trackImage = juce::ImageCache::getFromMemory (BinaryData::faderTrackV2_png, BinaryData::faderTrackV2_pngSize);
     juce::Rectangle<float> resoTrackBounds, mudTrackBounds, compTrackBounds;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FadersPlatePanel)

@@ -45,11 +45,10 @@ public:
     {
         g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
         // g.drawImage (trackImage, trackBounds, juce::RectanglePlacement::centred);
-
         const auto thumbCY = thumbTravel.getEnd() - static_cast<float> (valueToProportionOfLength (getValue())) * thumbTravel.getLength();
         g.drawImage (thumbActive ? thumbON : thumbOFF,
                      thumbBounds.withCentre ({ thumbBounds.getCentreX(), thumbCY }),
-                     juce::RectanglePlacement::centred);
+                     juce::RectanglePlacement::fillDestination);
     }
 
     void resized() override
@@ -57,7 +56,7 @@ public:
         juce::Slider::resized();
         const auto b = getLocalBounds().toFloat();
         const auto boundsF = b.withSizeKeepingCentre(b.getWidth(), b.getHeight());
-        const auto thumbHeight = boundsF.getHeight() * 0.2f;
+        const auto thumbHeight = boundsF.getHeight() * 0.225f;
         const auto thumbWidth = thumbHeight / thumbAspectRatio;
         // const auto trackHeight = boundsF.getHeight() - thumbHeight;
         // const auto trackWidth = trackHeight / trackAspectRatio;
@@ -92,8 +91,6 @@ private:
 
     juce::Image thumbOFF = juce::ImageCache::getFromMemory (BinaryData::thumbOff_trimmed_png, BinaryData::thumbOff_trimmed_pngSize);
     juce::Image thumbON = juce::ImageCache::getFromMemory (BinaryData::thumbBlue2_png, BinaryData::thumbBlue2_pngSize);
-    // juce::Image trackImage = juce::ImageCache::getFromMemory (BinaryData::faderTrackClippedShorter_png, BinaryData::faderTrackClippedShorter_pngSize);
-    // juce::Image screw = juce::ImageCache::getFromMemory(BinaryData::screwDarkGreyv3_png, BinaryData::screwDarkGreyv3_pngSize);
 
     float trackAspectRatio {0.f};
     float thumbAspectRatio {0.f};

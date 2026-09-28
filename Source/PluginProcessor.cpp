@@ -221,6 +221,10 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
         }
     }
     smoothedBypassValue.skip(buffer.getNumSamples());
+
+    outputLevelLeft.store(juce::jmax(outputLevelLeft.load(), buffer.getMagnitude(0, 0, numSamples)));
+    if (buffer.getNumChannels() > 1)
+        outputLevelRight.store(juce::jmax(outputLevelRight.load(), buffer.getMagnitude(1, 0, numSamples)));
 }
 
 //==============================================================================

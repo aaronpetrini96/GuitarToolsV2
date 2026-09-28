@@ -77,6 +77,8 @@ public:
     float uiScale {0.0f};
     bool showTooltips {false};
 
+    std::atomic<float> outputLevelLeft {0.f}, outputLevelRight {0.f};
+
 private:
     //==============================================================================
 //    EQ PART

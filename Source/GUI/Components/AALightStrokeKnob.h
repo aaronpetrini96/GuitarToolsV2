@@ -25,7 +25,7 @@ public:
         for (auto* label : { &nameLabel, &valueLabel })
         {
             label->setInterceptsMouseClicks (false, false);
-            label->setColour (juce::Label::textColourId, GTColors::sectionTitleText);
+            label->setColour (juce::Label::textColourId, GTColors::sectionTitleText.withAlpha(0.85f));
             label->setJustificationType(juce::Justification::centred);
             addAndMakeVisible (*label);
         }
@@ -44,7 +44,7 @@ public:
     {
         const auto boundsF = getLocalBounds().toFloat();
         const auto fontBounds = boundsF.withHeight (boundsF.getHeight() * 0.14f);
-        nameLabel.setFont (AAFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.675f));
+        nameLabel.setFont (AAFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.7f));
         nameLabel.setBounds (fontBounds.toNearestInt());
         valueLabel.setFont (AAFonts::interMedium (fontBounds.getHeight() * 0.625f));
         valueLabel.setBounds (fontBounds.withBottomY (boundsF.getHeight()).toNearestInt());
@@ -56,12 +56,14 @@ public:
         //========   KNOB IMAGE  ========//
         const auto imageBounds = boundsF.reduced (boundsF.getWidth() * knobReducePOW);
         g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
+        g.setOpacity(0.85f);
         g.drawImage (knobImage, imageBounds, juce::RectanglePlacement::centred);
+        g.setOpacity(1.f);
+        const auto activeColor = GTColors::activeNeonBlue.withAlpha (0.85f);
+        const auto offColor = GTColors::dividerLinesEnd.withAlpha (0.85f);
 
-        const auto activeColor = GTColors::activeNeonBlue.withAlpha (0.9f);
-        const auto offColor = GTColors::dividerLinesEnd.withAlpha (0.9f);;
         //========   POINTS DRAWING  ========//
-        const auto radiusReference = imageBounds.getWidth() * 0.255;
+        const auto radiusReference = imageBounds.getWidth() * 0.255f;
         const auto centre = imageBounds.getCentre();
         const juce::PathStrokeType stroke (radiusReference * 0.075f, juce::PathStrokeType::mitered, juce::PathStrokeType::butt);
         const auto angle = startAngle + static_cast<float> (valueToProportionOfLength (getValue())) * (endAngle - startAngle);
@@ -125,9 +127,9 @@ private:
         valueLabel.setText (valueText + "%", juce::dontSendNotification);
     }
 
-
-    // juce::Image knobImage = juce::ImageCache::getFromMemory(BinaryData::knob_preview3_png, BinaryData::knob_preview3_pngSize);
-    juce::Image knobImage = juce::ImageCache::getFromMemory(BinaryData::knob_preview3Shadow_png, BinaryData::knob_preview3Shadow_pngSize);
+    juce::Image knobImage = juce::ImageCache::getFromMemory(BinaryData::_23232_png, BinaryData::_23232_pngSize);
+    // juce::Image knobImage = juce::ImageCache::getFromMemory(BinaryData::_2_png, BinaryData::_2_pngSize);
+    // juce::Image knobImage = juce::ImageCache::getFromMemory(BinaryData::knob_preview3Shadow_png, BinaryData::knob_preview3Shadow_pngSize);
     juce::Label nameLabel;
     juce::Label valueLabel;
     juce::RangedAudioParameter& parameter;

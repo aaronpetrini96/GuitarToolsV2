@@ -14,6 +14,7 @@
 #include "GUI/Components/AASquareSSLButton.h"
 #include "GUI/Components/AAIconAndTextButton.h"
 #include "GUI/Components/AAImgSwitch.h"
+#include "GUI/Components/GTLevelMeter.h"
 
 
 class MainPanel : public juce::Component
@@ -33,6 +34,9 @@ public:
 
 private:
     GuitarToolsAudioProcessor& audioProcessor;
+
+    juce::Image background {juce::ImageCache::getFromMemory(BinaryData::mainPanelBackgroundTextured_png, BinaryData::mainPanelBackgroundTextured_pngSize)};
+    // juce::Image background {juce::ImageCache::getFromMemory(BinaryData::mainPanelBackground_png, BinaryData::mainPanelBackground_pngSize)};
 
     const juce::Colour textWhiteColor = GTColors::almostWhite.withAlpha(0.9f);
     void setupLabels(juce::Label*, juce::Colour, juce::Justification);
@@ -72,11 +76,13 @@ private:
     AANotchSSLKnob outputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getOutputGainName()), &outputGainLabel};
     juce::Label levelsLabel {{}, "LEVELS"};
 
-    AAIconAndTextButton levelMatchControl {*audioProcessor.treeState.getParameter (ParamIDs::getLoudnessMatchActiveName()), BinaryData::linkON_svg, BinaryData::linkON_svgSize, "MATCH", "MATCHED"};
+    GTLevelMeter outputLevelMeter{audioProcessor.outputLevelLeft, audioProcessor.outputLevelRight};
+    std::unique_ptr<juce::Drawable> levelMatchButtonOn {juce::Drawable::createFromImageData (BinaryData::matchButton_on_png, BinaryData::matchButton_on_pngSize)};
+    std::unique_ptr<juce::Drawable> levelMatchButtonOff {juce::Drawable::createFromImageData (BinaryData::matchButton_off_png, BinaryData::matchButton_off_pngSize)};
+    juce::DrawableButton levelMatchButton {"levelMatchButton", juce::DrawableButton::ImageFitted};
+    std::unique_ptr<juce::ButtonParameterAttachment> levelMatchButtonAttachment;
 
     FadersPlatePanel fadersPlatePanel {audioProcessor};
-    // juce::Image screwA = juce::ImageCache::getFromMemory (BinaryData::allenKeyScrewDarkGrey_png, BinaryData::allenKeyScrewDarkGrey_pngSize);
-    // juce::Image screw = juce::ImageCache::getFromMemory (BinaryData::screwDarkGrey_png, BinaryData::screwDarkGrey_pngSize);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainPanel)
 };

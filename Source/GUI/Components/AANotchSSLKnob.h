@@ -26,6 +26,7 @@ public:
         setRotaryParameters (startAngle, endAngle, true);
         setComponentID (parameter.getParameterID());
         attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, nullptr);
+        updateValueDisplay();
     }
 
     void setUndoManager (juce::UndoManager& undoManager)
@@ -68,12 +69,12 @@ public:
         const auto sizeRef = juce::jmin (boundsF.getWidth(), boundsF.getHeight());
         const auto dotSizeRadius = sizeRef * dotSizeAdjuster;
         const auto dotRingRadius = sizeRef * 0.5f - dotSizeRadius;
-        const auto knobBounds = boundsF.reduced (knobBoundsReducer);
+        const auto knobBounds = boundsF.reduced (sizeRef * knobBoundsReducer);
 
 
         const auto sliderPos = static_cast<float> (valueToProportionOfLength (getValue()));
         const auto angle = startAngle + sliderPos * (endAngle - startAngle);
-        g.beginTransparencyLayer (isEnabled() ? 0.9f : 0.45f);
+        g.beginTransparencyLayer (isEnabled() ? 0.85f : 0.5f);
         paintLightDots (g, boundsCentre, dotRingRadius, dotSizeRadius, angle);
 
         {
@@ -97,7 +98,7 @@ public:
         g.endTransparencyLayer();
     }
 
-    int numberOfDots {11};
+    int numberOfDots {9};
 
 
 private:
@@ -116,7 +117,8 @@ private:
             const auto dotCentre = centre + dotDirection * dotRingRadius;
             const auto isCentreDot = dotIndex == (numberOfDots - 1) / 2;
             const auto isLit = isCentreDot || (dotAngle >= litFromAngle && dotAngle <= litToAngle);
-            g.setColour (isLit ? GTColors::activeNeonBlue : GTColors::dividerLinesEnd);
+            // g.setColour (isLit ? GTColors::activeNeonBlue : GTColors::dividerLinesEnd);
+            g.setColour(GTColors::almostWhite);
             g.fillEllipse (dotCentre.x - dotRadius, dotCentre.y - dotRadius, dotRadius * 2.0f, dotRadius * 2.0f);
         }
     }
@@ -124,7 +126,8 @@ private:
     void updateValueDisplay()
     {
         if (nameLabel != nullptr)
-            nameLabel->setText (isDragging ? getTextFromValue(getValue()) : nameText, juce::dontSendNotification);
+            // nameLabel->setText (isDragging ? getTextFromValue(getValue()) : nameText, juce::dontSendNotification);
+            nameLabel->setText (getTextFromValue(getValue()), juce::dontSendNotification);
         else
             repaint();
     }
@@ -132,8 +135,8 @@ private:
     juce::Image knobImage = juce::ImageCache::getFromMemory (BinaryData::sslKnotchKnobShadow2_png, BinaryData::sslKnotchKnobShadow2_pngSize);
     const float startAngle { 1.25f * juce::MathConstants<float>::pi };
     const float endAngle { 2.75f * juce::MathConstants<float>::pi };
-    const float dotSizeAdjuster {0.03f};
-    const float knobBoundsReducer {2.f};
+    const float dotSizeAdjuster {0.035f};
+    const float knobBoundsReducer {0.f};
 
     bool isDragging {false};
     juce::RangedAudioParameter& parameter;

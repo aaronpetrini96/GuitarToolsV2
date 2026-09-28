@@ -49,12 +49,17 @@ public:
     void resized() override
     {
         const auto boundsF = getLocalBounds().toFloat();
-        const auto iconSize = boundsF.getHeight() * 0.6f;
-        const auto textBounds = boundsF.withTop (iconSize);
+        if (textLabel.getText() != "")
+        {
+            const auto iconSize = boundsF.getHeight() * 0.6f;
+            const auto textBounds = boundsF.withTop (iconSize);
 
-        iconBounds = boundsF.withSizeKeepingCentre (iconSize, iconSize).withY (0.f);
-        textLabel.setFont (AAFonts::ibmPlexSansMedium (textBounds.getHeight() * 0.5f));
-        textLabel.setBounds (textBounds.toNearestInt());
+            iconBounds = boundsF.withSizeKeepingCentre (iconSize, iconSize).withY (0.f);
+            textLabel.setFont (AAFonts::ibmPlexSansMedium (textBounds.getHeight() * 0.5f));
+            textLabel.setBounds (textBounds.toNearestInt());
+        }
+        else
+            iconBounds = boundsF;
     }
 
     void paintButton (juce::Graphics& g, const bool shouldDrawButtonAsHighlighted, const bool shouldDrawButtonAsDown) override
@@ -63,7 +68,7 @@ public:
         auto* icon = isOn ? iconOn.get() : (shouldDrawButtonAsHighlighted ? iconOver.get() : iconOff.get());
 
         if (icon != nullptr)
-            icon->drawWithin (g, iconBounds, juce::RectanglePlacement::centred, 0.85f);
+            icon->drawWithin (g, iconBounds, juce::RectanglePlacement::centred, 0.9f);
     }
 
 private:

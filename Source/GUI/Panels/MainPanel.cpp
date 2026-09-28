@@ -64,15 +64,16 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
         addAndMakeVisible (*modeSwitch);
         modeSwitch->setTooltip (ParamHelpers::getTooltipForParam (modeSwitch->getComponentID()));
         modeSwitch->setUndoManager (audioProcessor.undoManager);
-        modeSwitch->setLabelText ("MODE");
+        modeSwitch->setLabelText ("");
     }
 
     //================  LEVEL KNOBS  ================//
     for (auto* l : {&inputGainLabel, &outputGainLabel})
-        setupLabels (l, textWhiteColor, juce::Justification::centredTop);
+        setupLabels (l, textWhiteColor, juce::Justification::centred);
 
     for (auto* l : {&levelsLabel})
-        setupLabels (l, textWhiteColor, juce::Justification::centred);
+        setupLabels (l, textWhiteColor, juce::Justification::centredTop);
+    levelsLabel.setVisible(true);
 
     addAndMakeVisible (inputGainKnob);
     addAndMakeVisible (outputGainKnob);
@@ -82,26 +83,31 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
         knob->setUndoManager (audioProcessor.undoManager);
     }
 
-    levelMatchControl.setTooltip (ParamHelpers::getTooltipForParam (levelMatchControl.getComponentID()));
-    levelMatchControl.setUndoManager (audioProcessor.undoManager);
-    levelMatchControl.onClick = [this] { outputGainKnob.setEnabled (! levelMatchControl.getToggleState()); };
-    outputGainKnob.setEnabled (! levelMatchControl.getToggleState());
-    addAndMakeVisible (levelMatchControl);
+    addAndMakeVisible(outputLevelMeter);
+
+    levelMatchButton.setImages (levelMatchButtonOff.get(), nullptr, nullptr, nullptr, levelMatchButtonOn.get());
+    levelMatchButton.setClickingTogglesState (true);
+    levelMatchButton.setColour (juce::DrawableButton::backgroundColourId, GTColors::transparent);
+    levelMatchButton.setColour (juce::DrawableButton::backgroundOnColourId, GTColors::transparent);
+    levelMatchButton.setTooltip (ParamHelpers::getTooltipForParam (ParamIDs::getLoudnessMatchActiveName()));
+    levelMatchButtonAttachment = std::make_unique<juce::ButtonParameterAttachment> (*audioProcessor.treeState.getParameter (ParamIDs::getLoudnessMatchActiveName()), levelMatchButton, &audioProcessor.undoManager);
+    levelMatchButtonAttachment->sendInitialUpdate();
+    levelMatchButton.onClick = [this] { outputGainKnob.setEnabled (! levelMatchButton.getToggleState()); };
+    outputGainKnob.setEnabled (! levelMatchButton.getToggleState());
+    addAndMakeVisible (levelMatchButton);
 }
 
 void MainPanel::paint(juce::Graphics& g)
 {
     const auto boundsF = getLocalBounds().toFloat();
-
-    dividerThickness = boundsF.getHeight() * 0.006f;
+    dividerThickness = boundsF.getHeight() * 0.009f;
     const auto dividerHalf = dividerThickness / 2.0f;
-    const auto dividerGap = dividerThickness * 5.f;
-    // AAUITools::drawRoundedDivider (g, boundsF.withHeight(dividerThickness));
-    // AAUITools::drawRoundedDivider (g, boundsF.withHeight(dividerThickness).withBottomY(boundsF.getHeight()));
-    const auto verticalDividerBounds = boundsF.withSizeKeepingCentre (dividerThickness, boundsF.getHeight() - dividerGap);
-    AAUITools::drawRoundedDivider (g, verticalDividerBounds.withCentre ({cutFiltersArea.getRight() , verticalDividerBounds.getCentreY() }));
-    AAUITools::drawRoundedDivider (g, verticalDividerBounds.withCentre ({ shelfFiltersArea.getX(), verticalDividerBounds.getCentreY() }));
+    const auto dividerGap = dividerThickness * 4.f;
 
+    // const auto verticalDividerBounds = boundsF.withSizeKeepingCentre (dividerThickness * 1.1f, boundsF.getHeight());
+    // AAUITools::drawDivider (g, verticalDividerBounds.withCentre ({cutFiltersArea.getRight() , verticalDividerBounds.getCentreY() }));
+    // AAUITools::drawDivider (g, verticalDividerBounds.withCentre ({ shelfFiltersArea.getX(), verticalDividerBounds.getCentreY() }));
+    //
     for (const auto& sectionArea : { cutFiltersArea, shelfFiltersArea })
         AAUITools::drawRoundedDivider (g, sectionArea.withSizeKeepingCentre (sectionArea.getWidth() - dividerHalf - dividerGap, dividerThickness).withY (sectionTitleH - dividerHalf));
 
@@ -110,12 +116,7 @@ void MainPanel::paint(juce::Graphics& g)
     // AAUITools::drawRoundedDivider (g, boundsF.withSize (boundsF.getWidth()/* - dividerHalf - dividerGap*/, dividerThickness).withY (sectionTitleH - dividerHalf));
     AAUITools::drawRoundedDivider (g, magicDividerBounds.withSizeKeepingCentre(buttonsArea.getWidth() - dividerHalf - dividerGap , magicDividerBounds.getHeight()));
 
-    // const auto screwSize = boundsF.getHeight() * 0.033f;
-    // const auto screwBounds = boundsF.withSize(screwSize, screwSize);
-    // g.drawImage(screw, screwBounds.withCentre({screwSize, screwSize}), juce::RectanglePlacement::centred);
-    // g.drawImage(screw, screwBounds.withCentre({boundsF.getWidth() - screwSize, screwSize}), juce::RectanglePlacement::centred);
-    // g.drawImage(screw, screwBounds.withCentre({boundsF.getWidth() - screwSize, boundsF.getHeight() - screwSize}), juce::RectanglePlacement::centred);
-    // g.drawImage(screw, screwBounds.withCentre({screwSize, boundsF.getHeight() - screwSize}), juce::RectanglePlacement::centred);
+
 }
 
 void MainPanel::resized()
@@ -137,7 +138,8 @@ void MainPanel::resized()
 
     resizeKnobs(boundsF);
     resizeMagicButtons(boundsF);
-    magicDividerBounds = buttonsArea.withSizeKeepingCentre (plateBounds.getWidth(), boundsF.getWidth() * 0.006f).withY (resoModeSwitch.getBounds().toFloat().getBottom());
+
+    magicDividerBounds = buttonsArea.withSizeKeepingCentre (plateBounds.getWidth(), boundsF.getHeight() * 0.006f).withY (buttonsArea.getHeight() * 0.775f);
     resizeLevelsSection(boundsF);
 }
 
@@ -188,42 +190,49 @@ void MainPanel::resizeKnobs(const juce::Rectangle<float>& boundsF)
 void MainPanel::resizeMagicButtons(const juce::Rectangle<float>& boundsF)
 {
     const auto knobSizeReference = boundsF.getHeight() * 0.33f;
-    const auto magicButtonSize = knobSizeReference * 0.33f;
+    const auto magicButtonSize = knobSizeReference * 0.31f;
     const auto magicButtonBounds = buttonsArea.withSize (magicButtonSize, magicButtonSize).withCentre({buttonsArea.getCentreX(), lowCutFreqKnob.getBounds().toFloat().getCentreY() * 0.55f});
     mudActiveButton.setBounds (magicButtonBounds.toNearestInt());
     resoActiveButton.setBounds (magicButtonBounds.withRightX(magicButtonBounds.getX()).toNearestInt());
     compActiveButton.setBounds (magicButtonBounds.withX(magicButtonBounds.getRight()).toNearestInt());
     //PLATE BOUNDS
-    plateBounds = buttonsArea.withSizeKeepingCentre(buttonsArea.getWidth() * 0.9f, buttonsArea.getHeight() * 0.5f).withY(magicButtonBounds.getBottom() * 1.025f);
+    plateBounds = buttonsArea.withSizeKeepingCentre(buttonsArea.getWidth() * 0.9f, buttonsArea.getHeight() * 0.475f).withY(magicButtonBounds.getBottom() * 1.05f);
     fadersPlatePanel.setFaderSpacing(magicButtonSize);
     fadersPlatePanel.setBounds (plateBounds.toNearestInt());
 
     const auto switchBounds = plateBounds.withSizeKeepingCentre (plateBounds.getWidth() * 0.3f, knobSizeReference * 0.3f).withY (plateBounds.getBottom());
     mudModeSwitch.setBounds (switchBounds.toNearestInt());
-    resoModeSwitch.setBounds (switchBounds.translated (-magicButtonSize, 0.0f).toNearestInt());
+    resoModeSwitch.setBounds (switchBounds.translated (- magicButtonSize, 0.0f).toNearestInt());
     compModeSwitch.setBounds (switchBounds.translated (magicButtonSize, 0.0f).toNearestInt());
 }
 
 void MainPanel::resizeLevelsSection(const juce::Rectangle<float>& boundsF)
 {
     const auto gainKnobsArea = buttonsArea.withTop (magicDividerBounds.getBottom());
-    const auto gainLabelBounds = gainKnobsArea.withSizeKeepingCentre(boundsF.getHeight() * 0.245f,gainKnobsArea.getHeight() * 0.2f);
-    levelsLabel.setFont (AAFonts::ibmPlexSansMedium (gainLabelBounds.getHeight() * 0.925f));
-    levelsLabel.setBounds(gainLabelBounds.withY(gainKnobsArea.getY() * 1.01f).toNearestInt());
+    const auto gainLabelBounds = gainKnobsArea.withSizeKeepingCentre(boundsF.getHeight() * 0.245f,gainKnobsArea.getHeight() * 0.15F);
+    levelsLabel.setFont (AAFonts::ibmPlexSansMedium (gainLabelBounds.getHeight()));
+    levelsLabel.setBounds(gainLabelBounds.withY(gainKnobsArea.getY()).toNearestInt());
 
-    const auto gainKnobSize = gainKnobsArea.getHeight() * 0.65f;
-    const auto gainKnobBounds = gainKnobsArea.withSize (gainKnobSize, gainKnobSize);
+    const auto gainKnobSize = gainKnobsArea.getHeight() * 0.6f;
+    const auto gainKnobBounds = gainKnobsArea.withSizeKeepingCentre (gainKnobSize, gainKnobSize);
     const auto gainKnobCY = buttonsArea.getHeight() * 0.91f;
-    inputGainKnob.setBounds    (gainKnobBounds.withCentre({resoActiveButton.getBounds().toFloat().getCentreX(), gainKnobCY}).toNearestInt());
-    outputGainKnob.setBounds (gainKnobBounds.withCentre({compActiveButton.getBounds().toFloat().getCentreX(), gainKnobCY}).toNearestInt());
+    const auto gainKnobGap = gainKnobSize * 0.8f;
+    inputGainKnob.setBounds    (gainKnobBounds.withCentre({gainKnobBounds.getCentreX() - gainKnobGap, gainKnobCY}).toNearestInt());
+    outputGainKnob.setBounds (gainKnobBounds.withCentre({gainKnobBounds.getCentreX() + gainKnobGap, gainKnobCY}).toNearestInt());
+
+    const auto levelMeterW = gainKnobSize * 0.33f;
+    const auto levelMeterBounds = gainKnobBounds.withSize(levelMeterW, gainKnobSize).withCentre({buttonsArea.getCentreX(), gainKnobCY});
+    // const auto levelMeterBounds = gainKnobBounds.withSize(levelMeterW, levelMeterH).withCentre({gainKnobsArea.getCentreX(), gainKnobCY * 1.01f});
+    outputLevelMeter.setBounds (levelMeterBounds.toNearestInt());
+
 
     for (const auto l : { &inputGainLabel, &outputGainLabel})
-        l->setFont (AAFonts::ibmPlexSansMedium (gainLabelBounds.getHeight() * 0.65f));
-    const auto gainLabelY = gainKnobCY * 1.053f;
+        l->setFont (AAFonts::ibmPlexSansMedium (gainLabelBounds.getHeight() * 0.7f));
+    const auto gainLabelY = (gainKnobCY + gainKnobSize * 0.5f) * 0.93f;
     inputGainLabel.setBounds    (gainKnobBounds.withCentre({inputGainKnob.getBounds().toFloat().getCentre()}).withY(gainLabelY) .toNearestInt());
     outputGainLabel.setBounds   (gainKnobBounds.withCentre({outputGainKnob.getBounds().toFloat().getCentre()}).withY(gainLabelY) .toNearestInt());
 
-    const auto matchY = gainKnobCY * JUCE_LIVE_CONSTANT(1.053f);
-    const auto matchBounds = gainLabelBounds.withSizeKeepingCentre (gainKnobSize * 0.6f, gainLabelBounds.getHeight() * 2.0f).withY(matchY);
-    levelMatchControl.setBounds (matchBounds.toNearestInt());
+    const auto levelMatchW = levelMeterW;
+    const auto levelMatchButtonHeight = levelMatchW / levelMatchButtonOn->getDrawableBounds().getAspectRatio();
+    levelMatchButton.setBounds (gainKnobBounds.withSizeKeepingCentre (levelMatchW, levelMatchButtonHeight).withY(levelMeterBounds.getBottom()).toNearestInt());
 }

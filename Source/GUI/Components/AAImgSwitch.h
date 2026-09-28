@@ -21,7 +21,7 @@ public:
         const auto imgBounds = imgPosition1->getDrawableBounds();
         imgAspectRatio = imgBounds.getWidth() / imgBounds.getHeight();
 
-        toggleSwitch.setImages (imgPosition1.get(), nullptr, imgPosition2.get(), nullptr, imgPosition2.get());
+        toggleSwitch.setImages (imgPosition1.get(), nullptr, nullptr, nullptr, imgPosition2.get());
         toggleSwitch.setClickingTogglesState (true);
         toggleSwitch.setColour (juce::DrawableButton::backgroundColourId, GTColors::transparent);
         toggleSwitch.setColour (juce::DrawableButton::backgroundOnColourId, GTColors::transparent);
@@ -68,8 +68,8 @@ public:
 
 private:
 
-    std::unique_ptr<juce::Drawable> imgPosition1 {juce::Drawable::createFromImageData(BinaryData::toggleSwitchLeft_png, BinaryData::toggleSwitchLeft_pngSize)};
-    std::unique_ptr<juce::Drawable> imgPosition2 {juce::Drawable::createFromImageData(BinaryData::toggleSwitchRight_png, BinaryData::toggleSwitchRight_pngSize)};
+    std::unique_ptr<juce::Drawable> imgPosition1 {juce::Drawable::createFromImageData(BinaryData::matchButton_off_png, BinaryData::matchButton_off_pngSize)};
+    std::unique_ptr<juce::Drawable> imgPosition2 {juce::Drawable::createFromImageData(BinaryData::matchButton_on_png, BinaryData::matchButton_on_pngSize)};
     juce::DrawableButton toggleSwitch {"Switch", juce::DrawableButton::ImageFitted};
     juce::Label label;
     juce::RangedAudioParameter& parameter;

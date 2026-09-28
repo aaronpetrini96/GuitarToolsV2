@@ -42,8 +42,11 @@ void GTMidBandCompressor::setAmount(float newAmountProportion)
     amountProportion = juce::jlimit(0.f, 1.f, newAmountProportion);
 
     const auto thresholdOffsetDb = amountProportion * maxThresholdOffsetDb;
-    makeupGain = juce::Decibels::decibelsToGain(thresholdOffsetDb * (1.f - 1.f / ratio));
-    extremeMakeupGain = juce::Decibels::decibelsToGain(thresholdOffsetDb * (1.f - 1.f / extremeRatio));
+    const auto ratioSweepProportion = juce::jmax(0.f, (amountProportion - ratioSweepStart) / (1.f - ratioSweepStart));
+    compressionSlope = 1.f - 1.f / juce::jmap(ratioSweepProportion, minRatio, maxRatio);
+    extremeCompressionSlope = 1.f - 1.f / juce::jmap(ratioSweepProportion, extremeMinRatio, extremeMaxRatio);
+    makeupGain = juce::Decibels::decibelsToGain(thresholdOffsetDb * compressionSlope);
+    extremeMakeupGain = juce::Decibels::decibelsToGain(thresholdOffsetDb * extremeCompressionSlope);
 
     thresholdOffsetGain = juce::Decibels::decibelsToGain(-thresholdOffsetDb);
 }
@@ -67,9 +70,6 @@ void GTMidBandCompressor::setExtremeMode(bool shouldBeExtreme)
 void GTMidBandCompressor::process(juce::AudioBuffer<float>& buffer)
 {
     splitBands(buffer);
-
-    static_assert (ratio == 4.f, "The gain law below assumes a 4:1 ratio");
-    static_assert (extremeRatio == 8.f, "The gain law below assumes an 8:1 extreme ratio");
 
     const auto numChannels = buffer.getNumChannels();
     const auto numSamples = buffer.getNumSamples();
@@ -97,15 +97,8 @@ void GTMidBandCompressor::process(juce::AudioBuffer<float>& buffer)
 
         if (envelope >= threshold)
         {
-            const auto overshoot = envelope / threshold;
-            const auto overshootRoot = std::sqrt(overshoot);
-            const auto overshootQuarterRoot = std::sqrt(overshootRoot);
-            auto overshootPower = overshootRoot * overshootQuarterRoot;              // overshoot^0.75, a 4:1 ratio
-
-            if (extremeProportion > 0.f)
-                overshootPower *= 1.f + (std::sqrt(overshootQuarterRoot) - 1.f) * extremeProportion;                // overshoot^0.875, an 8:1 ratio
-
-            compressorGain /= overshootPower;
+            const auto slope = compressionSlope + (extremeCompressionSlope - compressionSlope) * extremeProportion;
+            compressorGain /= std::pow(envelope / threshold, slope);
         }
 
         const auto gain = 1.f + (compressorGain - 1.f) * activeProportion;

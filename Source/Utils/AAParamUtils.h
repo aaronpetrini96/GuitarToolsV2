@@ -72,7 +72,7 @@ namespace DefaultValues
     inline constexpr float mudExtremeQ {0.7f};
     inline constexpr float mudExtremeGainDb {-8.f};
 
-    inline constexpr float compAmount {30.f};
+    inline constexpr float compAmount {50.f};
     inline constexpr float compAmountRangeStart {0.f};
     inline constexpr float compAmountRangeEnd {100.f};
     inline constexpr float compAmountIntervalValue {0.1f};

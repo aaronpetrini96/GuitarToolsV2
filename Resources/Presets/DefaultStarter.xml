@@ -14,7 +14,7 @@
   <PARAM id="Mud Freq" value="120"/>
   <PARAM id="Mud Active" value="0"/>
   <PARAM id="Mud Mode Active" value="0"/>
-  <PARAM id="Comp Amount" value="30"/>
+  <PARAM id="Comp Amount" value="50"/>
   <PARAM id="Comp Active" value="1"/>
   <PARAM id="Comp Mode Active" value="0"/>
   <PARAM id="Input Gain" value="0"/>

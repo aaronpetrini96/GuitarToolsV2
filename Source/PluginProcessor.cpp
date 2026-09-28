@@ -199,11 +199,11 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 //========================    LEVELS part    ========================
         applyGain(chunk, inputGain);
 
-//========================    COMP part    ========================
-        midBandCompressor.process(chunk);
-
 //========================    EQ part    ========================
         filters.process(chunk);
+
+//========================    COMP part    ========================
+        midBandCompressor.process(chunk);
     }
     
     levelMatch.update (dryBuffer, buffer);

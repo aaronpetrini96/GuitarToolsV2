@@ -18,10 +18,13 @@ private:
     static constexpr float crossoverHighFreq {220.f};
     static constexpr float attackMs {20.f};
     static constexpr float releaseMs {30.f};
-    static constexpr float ratio {4.f};
     static constexpr float extremeAttackMs {15.f};
     static constexpr float extremeReleaseMs {10.f};
-    static constexpr float extremeRatio {8.f};
+    static constexpr float minRatio {2.f};
+    static constexpr float maxRatio {4.f};
+    static constexpr float extremeMinRatio {8.f};
+    static constexpr float extremeMaxRatio {12.f};
+    static constexpr float ratioSweepStart {0.35f};
     static constexpr float maxThresholdOffsetDb {15.f};
     static constexpr double levelTrackingTime {300.0};
     static constexpr float levelFloorDb {-60.f};
@@ -41,6 +44,8 @@ private:
     juce::LinearSmoothedValue<float> activeAmount {0.f};
     bool extremeMode {false};
     float extremeMakeupGain {1.f};
+    float compressionSlope {0.5f};
+    float extremeCompressionSlope {0.875f};
     juce::LinearSmoothedValue<float> extremeAmount {0.f};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GTMidBandCompressor)

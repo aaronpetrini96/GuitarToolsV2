@@ -23,8 +23,9 @@ public:
         const auto boundsFWidth = boundsF.getWidth();
         const auto boundsFHeight = boundsF.getHeight();
 
-        // g.setGradientFill (juce::ColourGradient::horizontal (GTColors::headerPanelEnd, 0.f, GTColors::headerPanelStart, boundsFWidth));
-        g.setColour(GTColors::dividerLinesStart);
+        g.fillAll (juce::Colours::black);
+        g.setGradientFill (juce::ColourGradient::horizontal (GTColors::headerPanelEnd, 0.f, GTColors::headerPanelStart, boundsFWidth));
+        g.setOpacity (0.9f);
         g.fillRect (boundsF);
 
         g.setColour (GTColors::almostWhite.withAlpha(0.9f));

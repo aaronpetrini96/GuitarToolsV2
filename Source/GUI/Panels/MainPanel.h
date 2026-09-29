@@ -13,7 +13,6 @@
 #include "GUI/Components/AANeveRadioButtons.h"
 #include "GUI/Components/AASquareSSLButton.h"
 #include "GUI/Components/AAIconAndTextButton.h"
-#include "GUI/Components/AAImgSwitch.h"
 #include "GUI/Components/GTLevelMeter.h"
 
 
@@ -40,6 +39,10 @@ private:
 
     const juce::Colour textWhiteColor = GTColors::almostWhite.withAlpha(0.9f);
     void setupLabels(juce::Label*, juce::Colour, juce::Justification);
+    static void setIbmMediumFont (juce::Label& l, const float fontHeight)
+    {
+        l.setFont (AAFonts::ibmPlexSansMedium(fontHeight).withExtraKerningFactor(0.04f));
+    }
 
     juce::Rectangle<float> cutFiltersArea, buttonsArea, shelfFiltersArea, plateBounds, magicDividerBounds;
     juce::Label cutFiltersGroupLabel {{}, "TONE RANGE"}, magicButtonsGroupLabel {{}, "CLEAN-UP"}, shelfFiltersGroupLabel {{}, "COLOR"};
@@ -66,15 +69,20 @@ private:
     AASquareSSLButton mudActiveButton {*audioProcessor.treeState.getParameter (ParamIDs::getMudActiveName()), mudBypassLabel.getText()};
     AASquareSSLButton compActiveButton {*audioProcessor.treeState.getParameter (ParamIDs::getCompActiveName()), compBypassLabel.getText()};
 
-    AAImgSwitch resoModeSwitch {*audioProcessor.treeState.getParameter (ParamIDs::getResoExtremeActiveName())};
-    AAImgSwitch compModeSwitch {*audioProcessor.treeState.getParameter (ParamIDs::getCompExtremeActiveName())};
-    AAImgSwitch mudModeSwitch {*audioProcessor.treeState.getParameter (ParamIDs::getMudExtremeActiveName())};
+    std::unique_ptr<juce::Drawable> modeSwitchOn {juce::Drawable::createFromImageData (BinaryData::matchButton_on_png, BinaryData::matchButton_on_pngSize)};
+    std::unique_ptr<juce::Drawable> modeSwitchOff {juce::Drawable::createFromImageData (BinaryData::matchButton_off_png, BinaryData::matchButton_off_pngSize)};
+    juce::DrawableButton resoModeSwitch {"resoModeSwitch", juce::DrawableButton::ImageFitted};
+    juce::DrawableButton compModeSwitch {"compModeSwitch", juce::DrawableButton::ImageFitted};
+    juce::DrawableButton mudModeSwitch {"mudModeSwitch", juce::DrawableButton::ImageFitted};
+    std::unique_ptr<juce::ButtonParameterAttachment> resoModeSwitchAttachment, compModeSwitchAttachment, mudModeSwitchAttachment;
 
     juce::Label inputGainLabel {{}, "IN"};
     juce::Label outputGainLabel {{}, "OUT"};
     AANotchSSLKnob inputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getInputGainName()), &inputGainLabel};
     AANotchSSLKnob outputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getOutputGainName()), &outputGainLabel};
     juce::Label levelsLabel {{}, "LEVELS"};
+    juce::Label inputTitleLabel {{}, "INPUT"};
+    juce::Label outputTitleLabel {{}, "OUTPUT"};
 
     GTLevelMeter outputLevelMeter{audioProcessor.outputLevelLeft, audioProcessor.outputLevelRight};
     std::unique_ptr<juce::Drawable> levelMatchButtonOn {juce::Drawable::createFromImageData (BinaryData::matchButton_on_png, BinaryData::matchButton_on_pngSize)};

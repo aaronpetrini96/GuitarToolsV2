@@ -25,7 +25,7 @@ public:
         for (auto* label : { &nameLabel, &valueLabel })
         {
             label->setInterceptsMouseClicks (false, false);
-            label->setColour (juce::Label::textColourId, GTColors::sectionTitleText.withAlpha(0.85f));
+            label->setColour (juce::Label::textColourId, GTColors::almostWhite);
             label->setJustificationType(juce::Justification::centred);
             addAndMakeVisible (*label);
         }
@@ -44,9 +44,9 @@ public:
     {
         const auto boundsF = getLocalBounds().toFloat();
         const auto fontBounds = boundsF.withHeight (boundsF.getHeight() * 0.14f);
-        nameLabel.setFont (AAFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.7f));
+        nameLabel.setFont (AAFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.8f).withExtraKerningFactor(0.03f));
         nameLabel.setBounds (fontBounds.toNearestInt());
-        valueLabel.setFont (AAFonts::interMedium (fontBounds.getHeight() * 0.625f));
+        valueLabel.setFont (AAFonts::interMedium (fontBounds.getHeight() * 0.7f));
         valueLabel.setBounds (fontBounds.withBottomY (boundsF.getHeight()).toNearestInt());
     }
 
@@ -56,11 +56,10 @@ public:
         //========   KNOB IMAGE  ========//
         const auto imageBounds = boundsF.reduced (boundsF.getWidth() * knobReducePOW);
         g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
-        g.setOpacity(0.85f);
+        g.setOpacity(0.9f);
         g.drawImage (knobImage, imageBounds, juce::RectanglePlacement::centred);
-        g.setOpacity(1.f);
-        const auto activeColor = GTColors::activeNeonBlue.withAlpha (0.85f);
-        const auto offColor = GTColors::dividerLinesEnd.withAlpha (0.85f);
+        const auto activeColor = GTColors::activeNeonBlue.withAlpha (0.9f);
+        const auto offColor = GTColors::dividerLinesStart.withAlpha (0.9f);
 
         //========   POINTS DRAWING  ========//
         const auto radiusReference = imageBounds.getWidth() * 0.255f;
@@ -128,8 +127,6 @@ private:
     }
 
     juce::Image knobImage = juce::ImageCache::getFromMemory(BinaryData::_23232_png, BinaryData::_23232_pngSize);
-    // juce::Image knobImage = juce::ImageCache::getFromMemory(BinaryData::_2_png, BinaryData::_2_pngSize);
-    // juce::Image knobImage = juce::ImageCache::getFromMemory(BinaryData::knob_preview3Shadow_png, BinaryData::knob_preview3Shadow_pngSize);
     juce::Label nameLabel;
     juce::Label valueLabel;
     juce::RangedAudioParameter& parameter;

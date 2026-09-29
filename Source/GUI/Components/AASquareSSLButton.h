@@ -38,6 +38,7 @@ public:
 
     void paintOverChildren (juce::Graphics& g) override
     {
+        g.setColour (juce::Colours::black);
         if (nameText.isEmpty())
             return;
         const auto boundsF =getLocalBounds().toFloat();

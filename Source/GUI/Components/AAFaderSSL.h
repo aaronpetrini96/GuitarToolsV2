@@ -56,7 +56,7 @@ public:
         juce::Slider::resized();
         const auto b = getLocalBounds().toFloat();
         const auto boundsF = b.withSizeKeepingCentre(b.getWidth(), b.getHeight());
-        const auto thumbHeight = boundsF.getHeight() * 0.225f;
+        const auto thumbHeight = boundsF.getHeight() * 0.25f;
         const auto thumbWidth = thumbHeight / thumbAspectRatio;
         // const auto trackHeight = boundsF.getHeight() - thumbHeight;
         // const auto trackWidth = trackHeight / trackAspectRatio;
@@ -89,7 +89,7 @@ private:
     juce::Range<float> thumbTravel;
     bool thumbActive {true};
 
-    juce::Image thumbOFF = juce::ImageCache::getFromMemory (BinaryData::thumbOff_trimmed_png, BinaryData::thumbOff_trimmed_pngSize);
+    juce::Image thumbOFF = juce::ImageCache::getFromMemory (BinaryData::thumbOffShadow_png, BinaryData::thumbOffShadow_pngSize);
     juce::Image thumbON = juce::ImageCache::getFromMemory (BinaryData::thumbBlue2_png, BinaryData::thumbBlue2_pngSize);
 
     float trackAspectRatio {0.f};

@@ -65,7 +65,8 @@ public:
     {
         const auto boundsF = getLocalBounds().toFloat();
         const auto boundsCentre = boundsF.getCentre();
-
+        g.setColour(juce::Colours::aliceblue);
+        g.drawRect(boundsF, 1.f);
         const auto sizeRef = juce::jmin (boundsF.getWidth(), boundsF.getHeight());
         const auto dotSizeRadius = sizeRef * dotSizeAdjuster;
         const auto dotRingRadius = sizeRef * 0.5f - dotSizeRadius;
@@ -74,7 +75,7 @@ public:
 
         const auto sliderPos = static_cast<float> (valueToProportionOfLength (getValue()));
         const auto angle = startAngle + sliderPos * (endAngle - startAngle);
-        g.beginTransparencyLayer (isEnabled() ? 0.85f : 0.5f);
+        g.beginTransparencyLayer (isEnabled() ? 0.9f : 0.3f);
         paintLightDots (g, boundsCentre, dotRingRadius, dotSizeRadius, angle);
 
         {
@@ -126,8 +127,7 @@ private:
     void updateValueDisplay()
     {
         if (nameLabel != nullptr)
-            // nameLabel->setText (isDragging ? getTextFromValue(getValue()) : nameText, juce::dontSendNotification);
-            nameLabel->setText (getTextFromValue(getValue()), juce::dontSendNotification);
+            nameLabel->setText (isDragging ? getTextFromValue(getValue()) : nameText, juce::dontSendNotification);
         else
             repaint();
     }
@@ -135,7 +135,7 @@ private:
     juce::Image knobImage = juce::ImageCache::getFromMemory (BinaryData::sslKnotchKnobShadow2_png, BinaryData::sslKnotchKnobShadow2_pngSize);
     const float startAngle { 1.25f * juce::MathConstants<float>::pi };
     const float endAngle { 2.75f * juce::MathConstants<float>::pi };
-    const float dotSizeAdjuster {0.035f};
+    const float dotSizeAdjuster {0.03f};
     const float knobBoundsReducer {0.f};
 
     bool isDragging {false};

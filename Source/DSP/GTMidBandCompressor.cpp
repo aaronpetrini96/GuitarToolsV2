@@ -22,16 +22,10 @@ void GTMidBandCompressor::prepare(const juce::dsp::ProcessSpec& spec)
     for (auto& bandBuffer : bandBuffers)
         bandBuffer.setSize(static_cast<int>(spec.numChannels), static_cast<int>(spec.maximumBlockSize));
 
-    auto detectorSpec = spec;
-    detectorSpec.numChannels = 1;
-    envelopeFilter.prepare(detectorSpec);
-    envelopeFilter.setAttackTime(extremeMode ? extremeAttackMs : attackMs);
-    envelopeFilter.setReleaseTime(extremeMode ? extremeReleaseMs : releaseMs);
-
-    bandLevelFilter.prepare(detectorSpec);
-    bandLevelFilter.setLevelCalculationType(juce::dsp::BallisticsFilterLevelCalculationType::RMS);
-    bandLevelFilter.setAttackTime(levelTrackingTime);
-    bandLevelFilter.setReleaseTime(levelTrackingTime);
+    const auto samplesPerMs = static_cast<float>(spec.sampleRate) / 1000.f;
+    attackCoefficient = std::exp(-1.f / (attackTimeConstantMs * samplesPerMs));
+    releaseCoefficient = std::exp(-1.f / (releaseTimeConstantMs * samplesPerMs));
+    smoothedGainReductionDb = 0.f;
 
     activeAmount.reset(spec.sampleRate, activeRampSeconds);
     extremeAmount.reset(spec.sampleRate, activeRampSeconds);
@@ -45,10 +39,8 @@ void GTMidBandCompressor::setAmount(float newAmountProportion)
     const auto ratioSweepProportion = juce::jmax(0.f, (amountProportion - ratioSweepStart) / (1.f - ratioSweepStart));
     compressionSlope = 1.f - 1.f / juce::jmap(ratioSweepProportion, minRatio, maxRatio);
     extremeCompressionSlope = 1.f - 1.f / juce::jmap(ratioSweepProportion, extremeMinRatio, extremeMaxRatio);
-    makeupGain = juce::Decibels::decibelsToGain(thresholdOffsetDb * compressionSlope);
-    extremeMakeupGain = juce::Decibels::decibelsToGain(thresholdOffsetDb * extremeCompressionSlope);
 
-    thresholdOffsetGain = juce::Decibels::decibelsToGain(-thresholdOffsetDb);
+    thresholdDb = referenceLevelDb - thresholdOffsetDb;
 }
 
 void GTMidBandCompressor::setActive(bool shouldBeActive)
@@ -62,8 +54,6 @@ void GTMidBandCompressor::setExtremeMode(bool shouldBeExtreme)
         return;
 
     extremeMode = shouldBeExtreme;
-    envelopeFilter.setAttackTime(extremeMode ? extremeAttackMs : attackMs);
-    envelopeFilter.setReleaseTime(extremeMode ? extremeReleaseMs : releaseMs);
     extremeAmount.setTargetValue(extremeMode ? 1.f : 0.f);
 }
 
@@ -74,8 +64,7 @@ void GTMidBandCompressor::process(juce::AudioBuffer<float>& buffer)
     const auto numChannels = buffer.getNumChannels();
     const auto numSamples = buffer.getNumSamples();
     auto* const* midBandChannels = bandBuffers[1].getArrayOfWritePointers();
-
-
+    
     for (int sample = 0; sample < numSamples; ++sample)
     {
         auto linkedInput = 0.f;
@@ -83,24 +72,28 @@ void GTMidBandCompressor::process(juce::AudioBuffer<float>& buffer)
         for (int channel = 0; channel < numChannels; ++channel)
             linkedInput = juce::jmax(linkedInput, std::abs(midBandChannels[channel][sample]));
 
-        const auto envelope = envelopeFilter.processSample(0, linkedInput);
-        const auto bandLevel = juce::jmax(bandLevelFilter.processSample(0, linkedInput), levelFloorGain);
-
+        const auto inputLevelDb = juce::Decibels::gainToDecibels(linkedInput);
         const auto activeProportion = activeAmount.getNextValue();
         const auto extremeProportion = extremeAmount.getNextValue();
+
+        const auto slope = compressionSlope + (extremeCompressionSlope - compressionSlope) * extremeProportion;
+        const auto kneeWidthDb = softKneeWidthDb * (1.f - extremeProportion);
+        const auto overshootDb = inputLevelDb - thresholdDb;
+
+        auto targetGainReductionDb = 0.f;
+
+        if (2.f * overshootDb >= kneeWidthDb)
+            targetGainReductionDb = -slope * overshootDb;
+        else if (2.f * overshootDb > -kneeWidthDb)
+            targetGainReductionDb = -slope * juce::square(overshootDb + kneeWidthDb * 0.5f) / (2.f * kneeWidthDb);
+
+        const auto coefficient = targetGainReductionDb < smoothedGainReductionDb ? attackCoefficient : releaseCoefficient;
+        smoothedGainReductionDb = targetGainReductionDb + coefficient * (smoothedGainReductionDb - targetGainReductionDb);
 
         if (activeProportion == 0.f)
             continue;
 
-        const auto threshold = bandLevel * thresholdOffsetGain;
-        auto compressorGain = makeupGain + (extremeMakeupGain - makeupGain) * extremeProportion;
-
-        if (envelope >= threshold)
-        {
-            const auto slope = compressionSlope + (extremeCompressionSlope - compressionSlope) * extremeProportion;
-            compressorGain /= std::pow(envelope / threshold, slope);
-        }
-
+        const auto compressorGain = juce::Decibels::decibelsToGain(smoothedGainReductionDb);
         const auto gain = 1.f + (compressorGain - 1.f) * activeProportion;
 
         for (int channel = 0; channel < numChannels; ++channel)

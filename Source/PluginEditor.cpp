@@ -263,12 +263,14 @@ void GuitarToolsAudioProcessorEditor::mouseEnter (const juce::MouseEvent& event)
             tooltipText = tooltipClient->getTooltip();
     }
 
-    tooltipsPanel.setTooltipText (tooltipText);
+    // tooltipsPanel.setTooltipText (tooltipText);
+    if (tooltipText.isNotEmpty())
+        tooltipsPanel.setTooltipText (tooltipText);
 }
 
 void GuitarToolsAudioProcessorEditor::mouseExit (const juce::MouseEvent&)
 {
-    tooltipsPanel.setTooltipText ({});
+    // tooltipsPanel.setTooltipText ({});
 }
 
 void GuitarToolsAudioProcessorEditor::showSettingsOptionsPopup()

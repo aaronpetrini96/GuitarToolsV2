@@ -15,7 +15,7 @@ HeaderPanel::HeaderPanel (GuitarToolsAudioProcessor& processor, AAPresetBox& pre
 
     setupIconButton(settingsButton, BinaryData::settingsLines_svg, BinaryData::settingsLines_svgSize);
     settingsButton.setClickingTogglesState (true);
-    settingsButton.setTooltip("Show settings panel");
+    settingsButton.setTooltip ("Settings: Show settings panel");
     settingsButton.onClick = [this] { if (onSettingsClicked != nullptr) onSettingsClicked(); };
 
     setupIconButton (undoButton, BinaryData::undoIcon_svg, BinaryData::undoIcon_svgSize);
@@ -29,7 +29,7 @@ HeaderPanel::HeaderPanel (GuitarToolsAudioProcessor& processor, AAPresetBox& pre
     addAndMakeVisible (presetBox);
 
     setupIconButton (savePresetButton, BinaryData::saveIcon_svg, BinaryData::saveIcon_svgSize);
-    savePresetButton.setTooltip ("Save preset");
+    savePresetButton.setTooltip ("Save: Save the current settings as a preset");
     savePresetButton.onClick = [this] { if (onSaveClicked != nullptr) onSaveClicked(); };
 }
 

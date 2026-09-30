@@ -66,8 +66,7 @@ private:
     SettingsOptionsPanel settingsOptionsPopup {uiResize, audioProcessor.showTooltips};
     AAListOptionsPopup resizeOptionsPopup;
     juce::DrawableButton resizeButton {"GUI Size", juce::DrawableButton::ImageFitted};
-    // juce::Image greyBackground = juce::ImageCache::getFromMemory (BinaryData::clearGrey2_3000_png, BinaryData::clearGrey2_3000_pngSize);
-    juce::Image backgroundWithDividers = juce::ImageCache::getFromMemory (BinaryData::mainPanelBackgroundTextured_png, BinaryData::mainPanelBackgroundTextured_pngSize);
+    juce::Image backgroundWithDividers = juce::ImageCache::getFromMemory (BinaryData::mainPanelBackgroundTexturedUnderline_png, BinaryData::mainPanelBackgroundTexturedUnderline_pngSize);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuitarToolsAudioProcessorEditor)
 };

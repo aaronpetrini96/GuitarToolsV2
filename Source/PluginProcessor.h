@@ -71,12 +71,12 @@ public:
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     juce::UndoManager undoManager { 100000, 100 };
     juce::AudioProcessorValueTreeState treeState {*this, &undoManager, "Parameters", createParameterLayout()};
-    
-    
+
     juce::String currentPresetName;
     float uiScale {0.0f};
     bool showTooltips {false};
 
+    std::atomic<float> inputLevelLeft {0.f}, inputLevelRight {0.f};
     std::atomic<float> outputLevelLeft {0.f}, outputLevelRight {0.f};
 
 private:
@@ -86,7 +86,6 @@ private:
     
     GTFilters filters;
     ChainSettings getChainSettings() const;
-
 
 // PARAMETER POINTERS
     juce::AudioParameterFloat* lowCutFreqParam {nullptr};

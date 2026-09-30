@@ -28,7 +28,7 @@ public:
     void resizeMagicButtons(const juce::Rectangle<float>&);
 
     float sectionTitleH {0};
-    float dividerThickness{0.f};
+    // float dividerThickness{0.f};
     float sideSectionPOW {0.32f};
 
 private:
@@ -44,8 +44,9 @@ private:
         l.setFont (AAFonts::ibmPlexSansMedium(fontHeight).withExtraKerningFactor(0.04f));
     }
 
-    juce::Rectangle<float> cutFiltersArea, buttonsArea, shelfFiltersArea, plateBounds, magicDividerBounds;
-    juce::Label cutFiltersGroupLabel {{}, "TONE RANGE"}, magicButtonsGroupLabel {{}, "CLEAN-UP"}, shelfFiltersGroupLabel {{}, "COLOR"};
+    juce::Rectangle<float> cutFiltersArea, buttonsArea, shelfFiltersArea, plateBounds;
+    // juce::Rectangle<float> magicDividerBounds;
+    // juce::Label cutFiltersGroupLabel {{}, "TONE RANGE"}, magicButtonsGroupLabel {{}, "CLEAN-UP"}, shelfFiltersGroupLabel {{}, "COLOR"};
 
     AALightStrokeKnob lowCutFreqKnob {*audioProcessor.treeState.getParameter (ParamIDs::getLowCutFreqName()), "LOW CUT", false, false};
     AALightStrokeKnob highCutFreqKnob {*audioProcessor.treeState.getParameter (ParamIDs::getHighCutFreqName()), "HIGH CUT", false, true};
@@ -80,16 +81,16 @@ private:
     juce::Label outputGainLabel {{}, "OUT"};
     AANotchSSLKnob inputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getInputGainName()), &inputGainLabel};
     AANotchSSLKnob outputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getOutputGainName()), &outputGainLabel};
-    juce::Label levelsLabel {{}, "LEVELS"};
-    juce::Label inputTitleLabel {{}, "INPUT"};
-    juce::Label outputTitleLabel {{}, "OUTPUT"};
+    // juce::Label levelsLabel {{}, "LEVELS"};
+    // juce::Label inputTitleLabel {{}, "INPUT"};
+    // juce::Label outputTitleLabel {{}, "OUTPUT"};
 
     GTLevelMeter outputLevelMeter{audioProcessor.outputLevelLeft, audioProcessor.outputLevelRight};
+    GTLevelMeter inputLevelMeter{audioProcessor.inputLevelLeft, audioProcessor.inputLevelRight};
     std::unique_ptr<juce::Drawable> levelMatchButtonOn {juce::Drawable::createFromImageData (BinaryData::matchButton_on_png, BinaryData::matchButton_on_pngSize)};
     std::unique_ptr<juce::Drawable> levelMatchButtonOff {juce::Drawable::createFromImageData (BinaryData::matchButton_off_png, BinaryData::matchButton_off_pngSize)};
     juce::DrawableButton levelMatchButton {"levelMatchButton", juce::DrawableButton::ImageFitted};
     std::unique_ptr<juce::ButtonParameterAttachment> levelMatchButtonAttachment;
-
     FadersPlatePanel fadersPlatePanel {audioProcessor};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainPanel)

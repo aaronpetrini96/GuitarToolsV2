@@ -198,7 +198,9 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 
 //========================    LEVELS part    ========================
         applyGain(chunk, inputGain);
-
+        inputLevelLeft.store(juce::jmax(inputLevelLeft.load(), chunk.getMagnitude(0, 0, chunkLength)));
+        if (chunk.getNumChannels() > 1)
+            inputLevelRight.store(juce::jmax(inputLevelRight.load(), chunk.getMagnitude(1, 0, chunkLength)));
 //========================    EQ part    ========================
         filters.process(chunk);
 

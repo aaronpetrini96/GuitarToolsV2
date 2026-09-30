@@ -173,17 +173,18 @@ void GuitarToolsAudioProcessorEditor::resized()
     const auto contentHeight = boundsFWidth * (float) uiResize.defaultHeight / (float) uiResize.defaultWidth;
     const float headerH = contentHeight * headerHeightRatio;
     const auto tooltipsPanelH = tooltipsPanel.isVisible() ? headerH * tooltipsHeightRatio : 0.0f;
-
     headerPanel.setBounds (boundsF.withHeight (headerH).toNearestInt());
     tooltipsPanel.setBounds (boundsF.withHeight (tooltipsPanelH).withY (contentHeight).toNearestInt());
-
     imageBounds = boundsF.withHeight (contentHeight - headerH).withY (headerH);
-    const auto mainPanelBounds = imageBounds.withSizeKeepingCentre(imageBounds.getWidth(), imageBounds.getHeight() * 0.98f);
+
+    const auto mainPanelBounds = imageBounds.withSizeKeepingCentre(imageBounds.getWidth(), imageBounds.getHeight() * 0.977f);
     mainPanel.sectionTitleH = mainPanelBounds.getHeight() * 0.07f;
     mainPanel.setBounds (mainPanelBounds.toNearestInt());
 
-    const auto resizeButtonSize = contentHeight * 0.04f;
-    const auto resizeBtnBounds = mainPanelBounds.withSize(resizeButtonSize, resizeButtonSize).withRightX(mainPanelBounds.getWidth()).withBottomY(mainPanelBounds.getBottom());
+    const auto resizeButtonSize = contentHeight * 0.0375f;
+    const auto resizeBtnGap = resizeButtonSize * 0.5f;
+    const auto resizeBtnBounds = mainPanelBounds.withSize(resizeButtonSize, resizeButtonSize)
+                                                .withCentre({mainPanelBounds.getWidth() - resizeBtnGap, mainPanelBounds.getBottom() - resizeBtnGap});
     resizeButton.setBounds (resizeBtnBounds.toNearestInt());
 
     const auto rowH = headerH * 0.65f;

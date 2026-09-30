@@ -65,23 +65,17 @@ public:
     {
         const auto boundsF = getLocalBounds().toFloat();
         const auto boundsCentre = boundsF.getCentre();
-        g.setColour(juce::Colours::aliceblue);
-        g.drawRect(boundsF, 1.f);
         const auto sizeRef = juce::jmin (boundsF.getWidth(), boundsF.getHeight());
-        const auto dotSizeRadius = sizeRef * dotSizeAdjuster;
+        const auto dotSizeRadius = sizeRef * 0.0275f;
         const auto dotRingRadius = sizeRef * 0.5f - dotSizeRadius;
         const auto knobBounds = boundsF.reduced (sizeRef * knobBoundsReducer);
-
-
         const auto sliderPos = static_cast<float> (valueToProportionOfLength (getValue()));
         const auto angle = startAngle + sliderPos * (endAngle - startAngle);
-        g.beginTransparencyLayer (isEnabled() ? 0.9f : 0.3f);
+        g.beginTransparencyLayer (isEnabled() ? 0.9f : 0.4f);
         paintLightDots (g, boundsCentre, dotRingRadius, dotSizeRadius, angle);
-
         {
             juce::Graphics::ScopedSaveState state (g);
             g.addTransform (juce::AffineTransform::rotation (angle, boundsCentre.x, boundsCentre.y));
-
             g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
             g.drawImage (knobImage, knobBounds, juce::RectanglePlacement::centred);
         }
@@ -100,8 +94,6 @@ public:
     }
 
     int numberOfDots {9};
-
-
 private:
 
     void paintLightDots (juce::Graphics& g, juce::Point<float> centre, float dotRingRadius, float dotRadius, float angle)
@@ -117,9 +109,9 @@ private:
             const juce::Point<float> dotDirection (std::sin (dotAngle), -std::cos (dotAngle));
             const auto dotCentre = centre + dotDirection * dotRingRadius;
             const auto isCentreDot = dotIndex == (numberOfDots - 1) / 2;
-            const auto isLit = isCentreDot || (dotAngle >= litFromAngle && dotAngle <= litToAngle);
+            // const auto isLit = isCentreDot || (dotAngle >= litFromAngle && dotAngle <= litToAngle);
             // g.setColour (isLit ? GTColors::activeNeonBlue : GTColors::dividerLinesEnd);
-            g.setColour(GTColors::almostWhite);
+            g.setColour(GTColors::sectionTitleText);
             g.fillEllipse (dotCentre.x - dotRadius, dotCentre.y - dotRadius, dotRadius * 2.0f, dotRadius * 2.0f);
         }
     }
@@ -135,7 +127,7 @@ private:
     juce::Image knobImage = juce::ImageCache::getFromMemory (BinaryData::sslKnotchKnobShadow2_png, BinaryData::sslKnotchKnobShadow2_pngSize);
     const float startAngle { 1.25f * juce::MathConstants<float>::pi };
     const float endAngle { 2.75f * juce::MathConstants<float>::pi };
-    const float dotSizeAdjuster {0.03f};
+    const float dotSizeAdjuster {0.0275f};
     const float knobBoundsReducer {0.f};
 
     bool isDragging {false};

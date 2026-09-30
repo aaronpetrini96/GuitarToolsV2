@@ -17,7 +17,7 @@ public:
         const auto boundsFWidth = boundsF.getWidth();
         const auto boundsFHeight = boundsF.getHeight();
 
-        const auto barWidth = boundsFWidth * 0.49f;
+        const auto barWidth = boundsFWidth * 0.475f;
         const auto cornerSize = barWidth * 0.12f;
         const auto slotInset = barWidth * 0.1f;
         const auto segmentPitch = (boundsFHeight - slotInset * 2.f) / static_cast<float> (numberOfSegments);

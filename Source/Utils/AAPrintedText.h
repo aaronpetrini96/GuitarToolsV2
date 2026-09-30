@@ -1,7 +1,6 @@
 #pragma once
 
-#include <juce_gui_basics/juce_gui_basics.h>
-#include "../../AALook.h"
+#include "../AALook.h"
 
 class AAPrintedText : public juce::Component
 {
@@ -11,6 +10,16 @@ public:
     {
         jassert (grainTile.isValid());
         setInterceptsMouseClicks (false, false);
+    }
+
+    void setText (const juce::String& newText)
+    {
+        if (text == newText)
+            return;
+
+        text = newText;
+        textPathIsStale = true;
+        repaint();
     }
 
     void setFont (const juce::Font& newFont)
@@ -53,7 +62,7 @@ private:
     }
 
     juce::Image grainTile = juce::ImageCache::getFromMemory (BinaryData::inkGrainTile_png, BinaryData::inkGrainTile_pngSize);
-    const juce::String text;
+    juce::String text;
     const juce::Colour inkColor;
     const juce::Justification justification;
     juce::Font font {juce::FontOptions {}};

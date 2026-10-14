@@ -74,16 +74,9 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
     addAndMakeVisible (outputLevelMeter);
     addAndMakeVisible (levelsTitle);
 
-    levelMatchButton.setImages (levelMatchButtonOff.get(), nullptr, nullptr, nullptr, levelMatchButtonOn.get());
-    levelMatchButton.setClickingTogglesState (true);
-    levelMatchButton.setColour (juce::DrawableButton::backgroundColourId, GTColors::transparent);
-    levelMatchButton.setColour (juce::DrawableButton::backgroundOnColourId, GTColors::transparent);
-    levelMatchButton.setTooltip (ParamHelpers::getTooltipForParam (ParamIDs::getLoudnessMatchActiveName()));
-    levelMatchButtonAttachment = std::make_unique<juce::ButtonParameterAttachment> (*audioProcessor.treeState.getParameter (ParamIDs::getLoudnessMatchActiveName()), levelMatchButton, &audioProcessor.undoManager);
-    levelMatchButtonAttachment->sendInitialUpdate();
-    levelMatchButton.onClick = [this] { outputGainKnob.setEnabled (! levelMatchButton.getToggleState()); };
-    outputGainKnob.setEnabled (! levelMatchButton.getToggleState());
-    // addAndMakeVisible (levelMatchButton);
+    levelMatchAttachment = std::make_unique<juce::ParameterAttachment> (*audioProcessor.treeState.getParameter (ParamIDs::getLoudnessMatchActiveName()),
+                                                                        [this] (float newValue) { outputGainKnob.setEnabled (newValue < 0.5f); });
+    levelMatchAttachment->sendInitialUpdate();
 }
 
 void MainPanel::paint(juce::Graphics& g)

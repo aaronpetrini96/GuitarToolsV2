@@ -68,10 +68,7 @@ private:
 
     GTLevelMeter outputLevelMeter{audioProcessor.outputLevelLeft, audioProcessor.outputLevelRight, GTLevelMeter::ScalePlacement::none};
     GTLevelMeter inputLevelMeter{audioProcessor.inputLevelLeft, audioProcessor.inputLevelRight, GTLevelMeter::ScalePlacement::none};
-    std::unique_ptr<juce::Drawable> levelMatchButtonOn {juce::Drawable::createFromImageData (BinaryData::matchButton_on_png, BinaryData::matchButton_on_pngSize)};
-    std::unique_ptr<juce::Drawable> levelMatchButtonOff {juce::Drawable::createFromImageData (BinaryData::matchButton_off_png, BinaryData::matchButton_off_pngSize)};
-    juce::DrawableButton levelMatchButton {"levelMatchButton", juce::DrawableButton::ImageFitted};
-    std::unique_ptr<juce::ButtonParameterAttachment> levelMatchButtonAttachment;
+    std::unique_ptr<juce::ParameterAttachment> levelMatchAttachment;
     FadersPlatePanel fadersPlatePanel {audioProcessor};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainPanel)

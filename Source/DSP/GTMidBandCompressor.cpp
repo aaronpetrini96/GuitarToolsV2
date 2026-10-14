@@ -69,15 +69,15 @@ void GTMidBandCompressor::process(juce::AudioBuffer<float>& buffer)
     if (juce::approximatelyEqual(activeAmount.getTargetValue(), 0.f) && !activeAmount.isSmoothing())
         return;
 
-    auto* const* lowBandChannels = bandBuffers[0].getArrayOfReadPointers();
-    auto* const* highBandChannels = bandBuffers[2].getArrayOfReadPointers();
     auto* const* outputChannels = buffer.getArrayOfWritePointers();
 
     splitBands(buffer);
 
     const auto numChannels = buffer.getNumChannels();
     const auto numSamples = buffer.getNumSamples();
+    auto* const* lowBandChannels = bandBuffers[0].getArrayOfReadPointers();
     auto* const* midBandChannels = bandBuffers[1].getArrayOfWritePointers();
+    auto* const* highBandChannels = bandBuffers[2].getArrayOfReadPointers();
     
     for (int sample = 0; sample < numSamples; ++sample)
     {

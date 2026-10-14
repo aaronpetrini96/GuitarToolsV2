@@ -32,6 +32,16 @@ public:
         repaint();
     }
 
+    void setSideLinesVisible (bool shouldShowSideLines)
+    {
+        if (sideLinesVisible == shouldShowSideLines)
+            return;
+
+        sideLinesVisible = shouldShowSideLines;
+        textPathIsStale = true;
+        repaint();
+    }
+
     void resized() override
     {
         textPathIsStale = true;
@@ -58,6 +68,17 @@ private:
 
         textPath.clear();
         glyphs.createPath (textPath);
+
+        if (sideLinesVisible && ! textPath.isEmpty())
+        {
+            const auto textBounds = textPath.getBounds();
+            const auto lineThickness = font.getHeight() * 0.07f;
+            const auto lineGap = font.getHeight() * 0.5f;
+            const auto lineBounds = textBounds.withSizeKeepingCentre (textBounds.getWidth(), lineThickness);
+            textPath.addRectangle (lineBounds.withLeft (0.f).withRight (textBounds.getX() - lineGap));
+            textPath.addRectangle (lineBounds.withLeft (textBounds.getRight() + lineGap).withRight (static_cast<float> (getWidth())));
+        }
+
         textPathIsStale = false;
     }
 
@@ -68,6 +89,7 @@ private:
     juce::Font font {juce::FontOptions {}};
     juce::Path textPath;
     bool textPathIsStale {true};
+    bool sideLinesVisible {false};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AAPrintedText)
 };

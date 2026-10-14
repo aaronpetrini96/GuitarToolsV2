@@ -73,11 +73,13 @@ public:
     juce::AudioProcessorValueTreeState treeState {*this, &undoManager, "Parameters", createParameterLayout()};
 
     juce::String currentPresetName;
+    juce::ChangeBroadcaster stateRestoredBroadcaster;
     float uiScale {0.0f};
     bool showTooltips {false};
 
     std::atomic<float> inputLevelLeft {0.f}, inputLevelRight {0.f};
     std::atomic<float> outputLevelLeft {0.f}, outputLevelRight {0.f};
+//    std::atomic<float> inputMeanSquare {0.f}, outputMeanSquare {0.f};
 
 private:
     //==============================================================================

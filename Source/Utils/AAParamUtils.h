@@ -39,8 +39,8 @@ namespace DefaultValues
     inline constexpr double parameterSmoothingTime {0.05};
     inline constexpr float frequencyIntervalValue {0.01f};
     inline constexpr float decibelIntervalValue {0.001f};
-    inline constexpr float gainRangeStart {-15.f};
-    inline constexpr float gainRangeEnd {15.f};
+    inline constexpr float gainRangeStart {-12.f};
+    inline constexpr float gainRangeEnd {12.f};
 
 //    ========== TONE RANGE ===========
     inline constexpr float lowCutFreq {20.f};

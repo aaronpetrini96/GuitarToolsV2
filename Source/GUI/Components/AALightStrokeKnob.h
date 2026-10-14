@@ -12,8 +12,9 @@
 class AALightStrokeKnob : public juce::Slider
 {
 public:
-    AALightStrokeKnob (juce::RangedAudioParameter& parameterToUse, const juce::String& nameText, const bool shouldDrawFromMiddle = false, const bool shouldFillFromEnd = false)
-        : parameter (parameterToUse), drawFromMiddle (shouldDrawFromMiddle), fillFromEnd (shouldFillFromEnd)
+    AALightStrokeKnob (juce::RangedAudioParameter& parameterToUse, const juce::String& nameTextToUse, const bool shouldDrawFromMiddle = false, const bool shouldFillFromEnd = false)
+        : nameText (nameTextToUse, GTColors::almostWhite), valueText (juce::String(), GTColors::almostWhite),
+          parameter (parameterToUse), drawFromMiddle (shouldDrawFromMiddle), fillFromEnd (shouldFillFromEnd)
     {
         jassert (knobImage.isValid());
         setSliderStyle (RotaryVerticalDrag);
@@ -22,14 +23,8 @@ public:
         setRotaryParameters (startAngle, endAngle, true);
         setComponentID (parameter.getParameterID());
 
-        for (auto* label : { &nameLabel, &valueLabel })
-        {
-            label->setInterceptsMouseClicks (false, false);
-            label->setColour (juce::Label::textColourId, GTColors::almostWhite);
-            label->setJustificationType(juce::Justification::centred);
-            addAndMakeVisible (*label);
-        }
-        nameLabel.setText (nameText, juce::dontSendNotification);
+        addAndMakeVisible (nameText);
+        addAndMakeVisible (valueText);
 
         attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, nullptr);
         updateValueLabelText();
@@ -44,10 +39,10 @@ public:
     {
         const auto boundsF = getLocalBounds().toFloat();
         const auto fontBounds = boundsF.withHeight (boundsF.getHeight() * 0.14f);
-        nameLabel.setFont (AAFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.8f).withExtraKerningFactor(0.03f));
-        nameLabel.setBounds (fontBounds.toNearestInt());
-        valueLabel.setFont (AAFonts::interMedium (fontBounds.getHeight() * 0.7f));
-        valueLabel.setBounds (fontBounds.withBottomY (boundsF.getHeight()).toNearestInt());
+        nameText.setFont (AAFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.8f).withExtraKerningFactor(0.03f));
+        nameText.setBounds (fontBounds.toNearestInt());
+        valueText.setFont (AAFonts::interMedium (fontBounds.getHeight() * 0.7f));
+        valueText.setBounds (fontBounds.withBottomY (boundsF.getHeight()).toNearestInt());
     }
 
     void paint (juce::Graphics& g) override
@@ -105,30 +100,31 @@ private:
     void updateValueLabelText()
     {
         const auto sliderPosition = valueToProportionOfLength (getValue());
-        juce::String valueText;
+        juce::String percentageText;
 
         if (drawFromMiddle)
         {
             const auto percentage = juce::roundToInt ((sliderPosition - 0.5) * 200.0);
-            valueText = juce::String (percentage > 0 ? "+" : "") + juce::String (percentage);
+            percentageText = juce::String (percentage > 0 ? "+" : "") + juce::String (percentage);
         }
         else if (fillFromEnd)
         {
             const auto percentage = juce::roundToInt ((1.0 - sliderPosition) * 100.0);
-            valueText = juce::String (percentage);
+            percentageText = juce::String (percentage);
         }
         else
         {
             const auto percentage = juce::roundToInt (sliderPosition * 100.0);
-            valueText = juce::String (percentage);
+            percentageText = juce::String (percentage);
         }
 
-        valueLabel.setText (valueText + "%", juce::dontSendNotification);
+        valueText.setText (percentageText + "%");
     }
 
-    juce::Image knobImage = juce::ImageCache::getFromMemory(BinaryData::_23232_png, BinaryData::_23232_pngSize);
-    juce::Label nameLabel;
-    juce::Label valueLabel;
+    juce::Image knobImage = juce::ImageCache::getFromMemory(BinaryData::darkKnobShadow_png, BinaryData::darkKnobShadow_pngSize);
+    // juce::Image knobImage = juce::ImageCache::getFromMemory(BinaryData::darkKnob_png, BinaryData::darkKnob_pngSize);
+    AAUITools::PrintedText nameText;
+    AAUITools::PrintedText valueText;
     juce::RangedAudioParameter& parameter;
 
     const bool drawFromMiddle;

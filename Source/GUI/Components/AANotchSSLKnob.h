@@ -14,17 +14,18 @@
 class AANotchSSLKnob : public juce::Slider
 {
 public:
-    explicit AANotchSSLKnob (juce::RangedAudioParameter& parameterToUse, juce::Label* nameLabelToUse = nullptr)
-        : parameter (parameterToUse), nameText (nameLabelToUse != nullptr ? nameLabelToUse->getText() : juce::String()), nameLabel (nameLabelToUse)
+    AANotchSSLKnob (juce::RangedAudioParameter& parameterToUse, const juce::String& nameTextToUse)
+        : nameText (nameTextToUse), parameter (parameterToUse)
     {
         jassert (knobImage.isValid());
         setSliderStyle (juce::Slider::SliderStyle::RotaryVerticalDrag);
+        setScrollWheelEnabled(false);
         setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
-        setNumDecimalPlacesToDisplay (1);
-        setTextValueSuffix (" " + parameter.getLabel());
         setMouseDragSensitivity (300);
         setRotaryParameters (startAngle, endAngle, true);
         setComponentID (parameter.getParameterID());
+
+        addAndMakeVisible (valueLabel);
         attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, nullptr);
         updateValueDisplay();
     }
@@ -36,7 +37,7 @@ public:
 
     void mouseDrag (const juce::MouseEvent& e) override
     {
-        if (isEnabled() && ! isDragging && e.mouseWasDraggedSinceMouseDown())
+        if (isEnabled() && ! isDragging && (e.mouseWasDraggedSinceMouseDown()))
         {
             isDragging = true;
             updateValueDisplay();
@@ -61,79 +62,81 @@ public:
         repaint();
     }
 
+
+
     void paint (juce::Graphics& g) override
     {
         const auto boundsF = getLocalBounds().toFloat();
-        const auto boundsCentre = boundsF.getCentre();
-        const auto sizeRef = juce::jmin (boundsF.getWidth(), boundsF.getHeight());
-        const auto dotSizeRadius = sizeRef * 0.0275f;
-        const auto dotRingRadius = sizeRef * 0.5f - dotSizeRadius;
-        const auto knobBounds = boundsF.reduced (sizeRef * knobBoundsReducer);
+        const auto knobArea = boundsF.withHeight (boundsF.getWidth());
+        const auto boundsCentre = knobArea.getCentre();
+        const auto sizeRef = knobArea.getWidth();
+        const auto scaleThickness = sizeRef * scaleThicknessAdjuster;
+        const auto tickLength = sizeRef * tickLengthAdjuster;
+        const auto scaleRadius = sizeRef * 0.5f - tickLength - scaleThickness * 0.5f;
+        const auto knobBounds = knobArea.reduced ((scaleThickness + tickLength) * knobBoundsReducer);
         const auto sliderPos = static_cast<float> (valueToProportionOfLength (getValue()));
         const auto angle = startAngle + sliderPos * (endAngle - startAngle);
         g.beginTransparencyLayer (isEnabled() ? 0.9f : 0.4f);
-        paintLightDots (g, boundsCentre, dotRingRadius, dotSizeRadius, angle);
+        paintScale (g, boundsCentre, scaleRadius, tickLength, scaleThickness);
         {
             juce::Graphics::ScopedSaveState state (g);
             g.addTransform (juce::AffineTransform::rotation (angle, boundsCentre.x, boundsCentre.y));
             g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
-            g.drawImage (knobImage, knobBounds, juce::RectanglePlacement::centred);
+            g.drawImage (knobImage, knobBounds, juce::RectanglePlacement::fillDestination);
         }
-
-        // if (isDragging && nameLabel == nullptr)
-        // {
-        //     const auto valueBounds = knobBounds.withSizeKeepingCentre (knobBounds.getWidth() * 0.65f, knobBounds.getWidth() * 0.25f).withY(knobBounds.getCentreX());
-        //     g.setColour (GTColors::dividerLinesEnd);
-        //     g.fillRect (valueBounds);
-        //     g.setColour (GTColors::almostWhite.withAlpha(0.9f));
-        //     g.setFont (AAFonts::interMedium (valueBounds.getHeight() * 0.5f));
-        //     g.drawFittedText (getTextFromValue (getValue()), valueBounds.toNearestInt(), juce::Justification::centredBottom, 1);
-        // }
 
         g.endTransparencyLayer();
     }
 
-    int numberOfDots {9};
+    void resized() override
+    {
+        const auto boundsF = getLocalBounds().toFloat();
+        const auto knobSize = boundsF.getWidth();
+        const auto labelBounds = boundsF.withTop (knobSize * 0.92f);
+
+        valueLabel.setFont (AAFonts::ibmPlexSansMedium (labelBounds.getHeight() * 0.9f));
+        valueLabel.setBounds (labelBounds.toNearestInt());
+    }
+
+    int numberOfTicks {11};
 private:
 
-    void paintLightDots (juce::Graphics& g, juce::Point<float> centre, float dotRingRadius, float dotRadius, float angle)
+    void paintScale (juce::Graphics& g, juce::Point<float> centre, float scaleRadius, float tickLength, float scaleThickness)
     {
-        const auto dotSpacing = (endAngle - startAngle) / static_cast<float> (numberOfDots - 1);
-        const auto midAngle = (startAngle + endAngle) * 0.5f;
-        const auto litFromAngle = juce::jmin (angle, midAngle);
-        const auto litToAngle = juce::jmax (angle, midAngle);
+        juce::Path scalePath;
+        scalePath.addCentredArc (centre.x, centre.y, scaleRadius, scaleRadius, 0.f, startAngle, endAngle, true);
 
-        for (auto dotIndex = 0; dotIndex < numberOfDots; ++dotIndex)
+        const auto tickSpacing = (endAngle - startAngle) / static_cast<float> (numberOfTicks - 1);
+
+        for (auto tickIndex = 0; tickIndex < numberOfTicks; ++tickIndex)
         {
-            const auto dotAngle = startAngle + static_cast<float> (dotIndex) * dotSpacing;
-            const juce::Point<float> dotDirection (std::sin (dotAngle), -std::cos (dotAngle));
-            const auto dotCentre = centre + dotDirection * dotRingRadius;
-            const auto isCentreDot = dotIndex == (numberOfDots - 1) / 2;
-            // const auto isLit = isCentreDot || (dotAngle >= litFromAngle && dotAngle <= litToAngle);
-            // g.setColour (isLit ? GTColors::activeNeonBlue : GTColors::dividerLinesEnd);
-            g.setColour(GTColors::sectionTitleText);
-            g.fillEllipse (dotCentre.x - dotRadius, dotCentre.y - dotRadius, dotRadius * 2.0f, dotRadius * 2.0f);
+            const auto tickAngle = startAngle + static_cast<float> (tickIndex) * tickSpacing;
+            const juce::Point<float> tickDirection (std::sin (tickAngle), -std::cos (tickAngle));
+            scalePath.startNewSubPath (centre + tickDirection * scaleRadius);
+            scalePath.lineTo (centre + tickDirection * (scaleRadius + tickLength));
         }
+
+        g.setColour (GTColors::almostWhite.withAlpha (0.8f));
+        g.strokePath (scalePath, juce::PathStrokeType (scaleThickness, juce::PathStrokeType::curved, juce::PathStrokeType::butt));
     }
 
     void updateValueDisplay()
     {
-        if (nameLabel != nullptr)
-            nameLabel->setText (isDragging ? getTextFromValue(getValue()) : nameText, juce::dontSendNotification);
-        else
-            repaint();
+        const auto roundedValue = juce::roundToInt (getValue() * 10.0) / 10.0;
+        valueLabel.setText (isDragging ? (roundedValue > 0.0 ? "+" : "") + juce::String (roundedValue, 1) : nameText);
     }
 
-    juce::Image knobImage = juce::ImageCache::getFromMemory (BinaryData::sslKnotchKnobShadow2_png, BinaryData::sslKnotchKnobShadow2_pngSize);
+    juce::Image knobImage = juce::ImageCache::getFromMemory (BinaryData::knotchKnobShadow2_png, BinaryData::knotchKnobShadow2_pngSize);
     const float startAngle { 1.25f * juce::MathConstants<float>::pi };
     const float endAngle { 2.75f * juce::MathConstants<float>::pi };
-    const float dotSizeAdjuster {0.0275f};
-    const float knobBoundsReducer {0.f};
+    const float scaleThicknessAdjuster {0.012f};
+    const float tickLengthAdjuster {0.065f};
+    const float knobBoundsReducer {0.5f};
 
     bool isDragging {false};
-    juce::RangedAudioParameter& parameter;
     const juce::String nameText;
-    juce::Label* const nameLabel {nullptr};
+    juce::RangedAudioParameter& parameter;
+    AAUITools::PrintedText valueLabel {juce::String(), GTColors::almostWhite.withAlpha (0.85f), juce::Justification::centredTop};
     std::unique_ptr<juce::SliderParameterAttachment> attachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AANotchSSLKnob)

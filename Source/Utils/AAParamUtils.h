@@ -140,6 +140,14 @@ namespace ParamTooltips
 
 namespace ParamHelpers
 {
+    inline auto getStringFromValue (const int numDecimals)
+    {
+        return [numDecimals] (float value, int)
+        {
+            return numDecimals > 0 ? juce::String (value, numDecimals) : juce::String (juce::roundToInt (value));
+        };
+    }
+
     inline juce::String getTooltipForParam (const juce::String& paramIDName)
     {
         const auto tooltip = ParamTooltips::parameterTooltips.find (paramIDName);

@@ -15,9 +15,6 @@ public:
         : parameter (parameterToUse)
     {
         jassert (thumbON.isValid() && thumbOFF.isValid());
-        // trackAspectRatio = (float) trackImage.getHeight() / (float) trackImage.getWidth();
-        thumbAspectRatio = (float) thumbOFF.getHeight() / (float) thumbOFF.getWidth();
-
         setSliderStyle (LinearVertical);
         setTextBoxStyle (NoTextBox, false, 0, 0);
         setSliderSnapsToMousePosition (false);
@@ -29,6 +26,7 @@ public:
 
     void setUndoManager (juce::UndoManager* undoManager)
     {
+        parameterUndoManager = undoManager;
         attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, undoManager);
     }
 
@@ -44,26 +42,18 @@ public:
     void paint (juce::Graphics& g) override
     {
         g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
-        // g.drawImage (trackImage, trackBounds, juce::RectanglePlacement::centred);
         const auto thumbCY = thumbTravel.getEnd() - static_cast<float> (valueToProportionOfLength (getValue())) * thumbTravel.getLength();
-        g.drawImage (thumbActive ? thumbON : thumbOFF,
-                     thumbBounds.withCentre ({ thumbBounds.getCentreX(), thumbCY }),
+        g.drawImage (thumbActive ? thumbON : thumbOFF, thumbBounds.withCentre ({ thumbBounds.getCentreX(), thumbCY }),
                      juce::RectanglePlacement::fillDestination);
     }
 
     void resized() override
     {
         juce::Slider::resized();
-        const auto b = getLocalBounds().toFloat();
-        const auto boundsF = b.withSizeKeepingCentre(b.getWidth(), b.getHeight());
-        const auto thumbHeight = boundsF.getHeight() * 0.25f;
-        const auto thumbWidth = thumbHeight / thumbAspectRatio;
-        // const auto trackHeight = boundsF.getHeight() - thumbHeight;
-        // const auto trackWidth = trackHeight / trackAspectRatio;
-
-        // trackBounds = boundsF.withSizeKeepingCentre (trackWidth, trackHeight);
+        const auto boundsF = getLocalBounds().toFloat();
+        const auto thumbHeight = boundsF.getHeight() * 0.225f;
+        const auto thumbWidth = thumbHeight / ((float) thumbOFF.getHeight() / (float) thumbOFF.getWidth());
         thumbBounds = boundsF.withSizeKeepingCentre (thumbWidth, thumbHeight);
-        // thumbTravel = { trackBounds.getY(), trackBounds.getBottom() };
         thumbTravel = { boundsF.getY() + thumbHeight * 0.5f, boundsF.getBottom() - thumbHeight * 0.5f };
     }
 
@@ -78,13 +68,16 @@ private:
         if (event.mods.isLeftButtonDown() && ! positionedThumbBounds.contains (event.position))
         {
             const auto proportion = juce::jlimit (0.0f, 1.0f, (thumbTravel.getEnd() - event.position.y) / thumbTravel.getLength());
-            setValue (proportionOfLengthToValue (proportion), juce::sendNotificationSync);
+            if (parameterUndoManager != nullptr)
+                parameterUndoManager->beginNewTransaction();
+            parameter.beginChangeGesture();
+            parameter.setValueNotifyingHost(parameter.convertTo0to1(static_cast<float>(proportionOfLengthToValue(proportion))));
+            parameter.endChangeGesture();
         }
 
         juce::Slider::mouseDown (event);
     }
 
-    juce::Rectangle<float> trackBounds;
     juce::Rectangle<float> thumbBounds;
     juce::Range<float> thumbTravel;
     bool thumbActive {true};
@@ -92,10 +85,8 @@ private:
     juce::Image thumbOFF = juce::ImageCache::getFromMemory (BinaryData::thumbOffShadow_png, BinaryData::thumbOffShadow_pngSize);
     juce::Image thumbON = juce::ImageCache::getFromMemory (BinaryData::thumbBlue2_png, BinaryData::thumbBlue2_pngSize);
 
-    float trackAspectRatio {0.f};
-    float thumbAspectRatio {0.f};
-
     juce::RangedAudioParameter& parameter;
+    juce::UndoManager* parameterUndoManager{nullptr};
     std::unique_ptr<juce::SliderParameterAttachment> attachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AAVerticalSSLFader)

@@ -34,8 +34,11 @@ public:
             buttons[index]->onClick = [this, index]
             {
                 attachment->setValueAsCompleteGesture ((float) index);
-                repaint();
+                resized();
             };
+
+        for (auto index = 0; index < juce::jmin (buttons.size(), nameText.size()); ++index)
+            addAndMakeVisible (printedNames.add (new AAUITools::PrintedText (nameText[index], juce::Colours::black)));
 
         createAttachment (nullptr);
     }
@@ -53,50 +56,36 @@ public:
 
     void paint (juce::Graphics& g) override
     {
-        housing->drawWithin (g, getLocalBounds().toFloat(), juce::RectanglePlacement::stretchToFit, 1.f);
-    }
-
-    void paintOverChildren (juce::Graphics& g) override
-    {
-        const auto textCount = juce::jmin (buttons.size(), nameText.size());
-        for (auto index = 0; index < textCount; ++index)
-        {
-            const auto textBounds = buttons[index]->getBounds().toFloat();
-            const auto isSelected = buttons[index]->getToggleState();
-            const auto selectedFont = AAFonts::interBold (textBounds.getHeight() * 0.475f).withExtraKerningFactor(0.01f);
-            const auto unselectedFont = AAFonts::interMedium (textBounds.getHeight() * 0.475f).withExtraKerningFactor(0.01f);
-            g.setColour (isSelected ? juce::Colours::black : juce::Colours::black.withAlpha (0.9f));
-            g.setFont (isSelected ? selectedFont : unselectedFont);
-            g.drawFittedText (nameText[index], textBounds.toNearestInt(), juce::Justification::centred, 1);
-            const auto delta = textBounds.getWidth() * 0.01f;
-            g.setColour (juce::Colours::black.withAlpha (0.1f));
-            g.drawFittedText (nameText[index], textBounds.translated(delta, delta).toNearestInt(), juce::Justification::centred, 1);
-        }
+        housing->drawWithin (g, housingBounds, juce::RectanglePlacement::centred, 1.f);
     }
 
     void resized() override
     {
         const auto boundsF = getLocalBounds().toFloat();
-        const auto boundsFWidth = boundsF.getWidth();
-        const auto boundsFHeight = boundsF.getHeight();
+        housingBounds = juce::RectanglePlacement (juce::RectanglePlacement::centred).appliedTo (housing->getDrawableBounds(), boundsF);
 
-        const auto capsArea = boundsF.withSizeKeepingCentre (boundsFWidth * capsToWidthRatio, boundsFHeight * capsToHeightRatio);
+        const auto capsArea = housingBounds.withSizeKeepingCentre (housingBounds.getWidth() * capsToWidthRatio, housingBounds.getHeight() * capsToHeightRatio);
         const auto cellWidth = capsArea.getWidth() / (float) buttons.size();
 
         for (auto index = 0; index < buttons.size(); ++index)
             buttons[index]->setBounds (capsArea.withWidth (cellWidth).withX (capsArea.getX() + cellWidth * (float) index).toNearestIntEdges());
-    }
 
-    float getImageAspectRatio() const
-    {
-        const auto imageBounds = housing->getDrawableBounds();
-        return imageBounds.getWidth() / imageBounds.getHeight();
+        for (auto index = 0; index < printedNames.size(); ++index)
+        {
+            const auto textBounds = buttons[index]->getBounds().toFloat();
+            const auto isSelected = buttons[index]->getToggleState();
+            const auto fontHeight = textBounds.getHeight() * 0.475f;
+            printedNames[index]->setFont (isSelected ? AAFonts::interBold (fontHeight) : AAFonts::interSemiBold (fontHeight));
+            printedNames[index]->setAlpha (isSelected ? 1.0f : 0.9f);
+            printedNames[index]->setBounds (textBounds.toNearestInt());
+        }
     }
-
-    // the share of the housing image the caps sit on, the rest being the frame around them
-    float capsToWidthRatio {0.9354f}, capsToHeightRatio {0.8296f};
 
 private:
+    // the share of the housing image the caps sit on, the rest being the frame and shadow around them
+    float capsToWidthRatio {0.9095f}, capsToHeightRatio {0.6401f};
+    juce::Rectangle<float> housingBounds;
+
     void createAttachment (juce::UndoManager* undoManager)
     {
         attachment = std::make_unique<juce::ParameterAttachment> (
@@ -106,7 +95,7 @@ private:
                 buttons[juce::jlimit (0, buttons.size() - 1, juce::roundToInt (newValue))]
                     ->setToggleState (true, juce::dontSendNotification);
 
-                repaint();
+                resized();
             },
             undoManager);
 
@@ -115,10 +104,11 @@ private:
 
     std::unique_ptr<juce::Drawable> housing = juce::Drawable::createFromImageData (BinaryData::neveRadioStrip_bg_png, BinaryData::neveRadioStrip_bg_pngSize);
     std::unique_ptr<juce::Drawable> capOff = juce::Drawable::createFromImageData (BinaryData::neveRadioCap_off_v2_png, BinaryData::neveRadioCap_off_v2_pngSize);
-    std::unique_ptr<juce::Drawable> capOn = juce::Drawable::createFromImageData (BinaryData::neveRadioCap_on_v2_png, BinaryData::neveRadioCap_on_v2_pngSize);
+    std::unique_ptr<juce::Drawable> capOn = juce::Drawable::createFromImageData (BinaryData::neveRadioCap_on_v3_png, BinaryData::neveRadioCap_on_v3_pngSize);
     juce::RangedAudioParameter& parameter;
     juce::StringArray nameText;
     juce::OwnedArray<juce::DrawableButton> buttons;
+    juce::OwnedArray<AAUITools::PrintedText> printedNames;
     std::unique_ptr<juce::ParameterAttachment> attachment;
     int radioGroupId {188889};
 

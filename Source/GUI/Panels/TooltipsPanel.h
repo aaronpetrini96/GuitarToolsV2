@@ -20,16 +20,11 @@ public:
     void paint (juce::Graphics& g) override
     {
         const auto boundsF = getLocalBounds().toFloat();
-        const auto boundsFWidth = boundsF.getWidth();
         const auto boundsFHeight = boundsF.getHeight();
-
-        g.fillAll (juce::Colours::black);
-        g.setGradientFill (juce::ColourGradient::horizontal (GTColors::headerPanelEnd, 0.f, GTColors::headerPanelStart, boundsFWidth));
-        g.setOpacity (0.9f);
+        g.setColour(GTColors::popupDarkBackground);
         g.fillRect (boundsF);
-
-        g.setColour (GTColors::almostWhite.withAlpha(0.9f));
-        g.setFont (AAFonts::interBold (boundsFHeight * 0.62f).withExtraKerningFactor(0.06F));
+        g.setColour (GTColors::sectionTitleText);
+        g.setFont (AAFonts::ibmPlexSansMedium (boundsFHeight * 0.65f).withExtraKerningFactor(0.04f));
         g.drawText (tooltipText, boundsF, juce::Justification::centred);
     }
 

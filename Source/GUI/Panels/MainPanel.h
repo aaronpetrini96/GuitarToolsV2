@@ -12,7 +12,7 @@
 #include "GUI/Components/AANotchSSLKnob.h"
 #include "GUI/Components/AANeveRadioButtons.h"
 #include "GUI/Components/AASquareSSLButton.h"
-#include "GUI/Components/AAIconAndTextButton.h"
+#include "GUI/Components/AARectSSLButton.h"
 #include "GUI/Components/GTLevelMeter.h"
 
 
@@ -23,30 +23,21 @@ public:
 
     void paint (juce::Graphics& g) override;
     void resized() override;
-    void resizeLevelsSection(const juce::Rectangle<float>&);
+    void resizeLevelsSectionCentred(const juce::Rectangle<float>&);
     void resizeKnobs(const juce::Rectangle<float>&);
-    void resizeMagicButtons(const juce::Rectangle<float>&);
+    void resizeMagicButtons();
 
-    float sectionTitleH {0};
-    // float dividerThickness{0.f};
+    float sectionTitleH {0.f};
     float sideSectionPOW {0.32f};
 
 private:
     GuitarToolsAudioProcessor& audioProcessor;
-
-    juce::Image background {juce::ImageCache::getFromMemory(BinaryData::mainPanelBackgroundTextured_png, BinaryData::mainPanelBackgroundTextured_pngSize)};
-    // juce::Image background {juce::ImageCache::getFromMemory(BinaryData::mainPanelBackground_png, BinaryData::mainPanelBackground_pngSize)};
+    float knobSizeReference {0.f};
+    const juce::StringArray levelScaleLabels {"  0", " -9", "-20", "-48"};
 
     const juce::Colour textWhiteColor = GTColors::almostWhite.withAlpha(0.9f);
-    void setupLabels(juce::Label*, juce::Colour, juce::Justification);
-    static void setIbmMediumFont (juce::Label& l, const float fontHeight)
-    {
-        l.setFont (AAFonts::ibmPlexSansMedium(fontHeight).withExtraKerningFactor(0.04f));
-    }
 
     juce::Rectangle<float> cutFiltersArea, buttonsArea, shelfFiltersArea, plateBounds;
-    // juce::Rectangle<float> magicDividerBounds;
-    // juce::Label cutFiltersGroupLabel {{}, "TONE RANGE"}, magicButtonsGroupLabel {{}, "CLEAN-UP"}, shelfFiltersGroupLabel {{}, "COLOR"};
 
     AALightStrokeKnob lowCutFreqKnob {*audioProcessor.treeState.getParameter (ParamIDs::getLowCutFreqName()), "LOW CUT", false, false};
     AALightStrokeKnob highCutFreqKnob {*audioProcessor.treeState.getParameter (ParamIDs::getHighCutFreqName()), "HIGH CUT", false, true};
@@ -58,35 +49,25 @@ private:
     AANeveRadioButtons lowCutSlopeButtons {*audioProcessor.treeState.getParameter (ParamIDs::getLowCutSlopeName()), {"12", "24", "36", "48"}};
     AANeveRadioButtons highCutSlopeButtons {*audioProcessor.treeState.getParameter (ParamIDs::getHighCutSlopeName()), {"12", "24", "36", "48"}};
 
-    juce::Label lowCutSlopeLabel {"lowCutSlopeLabel", "SLOPE"};
-    juce::Label highCutSlopeLabel {"highCutSlopeLabel", "SLOPE"};
-    juce::Label presenceModeLabel {"presenceModeLabel", "MODE"};
-    juce::Label depthModeLabel {"depthModeLabel", "MODE"};
+    AAUITools::PrintedText lowCutSlopeLabel  {"SLOPE", textWhiteColor};
+    AAUITools::PrintedText highCutSlopeLabel {"SLOPE", textWhiteColor};
+    AAUITools::PrintedText presenceModeLabel {"MODE", textWhiteColor};
+    AAUITools::PrintedText depthModeLabel    {"MODE", textWhiteColor};
+    AAUITools::PrintedText levelsTitle {"LEVELS", GTColors::almostWhite};
 
-    juce::Label resoBypassLabel{"resoBypassLabel", "KILL\nRESO"};
-    juce::Label compBypassLabel{"compBypassLabel", "TAME\nLOWS"};
-    juce::Label mudBypassLabel{"mudBypassLabel", "CLEAR\nMUD"};
-    AASquareSSLButton resoActiveButton {*audioProcessor.treeState.getParameter (ParamIDs::getResoActiveName()), resoBypassLabel.getText()};
-    AASquareSSLButton mudActiveButton {*audioProcessor.treeState.getParameter (ParamIDs::getMudActiveName()), mudBypassLabel.getText()};
-    AASquareSSLButton compActiveButton {*audioProcessor.treeState.getParameter (ParamIDs::getCompActiveName()), compBypassLabel.getText()};
+    AASquareSSLButton resoActiveButton {*audioProcessor.treeState.getParameter (ParamIDs::getResoActiveName()), "KILL\nRESO"};
+    AASquareSSLButton mudActiveButton {*audioProcessor.treeState.getParameter (ParamIDs::getMudActiveName()), "CLEAR\nMUD"};
+    AASquareSSLButton compActiveButton {*audioProcessor.treeState.getParameter (ParamIDs::getCompActiveName()), "TAME\nLOWS"};
 
-    std::unique_ptr<juce::Drawable> modeSwitchOn {juce::Drawable::createFromImageData (BinaryData::matchButton_on_png, BinaryData::matchButton_on_pngSize)};
-    std::unique_ptr<juce::Drawable> modeSwitchOff {juce::Drawable::createFromImageData (BinaryData::matchButton_off_png, BinaryData::matchButton_off_pngSize)};
-    juce::DrawableButton resoModeSwitch {"resoModeSwitch", juce::DrawableButton::ImageFitted};
-    juce::DrawableButton compModeSwitch {"compModeSwitch", juce::DrawableButton::ImageFitted};
-    juce::DrawableButton mudModeSwitch {"mudModeSwitch", juce::DrawableButton::ImageFitted};
-    std::unique_ptr<juce::ButtonParameterAttachment> resoModeSwitchAttachment, compModeSwitchAttachment, mudModeSwitchAttachment;
+    AARectSSLButton resoModeSwitch {*audioProcessor.treeState.getParameter (ParamIDs::getResoExtremeActiveName()), "MAX"};
+    AARectSSLButton compModeSwitch {*audioProcessor.treeState.getParameter (ParamIDs::getCompExtremeActiveName()), "MAX"};
+    AARectSSLButton mudModeSwitch {*audioProcessor.treeState.getParameter (ParamIDs::getMudExtremeActiveName()), "MAX"};
 
-    juce::Label inputGainLabel {{}, "IN"};
-    juce::Label outputGainLabel {{}, "OUT"};
-    AANotchSSLKnob inputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getInputGainName()), &inputGainLabel};
-    AANotchSSLKnob outputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getOutputGainName()), &outputGainLabel};
-    // juce::Label levelsLabel {{}, "LEVELS"};
-    // juce::Label inputTitleLabel {{}, "INPUT"};
-    // juce::Label outputTitleLabel {{}, "OUTPUT"};
+    AANotchSSLKnob inputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getInputGainName()), "IN"};
+    AANotchSSLKnob outputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getOutputGainName()), "OUT"};
 
-    GTLevelMeter outputLevelMeter{audioProcessor.outputLevelLeft, audioProcessor.outputLevelRight};
-    GTLevelMeter inputLevelMeter{audioProcessor.inputLevelLeft, audioProcessor.inputLevelRight};
+    GTLevelMeter outputLevelMeter{audioProcessor.outputLevelLeft, audioProcessor.outputLevelRight, GTLevelMeter::ScalePlacement::none};
+    GTLevelMeter inputLevelMeter{audioProcessor.inputLevelLeft, audioProcessor.inputLevelRight, GTLevelMeter::ScalePlacement::none};
     std::unique_ptr<juce::Drawable> levelMatchButtonOn {juce::Drawable::createFromImageData (BinaryData::matchButton_on_png, BinaryData::matchButton_on_pngSize)};
     std::unique_ptr<juce::Drawable> levelMatchButtonOff {juce::Drawable::createFromImageData (BinaryData::matchButton_off_png, BinaryData::matchButton_off_pngSize)};
     juce::DrawableButton levelMatchButton {"levelMatchButton", juce::DrawableButton::ImageFitted};

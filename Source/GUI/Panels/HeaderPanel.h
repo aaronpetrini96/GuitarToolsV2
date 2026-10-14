@@ -30,11 +30,11 @@ public:
     juce::DrawableButton settingsButton {"Settings", juce::DrawableButton::ImageFitted};
     // juce::DrawableButton resizeButton {"GUI Size", juce::DrawableButton::ImageFitted};
     juce::DrawableButton bypassButton {"Bypass", juce::DrawableButton::ImageFitted};
+    float logoCentreXPOW {0.16f};
 
 private:
     void setupIconButton (juce::DrawableButton& iconButton, const void* iconData, int iconDataSize);
     void setupPresetBox ();
-    juce::Rectangle<float> presetBoxBoundsExtended;
 
     void changeListenerCallback (juce::ChangeBroadcaster*) override;
 
@@ -46,7 +46,8 @@ private:
     juce::UndoManager& undoManager;
     AAPresetBox& presetBox;
 
-    juce::Image guitarToolsLogo = juce::ImageCache::getFromMemory (BinaryData::guitarTools2Logo2_png, BinaryData::guitarTools2Logo2_pngSize);
+    juce::Image guitarToolsLogo = juce::ImageCache::getFromMemory (BinaryData::GTLogoV2Shadow_png, BinaryData::GTLogoV2Shadow_pngSize);
+    juce::Rectangle<float> presetBoxBounds;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HeaderPanel)
 };

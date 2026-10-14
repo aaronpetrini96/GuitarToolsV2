@@ -21,12 +21,12 @@ public:
     {
     }
 
-    void drawButtonText (juce::Graphics& g, juce::TextButton& button, bool, bool) override
+    void drawButtonText (juce::Graphics& g, juce::TextButton& button, bool highlighted, bool) override
     {
         const auto boundsF = button.getLocalBounds().toFloat();
 
-        g.setColour (GTColors::sectionTitleText);
-        g.setFont (AAFonts::montserratMedium (boundsF.getHeight() * 0.65f));
+        g.setColour (highlighted ? GTColors::sectionTitleText.withMultipliedBrightness(2.f) : GTColors::sectionTitleText);
+        g.setFont (AAFonts::montserratMedium (boundsF.getHeight() * AAUITools::fontHeightPOH * 0.95f));
         g.drawFittedText (button.getButtonText(), boundsF.toNearestInt(), juce::Justification::centred, 1);
     }
 
@@ -66,34 +66,38 @@ public:
     void paint(juce::Graphics& g) override
     {
         const auto boundsF = getLocalBounds().toFloat();
+        const auto outlineThickness = boundsF.getHeight() * AAUITools::outlineThicknessPOH * 0.75f;
+        const auto corner = boundsF.getHeight() * AAUITools::cornerPOH;
         g.setColour(GTColors::presetBox);
-        g.fillRoundedRectangle(boundsF.withSizeKeepingCentre(boundsF.getWidth() * 0.7f, boundsF.getHeight()), boundsF.getHeight() * 0.225f);
+        g.fillRoundedRectangle(boxBounds, corner);
+        g.setColour (GTColors::dividerLinesStart);
+        g.drawRoundedRectangle (boxBounds.reduced (outlineThickness * 0.5f), corner, outlineThickness);
     }
 
     void resized() override
     {
-        const auto b = getLocalBounds().toFloat();
-        const auto boundsF = b.withSizeKeepingCentre(b.getWidth(), b.getHeight() * 0.88f);
+        const auto boundsF = getLocalBounds().toFloat();
         const auto boundsFWidth = boundsF.getWidth();
         const auto boundsFHeight = boundsF.getHeight();
 
-        const auto nameButtonBounds = boundsF.withSizeKeepingCentre (boundsFWidth * 0.575f, boundsFHeight);
+        boxBounds = boundsF.withSizeKeepingCentre (boundsFWidth * 0.7f, boundsFHeight);
+        const auto nameButtonBounds = boxBounds.reduced (boundsFHeight, 0.0f);
         nameButton.setBounds (nameButtonBounds.toNearestInt());
 
-        const auto arrowSize = boundsFHeight * 0.7f;
-        const auto arrowBounds = nameButtonBounds.withSizeKeepingCentre (arrowSize, arrowSize);
-        leftArrowButton.setBounds (arrowBounds.withRightX (nameButtonBounds.getX()).toNearestInt());
-        rightArrowButton.setBounds (arrowBounds.withX (nameButtonBounds.getRight()).toNearestInt());
+        const auto arrowSize = boundsFHeight * 0.6f;
+        leftArrowButton.setBounds (boxBounds.withRight (nameButtonBounds.getX()).withSizeKeepingCentre (arrowSize, arrowSize).toNearestInt());
+        rightArrowButton.setBounds (boxBounds.withLeft (nameButtonBounds.getRight()).withSizeKeepingCentre (arrowSize, arrowSize).toNearestInt());
     }
 
     std::function<void()> onNameClicked;
 
 private:
     PresetManager& presetManager;
+    PresetBoxLAF presetBoxLAF;
     juce::TextButton nameButton;
     juce::DrawableButton leftArrowButton {"Previous preset", juce::DrawableButton::ImageFitted};
     juce::DrawableButton rightArrowButton {"Next preset", juce::DrawableButton::ImageFitted};
-    PresetBoxLAF presetBoxLAF;
+    juce::Rectangle<float> boxBounds;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AAPresetBox)
 };

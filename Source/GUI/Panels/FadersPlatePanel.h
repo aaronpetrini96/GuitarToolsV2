@@ -31,14 +31,13 @@ public:
         const auto boundsF = getLocalBounds().toFloat();
         g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
         for (const auto& trackBounds : {resoTrackBounds, mudTrackBounds, compTrackBounds})
-            g.drawImage(trackImage, trackBounds, juce::RectanglePlacement::centred);
+            g.drawImage(trackImage, trackBounds, juce::RectanglePlacement::fillDestination);
 
         if (screw.isValid())
         {
             const auto screwBounds = boundsF.withSize(screwSize, screwSize);
-            const auto screwGap = screwSize * 1.3f;
-            const auto screwsTopCY = screwGap;
-            const auto screwsBottomCY = boundsF.getHeight() - screwGap;
+            const auto screwsTopCY = screwSize;
+            const auto screwsBottomCY = boundsF.getHeight() - screwSize;
             const auto faderCentreX = faderBounds.getCentreX();
             g.drawImage(screw, screwBounds.withCentre({faderCentreX,                screwsTopCY}), imgPlacement);
             g.drawImage(screw, screwBounds.withCentre({faderCentreX,                screwsBottomCY}), imgPlacement);
@@ -60,13 +59,13 @@ public:
         resoFreqFader.setBounds (faderBounds.translated(-faderSpacing, 0.f).toNearestInt());
         compAmountFader.setBounds (faderBounds.translated(faderSpacing, 0.f).toNearestInt());
 
-        const auto trackHeight = boundsFHeight * 0.795f;
+        const auto trackHeight = boundsFHeight * 0.8f;
         const auto trackWidth = trackHeight * (float) trackImage.getWidth() / (float) trackImage.getHeight();
         const auto trackBounds = faderBounds.withSizeKeepingCentre(trackWidth, trackHeight);
         mudTrackBounds = trackBounds;
         resoTrackBounds = trackBounds.translated(-faderSpacing, 0.f);
         compTrackBounds = trackBounds.translated(faderSpacing, 0.f);
-        screwSize = trackWidth * 2.f;
+        screwSize = trackWidth * 2.5f;
     }
 
     void setFaderSpacing (const float newFaderSpacing)
@@ -78,14 +77,14 @@ public:
     }
 
     AAVerticalSSLFader resoFreqFader, mudFreqFader, compAmountFader;
-
+    float faderSpacing {0.f};
 private:
     const juce::RectanglePlacement imgPlacement {juce::RectanglePlacement::fillDestination};
-    float faderSpacing {0.f};
+
     float screwSize{0.f};
     juce::Rectangle<float> faderBounds;
     juce::Image screw {juce::ImageCache::getFromMemory(BinaryData::screwDirty_png, BinaryData::screwDirty_pngSize)};
-    juce::Image trackImage = juce::ImageCache::getFromMemory (BinaryData::faderTrackV2_png, BinaryData::faderTrackV2_pngSize);
+    juce::Image trackImage = juce::ImageCache::getFromMemory (BinaryData::faderTrackV2_copy_png, BinaryData::faderTrackV2_copy_pngSize);
     juce::Rectangle<float> resoTrackBounds, mudTrackBounds, compTrackBounds;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FadersPlatePanel)
 };

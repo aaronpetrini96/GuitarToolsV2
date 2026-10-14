@@ -21,7 +21,7 @@ public:
         : parameter (parameterToUse), nameText (std::move(newNameText))
     {
         setComponentID (parameter.getParameterID());
-        button.setImages (buttonOff.get(), nullptr, nullptr, nullptr, buttonOn.get());
+        button.setImages (buttonOff.get(), nullptr, buttonDownOff.get(), nullptr, buttonOn.get(), nullptr, buttonDown.get());
         button.setClickingTogglesState (true);
         button.setColour (juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
         button.setColour (juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
@@ -31,23 +31,11 @@ public:
                 onClick();
         };
         addAndMakeVisible (button);
+        addAndMakeVisible (printedName);
+        button.onStateChange = [this] { resized(); };
 
         attachment = std::make_unique<juce::ButtonParameterAttachment> (parameter, button, nullptr);
         attachment->sendInitialUpdate();
-    }
-
-    void paintOverChildren (juce::Graphics& g) override
-    {
-        g.setColour (juce::Colours::black);
-        if (nameText.isEmpty())
-            return;
-        const auto boundsF =getLocalBounds().toFloat();
-        const auto textBounds = boundsF.withSizeKeepingCentre(boundsF.getWidth() * 0.65f, boundsF.getHeight() * 0.7f);
-        const auto isSelected = button.getToggleState();
-        const auto fontHeight = textBounds.getHeight() * (isSelected ? 0.275f : 0.28f);
-        g.setFont (AAFonts::interBold (fontHeight));
-        g.setColour (juce::Colours::black);
-        g.drawFittedText (nameText, textBounds.toNearestInt(), juce::Justification::centred, 2);
     }
 
     void resized() override
@@ -55,6 +43,11 @@ public:
         const auto boundsF = getLocalBounds().toFloat();
         const auto buttonSize = juce::jmin (boundsF.getWidth(), boundsF.getHeight());
         button.setBounds (boundsF.withSizeKeepingCentre (buttonSize, buttonSize).toNearestInt());
+
+        const auto textBounds = boundsF.withSizeKeepingCentre (boundsF.getWidth() * 0.65f, boundsF.getHeight() * 0.7f);
+        const auto fontHeight = textBounds.getHeight() * 0.285f;
+        printedName.setFont (button.getToggleState() ? AAFonts::interBold (fontHeight) : AAFonts::interSemiBold (fontHeight));
+        printedName.setBounds (textBounds.toNearestInt());
     }
 
     bool getToggleState() const
@@ -76,11 +69,14 @@ public:
     std::function<void()> onClick;
 
 private:
-    std::unique_ptr<juce::Drawable> buttonOn = juce::Drawable::createFromImageData (BinaryData::defON2Neutral_png, BinaryData::defON2Neutral_pngSize);
-    std::unique_ptr<juce::Drawable> buttonOff = juce::Drawable::createFromImageData (BinaryData::defOffNeutral_png, BinaryData::defOffNeutral_pngSize);
+    std::unique_ptr<juce::Drawable> buttonOn = juce::Drawable::createFromImageData (BinaryData::defON22Neutral_png, BinaryData::defON22Neutral_pngSize);
+    std::unique_ptr<juce::Drawable> buttonOff = juce::Drawable::createFromImageData (BinaryData::defOff22Neutral_png, BinaryData::defOff22Neutral_pngSize);
+    std::unique_ptr<juce::Drawable> buttonDown = juce::Drawable::createFromImageData (BinaryData::defDown22Neutral_png, BinaryData::defDown22Neutral_pngSize);
+    std::unique_ptr<juce::Drawable> buttonDownOff = juce::Drawable::createFromImageData (BinaryData::defDownOff22Neutral_png, BinaryData::defDownOff22Neutral_pngSize);
     juce::DrawableButton button {{}, juce::DrawableButton::ImageFitted};
     juce::RangedAudioParameter& parameter;
     juce::String nameText;
+    AAUITools::PrintedText printedName {nameText, juce::Colours::black};
     std::unique_ptr<juce::ButtonParameterAttachment> attachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AASquareSSLButton)

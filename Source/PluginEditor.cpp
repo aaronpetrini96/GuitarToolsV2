@@ -191,11 +191,11 @@ void GuitarToolsAudioProcessorEditor::resized()
     const auto popupsY = mainPanelBounds.getHeight() * 0.06f;
 
     const auto sizeOptionsWidth = boundsFWidth * 0.175f;
-    const auto sizeOptionsHeight = rowH * static_cast<float>(resizeOptionsPopup.getNumRows());
+    const auto sizeOptionsHeight = rowH * resizeOptionsPopup.getNumRows();
     resizeOptionsPopup.setBounds (juce::Rectangle<float> (sizeOptionsWidth, sizeOptionsHeight).withPosition (resizeBtnBounds.getCentreX() - sizeOptionsWidth, resizeBtnBounds.getCentreY() - sizeOptionsHeight).toNearestInt());
 
-    const auto settingsOptionsWidth = boundsFWidth * 0.225f;
-    const auto settingsOptionsHeight = rowH * static_cast<float>(settingsOptionsPopup.getNumRows());
+    const auto settingsOptionsWidth = boundsFWidth * 0.295f;
+    const auto settingsOptionsHeight = rowH * settingsOptionsPopup.getNumRows();
     settingsOptionsPopup.setBounds (mainPanelBounds.withSize(settingsOptionsWidth, settingsOptionsHeight).withY(popupsY).withRightX(static_cast<float>(headerPanel.settingsButton.getRight())).toNearestInt());
 
     const auto presetBoxBounds = getLocalArea (&headerPanel, presetBox.getBounds().toFloat());

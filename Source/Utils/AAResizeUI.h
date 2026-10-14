@@ -77,7 +77,7 @@ public:
     AAListOptionsPopup::Item getMakeDefaultOption() const
     {
         const auto isAlreadyDefault = juce::approximatelyEqual (currentScale, getDefaultScale());
-        return {"Save UI Size", [this] { makeCurrentSizeDefault(); }, ! isAlreadyDefault};
+        return {"Set UI Size As Default", [this] { makeCurrentSizeDefault(); }, ! isAlreadyDefault};
     }
 
     void makeCurrentSizeDefault() const

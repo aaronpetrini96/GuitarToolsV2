@@ -17,12 +17,6 @@ class PresetBoxLAF : public juce::LookAndFeel_V4
 public:
     PresetBoxLAF() = default;
 
-    static PresetBoxLAF* get()
-    {
-        static PresetBoxLAF instance;
-        return &instance;
-    }
-
     void drawButtonBackground(juce::Graphics&, juce::Button&, const juce::Colour& , bool , bool ) override
     {
     }
@@ -45,7 +39,7 @@ class AAPresetBox : public juce::Component
 public:
     explicit AAPresetBox (PresetManager& presetManagerToUse) : presetManager (presetManagerToUse)
     {
-        nameButton.setLookAndFeel (PresetBoxLAF::get());
+        nameButton.setLookAndFeel (&presetBoxLAF);
         nameButton.setColour(juce::TextButton::ColourIds::buttonColourId, GTColors::transparent);
         nameButton.setColour(juce::TextButton::ColourIds::buttonOnColourId, GTColors::transparent);
         nameButton.onClick = [this] { if (onNameClicked != nullptr) onNameClicked(); };
@@ -99,6 +93,7 @@ private:
     juce::TextButton nameButton;
     juce::DrawableButton leftArrowButton {"Previous preset", juce::DrawableButton::ImageFitted};
     juce::DrawableButton rightArrowButton {"Next preset", juce::DrawableButton::ImageFitted};
+    PresetBoxLAF presetBoxLAF;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AAPresetBox)
 };

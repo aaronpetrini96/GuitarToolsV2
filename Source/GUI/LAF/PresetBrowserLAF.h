@@ -32,12 +32,6 @@ public:
         setColour (outlineColourId, GTColors::dividerLinesStart);
     }
 
-    static PresetBrowserLAF* get()
-    {
-        static PresetBrowserLAF instance;
-        return &instance;
-    }
-
     void drawMenuListBackground (juce::Graphics& g, juce::Rectangle<float> bounds, const float numRows)
     {
         //bounds

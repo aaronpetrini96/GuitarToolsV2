@@ -19,7 +19,7 @@ public:
         : action (popupAction)
     {
         setAlwaysOnTop (true);
-        setLookAndFeel (PresetPopupLAF::get());
+        setLookAndFeel (&presetPopupLAF);
 
         titleLabel.setText (action == Action::save ? "SAVE PRESET" : "DELETE PRESET", juce::dontSendNotification);
         titleLabel.setJustificationType (juce::Justification::centred);
@@ -33,12 +33,10 @@ public:
             nameEditor.setInputRestrictions (24);
             nameEditor.onTextChange = [this]
             {
-                confirmButton.setEnabled (nameEditor.getText().trim().isNotEmpty());
+                confirmButton.setEnabled (juce::File::createLegalFileName (nameEditor.getText().trim()).isNotEmpty() && ! (isNameReserved != nullptr && isNameReserved (nameEditor.getText())));
                 isConfirmingOverwrite = false;
                 confirmButton.setButtonText ("SAVE");
             };
-            nameEditor.setColour (juce::TextEditor::backgroundColourId, GTColors::presetBox);
-            nameEditor.setColour (juce::TextEditor::textColourId, GTColors::sectionTitleText);
             addAndMakeVisible (nameEditor);
         }
         else
@@ -86,7 +84,7 @@ public:
         }
 
         nameEditor.setText (presetName, juce::dontSendNotification);
-        confirmButton.setEnabled (presetName.trim().isNotEmpty());
+        confirmButton.setEnabled (juce::File::createLegalFileName (presetName.trim()).isNotEmpty() && ! (isNameReserved != nullptr && isNameReserved (presetName)));
         isConfirmingOverwrite = false;
         confirmButton.setButtonText ("SAVE");
         nameEditor.grabKeyboardFocus();
@@ -95,8 +93,7 @@ public:
 
     void paint (juce::Graphics& g) override
     {
-        if (auto* presetPopupLAF = dynamic_cast<PresetPopupLAF*> (&getLookAndFeel()))
-            presetPopupLAF->drawPopupBackground (g, getLocalBounds().toFloat());
+        presetPopupLAF.drawPopupBackground (g, getLocalBounds().toFloat(), numRows);
     }
 
     void resized() override
@@ -105,12 +102,12 @@ public:
         const auto boundsFWidth = boundsF.getWidth();
         const auto boundsFHeight = boundsF.getHeight();
         const auto lineHeight = boundsFHeight * 0.2f;
-        const auto fontHeight = lineHeight * PresetPopupLAF::get()->fontPOH;
+        const auto fontHeight = lineHeight * presetPopupLAF.fontPOH;
 
         titleLabel.setFont (AAFonts::interMedium (fontHeight));
         titleLabel.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.1f).toNearestInt());
 
-        nameEditor.applyFontToAllText (AAFonts::montserratMedium (fontHeight));
+        nameEditor.applyFontToAllText (AAFonts::montserratMedium (fontHeight * 0.95f));
         nameEditor.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.4f).toNearestInt());
 
         messageLabel.setFont (AAFonts::interMedium (fontHeight));
@@ -123,9 +120,12 @@ public:
 
     std::function<void (const juce::String& presetName)> onConfirm;
     std::function<bool (const juce::String& presetName)> presetExists;
+    std::function<bool (const juce::String& presetName)> isNameReserved;
+    float numRows {5.f};
 
 private:
     const Action action;
+    PresetPopupLAF presetPopupLAF;
     juce::Label titleLabel {"titleLabel", ""};
     juce::Label messageLabel {"messageLabel", ""};
     juce::TextEditor nameEditor;

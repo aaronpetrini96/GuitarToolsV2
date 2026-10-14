@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(GuitarTools2 VERSION 1.0.0)
+project(GuitarTools2 VERSION 2.0.1)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -40,7 +40,7 @@ juce_add_plugin(GuitarTools
     IS_MIDI_EFFECT FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     COPY_PLUGIN_AFTER_BUILD TRUE
-    PLUGIN_MANUFACTURER_CODE Manu
+    PLUGIN_MANUFACTURER_CODE APau
     PLUGIN_CODE Uwz1
     FORMATS AU VST3 Standalone
     PRODUCT_NAME "GuitarTools2")

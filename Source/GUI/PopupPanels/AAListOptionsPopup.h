@@ -20,9 +20,11 @@ public:
         std::function<void()> onSelected;
         bool isEnabled {true};
         bool isSelected {false};
+        bool isCheckbox {false};
+        juce::String tooltip;
     };
 
-    AAListOptionsPopup()
+    explicit AAListOptionsPopup (const juce::String& titleToUse) : title (titleToUse)
     {
         setAlwaysOnTop (true);
         setLookAndFeel (&listOptionsLAF);
@@ -39,12 +41,14 @@ public:
 
         for (const auto& item : newItems)
         {
-            auto* row = rows.add (new juce::TextButton (item.text));
+            auto* row = rows.add (item.isCheckbox ? static_cast<juce::Button*> (new juce::ToggleButton (item.text)) : new juce::TextButton (item.text));
             row->setEnabled (item.isEnabled);
             row->setToggleState (item.isSelected, juce::dontSendNotification);
-            row->onClick = [this, onSelected = item.onSelected]
+            row->setTooltip (item.tooltip);
+            row->onClick = [this, onSelected = item.onSelected, closesPopup = ! item.isCheckbox]
             {
-                setVisible (false);
+                if (closesPopup)
+                    setVisible (false);
 
                 if (onSelected != nullptr)
                     onSelected();
@@ -55,29 +59,34 @@ public:
         resized();
     }
 
-    int getNumRows() const { return rows.size(); }
+    float getNumRows() const { return (float) rows.size() + titleHeightRowRatio; }
 
     void paint (juce::Graphics& g) override
     {
-        listOptionsLAF.drawListOptionsBackground (g, getLocalBounds().toFloat(), rows.size(), drawRowDividers);
+        listOptionsLAF.drawListOptionsBackground (g, getLocalBounds().toFloat(), getNumRows(), drawRowDividers);
+        listOptionsLAF.drawListOptionsTitle (g, titleBounds, title);
     }
 
     void resized() override
     {
         const auto boundsF = getLocalBounds().toFloat();
-        const auto rowHeight = boundsF.getHeight() / (float) juce::jmax (1, rows.size());
+        const auto rowHeight = boundsF.getHeight() / getNumRows();
+        titleBounds = boundsF.withHeight (rowHeight * titleHeightRowRatio);
 
         for (int rowIndex = 0; rowIndex < rows.size(); ++rowIndex)
-            rows[rowIndex]->setBounds (boundsF.withHeight (rowHeight).withY (rowHeight * (float) rowIndex).toNearestInt());
+            rows[rowIndex]->setBounds (boundsF.withHeight (rowHeight).withY (titleBounds.getBottom() + rowHeight * (float) rowIndex).toNearestInt());
     }
 
     bool drawRowDividers {false};
+    float titleHeightRowRatio {1.1f};
 
 protected:
     ListOptionsPopupLAF listOptionsLAF;
 
 private:
-    juce::OwnedArray<juce::TextButton> rows;
+    juce::String title;
+    juce::Rectangle<float> titleBounds;
+    juce::OwnedArray<juce::Button> rows;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AAListOptionsPopup)
 };

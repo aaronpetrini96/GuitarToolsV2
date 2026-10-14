@@ -26,6 +26,7 @@ namespace ParamIDs
     inline juce::String getCompAmountName() { return "Comp Amount"; }
     inline juce::String getCompActiveName() { return "Comp Active"; }
     inline juce::String getLoudnessMatchActiveName() {return "Loudness Match Active";}
+    inline juce::String getGainLimitActiveName() { return "Gain Limit Active"; }
     inline juce::String getResoExtremeActiveName() { return "Reso Mode Active"; }
     inline juce::String getMudExtremeActiveName() { return "Mud Mode Active"; }
     inline juce::String getCompExtremeActiveName() { return "Comp Mode Active"; }
@@ -95,6 +96,7 @@ namespace DefaultValues
     inline constexpr float outputGainValue {0.f};
 
     inline constexpr bool loudnessMatchActive {false};
+    inline constexpr bool gainLimitActive {false};
 
 }
 
@@ -125,9 +127,13 @@ namespace ParamTooltips
         {ParamIDs::getMudFreqName(),                "Mud frequency: Find the muddy frequency you want to reduce"},
         {ParamIDs::getCompActiveName(),             "Tame lows: Tighten the dynamics of your low end"},
         {ParamIDs::getCompAmountName(),             "Tame lows amount: Adjust how much the low end is tightened"},
-        {ParamIDs::getInputGainName(),              "Input: Adjust the level going into the plugin"},
+        {ParamIDs::getResoExtremeActiveName(),      "Kill reso max: Tame harsh resonances even harder"},
+        {ParamIDs::getMudExtremeActiveName(),       "Clear mud max: Reduce muddy buildup even harder"},
+        {ParamIDs::getCompExtremeActiveName(),      "Tame lows max: Tighten your low end even harder"},
+        {ParamIDs::getInputGainName(),             "Input: Adjust the level going into the plugin"},
         {ParamIDs::getOutputGainName(),             "Output: Adjust the level leaving the plugin"},
         {ParamIDs::getLoudnessMatchActiveName(),    "Match level: Match the output loudness to the input"},
+        {ParamIDs::getGainLimitActiveName(),        "Clip guard: Stop the gain from pushing the output into clipping"},
         {ParamIDs::getPluginBypassActiveName(),     "Bypass: Bypass all plugin processing"},
     };
 }

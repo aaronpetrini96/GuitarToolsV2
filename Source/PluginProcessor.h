@@ -147,6 +147,8 @@ private:
     juce::AudioParameterBool* pluginBypassActiveParam {nullptr};
     juce::LinearSmoothedValue<float> smoothedBypassValue {1.f};
     AALevelMatch levelMatch;
+    juce::AudioParameterBool* gainLimitActiveParam {nullptr};
+    float maxTotalGainDb {DefaultValues::gainRangeEnd * 2.f};
     juce::AudioBuffer<float> dryBuffer {};
 
     void updateGainState();

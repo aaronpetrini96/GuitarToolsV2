@@ -81,12 +81,12 @@ void HeaderPanel::resized()
     const auto iconButtonSize = boundsFHeight * 0.6f;
     const auto iconGap = boundsFWidth * 0.0125f;
     const auto iconButtonBounds = boundsF.withSizeKeepingCentre (iconButtonSize, iconButtonSize);
-    const auto bypassButtonBounds = iconButtonBounds.withRightX (boundsFWidth - iconGap);
-    settingsButton.setBounds (bypassButtonBounds.toNearestInt());
-    const auto settingsButtonBounds = iconButtonBounds.withRightX (bypassButtonBounds.getX() - iconGap);
-    bypassButton.setBounds (settingsButtonBounds.toNearestInt());
+    const auto settingsButtonBounds = iconButtonBounds.withRightX (boundsFWidth - iconGap);
+    settingsButton.setBounds (settingsButtonBounds.toNearestInt());
+    const auto bypassButtonBounds = iconButtonBounds.withRightX (settingsButtonBounds.getX() - iconGap);
+    bypassButton.setBounds (bypassButtonBounds.toNearestInt());
 
-    const auto undoRedoCentreX = (presetBoxBounds.getRight() + settingsButtonBounds.getX()) * 0.5f;
+    const auto undoRedoCentreX = (presetBoxBounds.getRight() + bypassButtonBounds.getX()) * 0.5f;
     const auto undoRedoOffset = (iconButtonSize + iconGap) * 0.5f;
     undoButton.setBounds (iconButtonBounds.withCentre ({undoRedoCentreX - undoRedoOffset, boundsF.getCentreY()}).toNearestInt());
     redoButton.setBounds (iconButtonBounds.withCentre ({undoRedoCentreX + undoRedoOffset, boundsF.getCentreY()}).toNearestInt());

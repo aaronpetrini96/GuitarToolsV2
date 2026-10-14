@@ -11,26 +11,18 @@ namespace  GTColors //project specific
 {
     inline juce::Colour transparent { juce::Colours::transparentBlack };
 
-    inline juce::Colour controlBackground { 50, 50, 55 };
     inline juce::Colour superDarkBackground {15, 15, 15};
     inline juce::Colour almostWhite {190, 190, 190};
     inline juce::Colour sectionTitleText {215, 215, 215};
-    inline juce::Colour darkGrey {36, 36, 36};
     inline juce::Colour activeNeonBlue { 64, 196, 255 };
 
     inline juce::Colour dividerLinesEnd{12, 12, 12};
     inline juce::Colour dividerLinesStart {5, 5, 5};
 
-    inline juce::Colour mainPanelTop {58, 60,65};
-    inline juce::Colour mainPanelBottom {42, 45,49};
+    inline juce::Colour headerPanelStart {12, 12, 16};
+    inline juce::Colour headerPanelEnd {22, 28, 45};
 
-    inline juce::Colour headerPanelStart {12, 12, 12};
-    inline juce::Colour headerPanelEnd {24, 27, 45};
-
-    inline juce::Colour popupDarkBackground {20, 24, 34};
-
-    inline juce::Colour fadersPlateGradientStart {juce::Colours::black.withAlpha (0.175f)};
-    inline juce::Colour fadersPlateGradientEnd {juce::Colours::black.withAlpha (0.225f)};
+    inline juce::Colour popupDarkBackground {30, 34, 44};
 
     inline juce::Colour iconSVGColor {100, 100, 100};
     inline juce::Colour iconNormalColor {200, 200, 200};
@@ -38,24 +30,23 @@ namespace  GTColors //project specific
 
     inline juce::Colour presetBox {35, 42, 60};
     inline juce::Colour presetPopupHighlight {30, 50, 80};
-    inline juce::Colour tabButtonBackground {17, 19, 31};
-    inline juce::Colour presetBlue {45, 57, 92};
-    inline juce::Colour outlinePopup {73, 83, 102};
+    inline juce::Colour tabButtonSelected {34, 56, 90};
+    inline juce::Colour tabButtonUnselected {21, 24, 40};
 
-    inline juce::Colour infoPanelTop {36, 45, 81};
-    inline juce::Colour infoPanelBottom {26, 33, 60};
     inline juce::Colour infoPanelSecondaryText {140, 152, 185};
     inline juce::Colour infoPanelDivider {juce::Colour (190, 200, 225).withAlpha (0.27f)};
 
-    inline juce::Colour meterUnlit {juce::Colours::black};
     inline juce::Colour meterGreen {60, 200, 80};
     inline juce::Colour meterYellow {235, 200, 40};
     inline juce::Colour meterRed {235, 50, 40};
-    inline juce::Colour meterSegmentLine {juce::Colours::black.withAlpha (0.35f)};
 }
 
 namespace AAUITools
 {
+    constexpr float outlineThicknessPOH {0.1f};
+    constexpr float cornerPOH {0.0f};
+    constexpr float fontHeightPOH {0.625f};
+
     inline void setIconButtonImages (juce::DrawableButton& button, const void* iconData, const int iconDataSize)
     {
         if (const auto icon = juce::Drawable::createFromImageData (iconData, (size_t) iconDataSize))
@@ -72,21 +63,106 @@ namespace AAUITools
         }
     }
 
-    inline void drawRoundedDivider (juce::Graphics& g, const juce::Rectangle<float> dividerBounds)
+    class PrintedText : public juce::Component
     {
-        const auto dividerThickness = juce::jmin (dividerBounds.getWidth(), dividerBounds.getHeight());
-        const auto cornerSize = dividerThickness * 0.25f;
-        g.setColour (juce::Colours::black);
-        g.fillRoundedRectangle (dividerBounds, cornerSize);
-    }
+    public:
+        PrintedText (const juce::String& textToUse, const juce::Colour inkColorToUse, const juce::Justification justificationToUse = juce::Justification::centred)
+            : text (textToUse), inkColor (inkColorToUse), justification (justificationToUse)
+        {
+            jassert (grainTile.isValid());
+            setInterceptsMouseClicks (false, false);
+        }
 
-    inline void drawDivider (juce::Graphics& g, const juce::Rectangle<float> dividerBounds, const float alpha = 1.f)
-    {
-        const auto color = juce::Colours::black.withAlpha (alpha);
-        const auto dividerThickness = juce::jmin (dividerBounds.getWidth(), dividerBounds.getHeight());
-        g.setColour (color);
-        g.fillRect (dividerBounds);
-    }
+        void setText (const juce::String& newText)
+        {
+            if (text == newText)
+                return;
+
+            text = newText;
+            textPathIsStale = true;
+            repaint();
+        }
+
+        void setFont (const juce::Font& newFont)
+        {
+            if (font == newFont)
+                return;
+
+            font = newFont;
+            textPathIsStale = true;
+            repaint();
+        }
+
+        void setInkColor (const juce::Colour newInkColor)
+        {
+            if (inkColor == newInkColor)
+                return;
+
+            inkColor = newInkColor;
+            repaint();
+        }
+
+        void setSideLinesVisible (bool shouldShowSideLines)
+        {
+            if (sideLinesVisible == shouldShowSideLines)
+                return;
+
+            sideLinesVisible = shouldShowSideLines;
+            textPathIsStale = true;
+            repaint();
+        }
+
+        void resized() override
+        {
+            textPathIsStale = true;
+        }
+
+        void paint (juce::Graphics& g) override
+        {
+            if (textPathIsStale)
+                rebuildTextPath();
+
+            g.setColour (inkColor);
+            g.fillPath (textPath);
+
+            const auto originInTopLevel = getTopLevelComponent()->getLocalPoint (this, juce::Point<float>());
+            g.setFillType (juce::FillType (grainTile, juce::AffineTransform::translation (-originInTopLevel)));
+            g.fillPath (textPath);
+        }
+
+    private:
+        void rebuildTextPath()
+        {
+            juce::GlyphArrangement glyphs;
+            glyphs.addFittedText (font, text, 0.f, 0.f, static_cast<float> (getWidth()), static_cast<float> (getHeight()), justification, 1);
+
+            textPath.clear();
+            glyphs.createPath (textPath);
+
+            if (sideLinesVisible && ! textPath.isEmpty())
+            {
+                const auto textBounds = textPath.getBounds();
+                const auto lineThickness = font.getHeight() * 0.07f;
+                const auto lineGap = font.getHeight() * 0.5f;
+                const auto lineBounds = textBounds.withSizeKeepingCentre (textBounds.getWidth(), lineThickness);
+                textPath.addRectangle (lineBounds.withLeft (0.f).withRight (textBounds.getX() - lineGap));
+                textPath.addRectangle (lineBounds.withLeft (textBounds.getRight() + lineGap).withRight (static_cast<float> (getWidth())));
+            }
+
+            textPathIsStale = false;
+        }
+
+        juce::Image grainTile = juce::ImageCache::getFromMemory (BinaryData::inkGrainTile_png, BinaryData::inkGrainTile_pngSize);
+        juce::String text;
+        juce::Colour inkColor;
+        const juce::Justification justification;
+        juce::Font font {juce::FontOptions {}};
+        juce::Path textPath;
+        bool textPathIsStale {true};
+        bool sideLinesVisible {false};
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PrintedText)
+    };
 }
 
 namespace AAFonts
@@ -207,12 +283,6 @@ namespace AAFonts
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::MontserratLight_ttf, BinaryData::MontserratLight_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
-    }
-
-    inline juce::Font futuraBold (const float fontHeight)
-    {
-        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (BinaryData::Futura_Bold_otf, BinaryData::Futura_Bold_otfSize);
         return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 

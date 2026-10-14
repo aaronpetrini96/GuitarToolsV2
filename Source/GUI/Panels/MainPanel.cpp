@@ -161,7 +161,7 @@ void MainPanel::resizeMagicButtons()
     fadersPlatePanel.setFaderSpacing(magicButtonsGap);
     fadersPlatePanel.setBounds (plateBounds.toNearestInt());
 
-    const auto modeSwitchWidth = magicButtonSize;
+    const auto modeSwitchWidth = magicButtonSize * 0.8f;
     const auto modeSwitchHeight = modeSwitchWidth * 683.0f / 1206.0f;
     const auto switchBounds = plateBounds.withSizeKeepingCentre (modeSwitchWidth, modeSwitchHeight).withY (buttonsArea.getHeight() * 0.7f);
     mudModeSwitch.setBounds (switchBounds.toNearestInt());

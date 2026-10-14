@@ -7,54 +7,58 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "AALook.h"
 
-class AARectSSLButton : public juce::Component
+class AARectSSLButton : public juce::Button
 {
 public:
     explicit AARectSSLButton (juce::RangedAudioParameter& parameterToUse, juce::String newNameText)
-        : parameter (parameterToUse), nameText (std::move (newNameText))
+        : juce::Button ({}), parameter (parameterToUse), nameText (std::move (newNameText))
     {
         setComponentID (parameter.getParameterID());
-        button.setImages (imgOFF.get(), nullptr, nullptr, nullptr, imgON.get());
-        button.setClickingTogglesState (true);
-        button.setColour (juce::DrawableButton::backgroundOnColourId, juce::Colours::transparentBlack);
-        button.setColour (juce::DrawableButton::backgroundColourId, juce::Colours::transparentBlack);
-        addAndMakeVisible (button);
+        setClickingTogglesState (true);
         addAndMakeVisible (printedName);
-        button.onStateChange = [this] { resized(); };
 
-        buttonAttachment = std::make_unique<juce::ButtonParameterAttachment> (parameter, button, nullptr);
+        buttonAttachment = std::make_unique<juce::ButtonParameterAttachment> (parameter, *this, nullptr);
         buttonAttachment->sendInitialUpdate();
+    }
+
+    void paintButton (juce::Graphics& g, bool, bool) override
+    {
+        const auto& image = getToggleState() ? imgON : imgOFF;
+        image->drawWithin (g, imageBounds, juce::RectanglePlacement::centred, 1.0f);
     }
 
     void resized() override
     {
         const auto boundsF = getLocalBounds().toFloat();
-        const auto imageBounds = juce::RectanglePlacement (juce::RectanglePlacement::centred).appliedTo (imgOFF->getDrawableBounds(), boundsF);
-        button.setBounds (imageBounds.toNearestInt());
+        imageBounds = juce::RectanglePlacement (juce::RectanglePlacement::centred).appliedTo (imgOFF->getDrawableBounds(), boundsF);
+        updateLabel();
+    }
 
-        const auto imageBoundsHeight = imageBounds.getHeight();
-        const auto faceCentreYPOH = button.getToggleState() ? 0.5f : 0.42f;
-        const auto textBounds = imageBounds.withSizeKeepingCentre (imageBounds.getWidth() * 0.8f, imageBoundsHeight * 0.4f)
-                                           .withCentre ({imageBounds.getCentreX(), imageBounds.getY() + imageBoundsHeight * faceCentreYPOH});
-        printedName.setFont (AAFonts::interSemiBold (textBounds.getHeight()));
-        printedName.setBounds (textBounds.toNearestInt());
+    void buttonStateChanged() override
+    {
+        updateLabel();
     }
 
     void setUndoManager (juce::UndoManager& undoManager)
     {
-        buttonAttachment = std::make_unique<juce::ButtonParameterAttachment> (parameter, button, &undoManager);
+        buttonAttachment = std::make_unique<juce::ButtonParameterAttachment> (parameter, *this, &undoManager);
         buttonAttachment->sendInitialUpdate();
     }
 
-    void setTooltip (const juce::String& newTooltip)
+private:
+    void updateLabel()
     {
-        button.setTooltip (newTooltip);
+        const auto imageBoundsHeight = imageBounds.getHeight();
+        const auto faceCentreYPOH = getToggleState() ? 0.5f : 0.42f;
+        const auto textBounds = imageBounds.withSizeKeepingCentre (imageBounds.getWidth(), imageBoundsHeight * 0.5f)
+                                           .withCentre ({imageBounds.getCentreX(), imageBounds.getY() + imageBoundsHeight * faceCentreYPOH});
+        printedName.setFont (AAFonts::interBold (textBounds.getHeight() * 0.875f));
+        printedName.setBounds (textBounds.toNearestInt());
     }
 
-private:
+    juce::Rectangle<float> imageBounds;
     std::unique_ptr<juce::Drawable> imgON {juce::Drawable::createFromImageData(BinaryData::button2ONBetter_png, BinaryData::button2ONBetter_pngSize)};
     std::unique_ptr<juce::Drawable> imgOFF {juce::Drawable::createFromImageData(BinaryData::button2OFFBetter_png, BinaryData::button2OFFBetter_pngSize)};
-    juce::DrawableButton button{{}, juce::DrawableButton::ImageFitted};
     juce::RangedAudioParameter& parameter;
     juce::String nameText{};
     AAUITools::PrintedText printedName{nameText, juce::Colours::black};

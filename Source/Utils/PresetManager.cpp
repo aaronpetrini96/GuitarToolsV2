@@ -1,11 +1,22 @@
 #include "PresetManager.h"
 #include "BinaryData.h"
 
-static const juce::StringArray rootPresetFileNames {"DefaultStarter.xml"};
+static const juce::StringArray rootPresetFileNames {"Default.xml"};
 
 PresetManager::PresetManager(GuitarToolsAudioProcessor& processor) : audioProcessor(processor)
 {
-    
+    audioProcessor.stateRestoredBroadcaster.addChangeListener (this);
+}
+
+PresetManager::~PresetManager()
+{
+    audioProcessor.stateRestoredBroadcaster.removeChangeListener (this);
+}
+
+void PresetManager::changeListenerCallback (juce::ChangeBroadcaster*)
+{
+    if (onPresetNameChanged != nullptr)
+        onPresetNameChanged();
 }
 
 void PresetManager::savePreset(const juce::String& presetName)
@@ -106,6 +117,17 @@ juce::File PresetManager::getUserPresetFile(const juce::String& presetName) cons
     return getPresetFolder().getChildFile ("User Presets").getChildFile (juce::File::createLegalFileName (presetName.trim()) + ".xml");
 }
 
+bool PresetManager::isFactoryPresetName(const juce::String& presetName) const
+{
+    const auto legalPresetName = getUserPresetFile (presetName).getFileNameWithoutExtension();
+
+    for (const auto& factoryPresetFile : getPresetFiles (PresetType::factory))
+        if (factoryPresetFile.getFileNameWithoutExtension().equalsIgnoreCase (legalPresetName))
+            return true;
+
+    return false;
+}
+
 juce::String PresetManager::getCurrentPresetName() const
 {
     return audioProcessor.getCurrentPresetName();
@@ -137,12 +159,18 @@ void PresetManager::installFactoryPresets()
 
         const auto presetFile = (rootPresetFileNames.contains (originalFilename) ? presetFolder : factoryPresetFolder).getChildFile (originalFilename);
 
-        if (presetFile.existsAsFile())
+        int presetDataSize = 0;
+        const auto* presetData = BinaryData::getNamedResource (BinaryData::namedResourceList[resourceIndex], presetDataSize);
+
+        if (presetData == nullptr)
             continue;
 
-        int presetDataSize = 0;
+        const juce::MemoryBlock bundledPresetData (presetData, (size_t) presetDataSize);
+        juce::MemoryBlock installedPresetData;
 
-        if (const auto* presetData = BinaryData::getNamedResource (BinaryData::namedResourceList[resourceIndex], presetDataSize))
-            presetFile.replaceWithData (presetData, (size_t) presetDataSize);
+        if (presetFile.loadFileAsData (installedPresetData) && installedPresetData == bundledPresetData)
+            continue;
+
+        presetFile.replaceWithData (presetData, (size_t) presetDataSize);
     }
 }

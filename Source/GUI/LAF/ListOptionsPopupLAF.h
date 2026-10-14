@@ -85,7 +85,7 @@ public:
         if (!button.isEnabled())
             g.setColour (textColour.withAlpha (0.3f));
         g.setFont (AAFonts::montserratMedium (boundsF.getHeight() * textPOH));
-        const auto textBounds = leftAlignText ? boundsF.withLeft (boundsF.getHeight() * labelLeftPOH) : boundsF;
+        const auto textBounds = leftAlignText ? boundsF.withLeft (boundsF.getHeight() * 0.45f) : boundsF;
         g.drawText (button.getButtonText(), textBounds, leftAlignText ? juce::Justification::centredLeft : juce::Justification::centred, true);
     }
 

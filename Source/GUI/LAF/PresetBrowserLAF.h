@@ -22,8 +22,8 @@ public:
 
     PresetBrowserLAF()
     {
-        setColour (backgroundColourId, GTColors::presetBox.darker(0.1f));
-        setColour (dividerColourId, GTColors::dividerLinesStart);
+        setColour (backgroundColourId, GTColors::popupDarkBackground);
+        setColour (dividerColourId,GTColors::dividerLinesStart);
         setColour (highlightColourId, GTColors::presetPopupHighlight);
         setColour (activeColourId, GTColors::activeNeonBlue);
         setColour (textColourId, GTColors::sectionTitleText);
@@ -73,18 +73,19 @@ public:
 
         if (isTabButton)
         {
-            g.setColour (isSelected ? findColour (highlightColourId).darker(-0.12f) : GTColors::headerPanelEnd.darker(0.12f));
+            g.setColour (isSelected ? GTColors::tabButtonSelected : GTColors::tabButtonUnselected);
             g.fillRect(boundsF);
             g.setColour (findColour(outlineColourId));
-            const auto tabOutlineBounds = boundsF.withTrimmedLeft (button.isConnectedOnLeft() ? -outlineThickness * 0.5f : 0.0f)
-                                                 .withTrimmedRight (button.isConnectedOnRight() ? -outlineThickness * 0.5f : 0.0f);
-            g.drawRect (tabOutlineBounds, outlineThickness);
+            const auto tabOutlineThickness = outlineThickness * 0.5f;
+            const auto tabOutlineBounds = boundsF.withTrimmedLeft (button.isConnectedOnLeft() ? -tabOutlineThickness * 0.5f : 0.0f)
+                                                 .withTrimmedRight (button.isConnectedOnRight() ? -tabOutlineThickness * 0.5f : 0.0f);
+            g.drawRect (tabOutlineBounds, tabOutlineThickness);
         }
 
         if (!isTabButton && isHighlighted)
         {
             g.setColour (findColour(highlightColourId));
-            g.fillRoundedRectangle (boundsF.reduced(outlineThickness, outlineThickness * 0.5f), cornerSize);
+            g.fillRoundedRectangle (boundsF.reduced(outlineThickness), cornerSize);
         }
     }
 
@@ -92,8 +93,6 @@ public:
     {
         //bounds
         const auto boundsF = button.getLocalBounds().toFloat();
-        const auto cornerSize = boundsF.getHeight() * highlightCornerSizePOH;
-
         //bool checkers
         const auto isTabButton = button.getConnectedEdgeFlags() != 0;
         const auto isSelected = button.getToggleState();
@@ -105,18 +104,15 @@ public:
         const auto buttonTextColour = isTabButton ? tabButtonTextColour : presetTextColour;
 
         g.setColour (isHighlighted ? buttonTextColour.withBrightness(2.f) : buttonTextColour);
-        const auto tabFont = AAFonts::montserratMedium(boundsF.getHeight() * tabTextFontPOH);
-        g.setFont (isTabButton ? tabFont : AAFonts::montserratMedium (boundsF.getHeight() * presetFontPOH));
+        g.setFont (AAFonts::montserratMedium (boundsF.getHeight() * (isTabButton ? tabTextFontPOH : presetFontPOH)));
         g.drawText (button.getButtonText(), button.getLocalBounds(), juce::Justification::centred, true);
     }
 
-    float presetFontPOH {0.65f};
-    float tabTextFontPOH {0.55f};
-    float menuCornerSizePOH {0.0f};
-    float outlineThicknessPOH {0.07f};
-    float highlightCornerSizePOH {0.22f};
-    float dividerThicknessPOH {0.065f};
-    float underlineThicknessPOH {0.01f};
+    float presetFontPOH {AAUITools::fontHeightPOH};
+    float tabTextFontPOH {0.6f};
+    float menuCornerSizePOH {AAUITools::cornerPOH};
+    float outlineThicknessPOH {AAUITools::outlineThicknessPOH};
+    float highlightCornerSizePOH {AAUITools::cornerPOH};
 
 private:
     float outlineThickness {0.0f};

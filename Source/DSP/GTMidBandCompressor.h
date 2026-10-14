@@ -17,7 +17,7 @@ private:
     static constexpr float crossoverLowFreq {65.f};
     static constexpr float crossoverHighFreq {280.f};
     static constexpr float attackTimeConstantMs {16.f};
-    static constexpr float releaseTimeConstantMs {25.f};
+    static constexpr float releaseTimeConstantMs {50.f};
     static constexpr float referenceLevelDb {-18.f};
     static constexpr float softKneeWidthDb {6.f};
     static constexpr float minRatio {2.f};

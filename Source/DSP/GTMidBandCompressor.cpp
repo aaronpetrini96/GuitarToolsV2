@@ -45,6 +45,13 @@ void GTMidBandCompressor::setAmount(float newAmountProportion)
 
 void GTMidBandCompressor::setActive(bool shouldBeActive)
 {
+    const auto wasFullyInactive = juce::approximatelyEqual(activeAmount.getTargetValue(), 0.f) && !activeAmount.isSmoothing();
+    if (shouldBeActive && wasFullyInactive)
+    {
+        for (auto* filer : {&LP1, &HP1, &AP2, &LP2, &HP2})
+            filer->reset();
+        smoothedGainReductionDb = 0.f;
+    }
     activeAmount.setTargetValue(shouldBeActive ? 1.f : 0.f);
 }
 
@@ -59,6 +66,13 @@ void GTMidBandCompressor::setExtremeMode(bool shouldBeExtreme)
 
 void GTMidBandCompressor::process(juce::AudioBuffer<float>& buffer)
 {
+    if (juce::approximatelyEqual(activeAmount.getTargetValue(), 0.f) && !activeAmount.isSmoothing())
+        return;
+
+    auto* const* lowBandChannels = bandBuffers[0].getArrayOfReadPointers();
+    auto* const* highBandChannels = bandBuffers[2].getArrayOfReadPointers();
+    auto* const* outputChannels = buffer.getArrayOfWritePointers();
+
     splitBands(buffer);
 
     const auto numChannels = buffer.getNumChannels();
@@ -90,21 +104,14 @@ void GTMidBandCompressor::process(juce::AudioBuffer<float>& buffer)
         const auto coefficient = targetGainReductionDb < smoothedGainReductionDb ? attackCoefficient : releaseCoefficient;
         smoothedGainReductionDb = targetGainReductionDb + coefficient * (smoothedGainReductionDb - targetGainReductionDb);
 
-        if (activeProportion == 0.f)
-            continue;
-
         const auto compressorGain = juce::Decibels::decibelsToGain(smoothedGainReductionDb);
-        const auto gain = 1.f + (compressorGain - 1.f) * activeProportion;
 
         for (int channel = 0; channel < numChannels; ++channel)
-            midBandChannels[channel][sample] *= gain;
-    }
-
-    for (int channel = 0; channel < numChannels; ++channel)
-    {
-        buffer.copyFrom(channel, 0, bandBuffers[0], channel, 0, numSamples);
-        buffer.addFrom(channel, 0, bandBuffers[1], channel, 0, numSamples);
-        buffer.addFrom(channel, 0, bandBuffers[2], channel, 0, numSamples);
+        {
+            const auto splitSample = lowBandChannels[channel][sample] + midBandChannels[channel][sample] * compressorGain + highBandChannels[channel][sample];
+            auto& outputSample = outputChannels[channel][sample];
+            outputSample += (splitSample - outputSample) * activeProportion;
+        }
     }
 }
 

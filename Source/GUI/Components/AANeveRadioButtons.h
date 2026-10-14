@@ -34,7 +34,7 @@ public:
             buttons[index]->onClick = [this, index]
             {
                 attachment->setValueAsCompleteGesture ((float) index);
-                resized();
+                updateNames();
             };
 
         for (auto index = 0; index < juce::jmin (buttons.size(), nameText.size()); ++index)
@@ -70,18 +70,23 @@ public:
         for (auto index = 0; index < buttons.size(); ++index)
             buttons[index]->setBounds (capsArea.withWidth (cellWidth).withX (capsArea.getX() + cellWidth * (float) index).toNearestIntEdges());
 
+        updateNames();
+    }
+
+private:
+    void updateNames()
+    {
         for (auto index = 0; index < printedNames.size(); ++index)
         {
             const auto textBounds = buttons[index]->getBounds().toFloat();
             const auto isSelected = buttons[index]->getToggleState();
-            const auto fontHeight = textBounds.getHeight() * 0.475f;
+            const auto fontHeight = textBounds.getHeight() * 0.5f;
             printedNames[index]->setFont (isSelected ? AAFonts::interBold (fontHeight) : AAFonts::interSemiBold (fontHeight));
             printedNames[index]->setAlpha (isSelected ? 1.0f : 0.9f);
             printedNames[index]->setBounds (textBounds.toNearestInt());
         }
     }
 
-private:
     // the share of the housing image the caps sit on, the rest being the frame and shadow around them
     float capsToWidthRatio {0.9095f}, capsToHeightRatio {0.6401f};
     juce::Rectangle<float> housingBounds;
@@ -95,7 +100,7 @@ private:
                 buttons[juce::jlimit (0, buttons.size() - 1, juce::roundToInt (newValue))]
                     ->setToggleState (true, juce::dontSendNotification);
 
-                resized();
+                updateNames();
             },
             undoManager);
 

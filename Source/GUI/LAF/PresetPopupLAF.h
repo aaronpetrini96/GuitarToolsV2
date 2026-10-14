@@ -18,24 +18,19 @@ public:
 
     PresetPopupLAF()
     {
-        setColour (backgroundColourId, GTColors::presetBox.darker(0.1f));
+        setColour (backgroundColourId, GTColors::popupDarkBackground);
         setColour (textColourId, GTColors::sectionTitleText);
         setColour (outlineColourId, GTColors::dividerLinesStart);
         setColour (highlightColourId, GTColors::presetPopupHighlight);
+        setColour (juce::TextEditor::backgroundColourId, GTColors::dividerLinesEnd);
+        setColour (juce::TextEditor::textColourId, GTColors::sectionTitleText);
     }
 
-    static PresetPopupLAF* get()
+    void drawPopupBackground (juce::Graphics& g, juce::Rectangle<float> bounds, const float numRows)
     {
-        static PresetPopupLAF instance;
-        return &instance;
-    }
-
-    void drawPopupBackground (juce::Graphics& g, juce::Rectangle<float> bounds)
-    {
-        const auto cornerSize = bounds.getWidth() * 0.0f;
-        const auto outlineThickness = bounds.getWidth() * outlineThicknessPOW;
-        // g.setGradientFill(juce::ColourGradient::vertical(GTColors::presetBox.darker(0.1f), 0, GTColors::headerPanelEnd, bounds.getHeight()));
-        g.setColour(findColour (backgroundColourId));
+        cornerSize = bounds.getHeight() * cornerSizePOH;
+        const auto outlineThickness = bounds.getHeight() / numRows * outlineThicknessPOH;
+        g.setGradientFill(juce::ColourGradient::vertical(GTColors::popupDarkBackground, 0, GTColors::presetBox.darker(0.15f), bounds.getHeight()));
         g.fillRoundedRectangle (bounds, cornerSize);
 
         g.setColour (findColour (outlineColourId));
@@ -53,7 +48,7 @@ public:
         if (shouldDrawButtonAsHighlighted)
         {
             g.setColour (findColour (highlightColourId));
-            g.fillRoundedRectangle (boundsF, boundsF.getHeight() * highlightCornerSizePOH);
+            g.fillRoundedRectangle (boundsF, cornerSize);
         }
 
         g.setColour ((shouldDrawButtonAsHighlighted ? textColour.withBrightness(2.f) : textColour).withMultipliedAlpha (button.isEnabled() ? 1.0f : 0.5f));
@@ -64,17 +59,20 @@ public:
     void fillTextEditorBackground (juce::Graphics& g, int width, int height, juce::TextEditor& textEditor) override
     {
         const auto boundsF = juce::Rectangle<int> (width, height).toFloat();
+        cornerSize = boundsF.getHeight() * textEditorCornerSizePOH;
+        const auto outlineThickness = boundsF.getHeight() * textEditorOutlineThicknessPOH;
         g.setColour (textEditor.findColour (juce::TextEditor::backgroundColourId));
-        g.fillRoundedRectangle (boundsF, boundsF.getHeight() * textEditorCornerSizePOH);
-        g.setColour(findColour (outlineColourId));
+        g.fillRoundedRectangle (boundsF, cornerSize);
     }
 
     void drawTextEditorOutline (juce::Graphics&, int, int, juce::TextEditor&) override { }
 
-    float outlineThicknessPOW {0.007f};
-    float highlightCornerSizePOH {0.22f};
-    float textEditorCornerSizePOH {0.22f};
-    float fontPOH {0.65f};
+    float textEditorCornerSizePOH {AAUITools::cornerPOH};
+    float textEditorOutlineThicknessPOH {AAUITools::outlineThicknessPOH * 0.75f};
+    float fontPOH {AAUITools::fontHeightPOH};
+    float cornerSizePOH {AAUITools::cornerPOH};
+    float outlineThicknessPOH {AAUITools::outlineThicknessPOH};
 private:
+    float cornerSize {0.0f};
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PresetPopupLAF)
 };

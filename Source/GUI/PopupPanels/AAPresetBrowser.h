@@ -18,7 +18,7 @@ public:
         : presetManager (manager)
     {
         setAlwaysOnTop (true);
-        setLookAndFeel (PresetBrowserLAF::get());
+        setLookAndFeel (&presetBrowserLAF);
 
         viewport.setViewedComponent (&rowsHolder, false);
         viewport.setScrollBarsShown (false, false);
@@ -87,12 +87,11 @@ public:
         setPresetType (PresetManager::PresetType::user);
     }
 
-    float getNumRows() const { return (float) rows.size() + tabHeightRowRatio; }
+    float getNumRows() const { return (float) rows.size() + tabHeightRowRatio + presetBrowserLAF.outlineThicknessPOH * 1.5f; }
 
     void paint (juce::Graphics& g) override
     {
-        if (auto* presetBrowserLAF = dynamic_cast<PresetBrowserLAF*> (&getLookAndFeel()))
-            presetBrowserLAF->drawMenuListBackground (g, getLocalBounds().toFloat(), getNumRows());
+        presetBrowserLAF.drawMenuListBackground (g, getLocalBounds().toFloat(), getNumRows());
     }
 
     void resized() override
@@ -135,6 +134,7 @@ private:
         refresh();
     }
 
+    PresetBrowserLAF presetBrowserLAF;
     PresetManager& presetManager;
     PresetManager::PresetType selectedPresetType {PresetManager::PresetType::factory};
     juce::Array<juce::File> presetFiles;

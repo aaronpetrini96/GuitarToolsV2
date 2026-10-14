@@ -98,7 +98,7 @@ void GuitarToolsAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     const auto numSamples = samplesPerBlock;
     spec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
     spec.sampleRate = sampleRate;
-    spec.numChannels = static_cast<juce::uint32>(getTotalNumInputChannels());
+    spec.numChannels = static_cast<juce::uint32>(getTotalNumOutputChannels());
     
     smoothedBypassValue.reset(sampleRate, DefaultValues::parameterSmoothingTime);
     smoothedBypassValue.setCurrentAndTargetValue(pluginBypassActiveParam->get() ? 0.f : 1.f);
@@ -156,7 +156,8 @@ bool GuitarToolsAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
         return false;
 
    #if ! JucePlugin_IsSynth
-    if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
+    if (layouts.getMainInputChannelSet() != juce::AudioChannelSet::mono()
+     && layouts.getMainInputChannelSet() != layouts.getMainOutputChannelSet())
         return false;
    #endif
 
@@ -173,7 +174,7 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     const auto totalNumOutputChannels = getTotalNumOutputChannels();
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+        buffer.copyFrom (i, 0, buffer, 0, 0, buffer.getNumSamples());
 
     dryBuffer.makeCopyOf(buffer, true); // Save a dry copy before processing
 
@@ -186,6 +187,7 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 
     constexpr int parameterUpdateInterval {32};
     const auto numSamples = buffer.getNumSamples();
+//    auto inputSquareSum = 0.f;
 
     for (int chunkStart {0}; chunkStart < numSamples; chunkStart += parameterUpdateInterval)
     {
@@ -201,6 +203,10 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
         inputLevelLeft.store(juce::jmax(inputLevelLeft.load(), chunk.getMagnitude(0, 0, chunkLength)));
         if (chunk.getNumChannels() > 1)
             inputLevelRight.store(juce::jmax(inputLevelRight.load(), chunk.getMagnitude(1, 0, chunkLength)));
+        else
+            inputLevelRight.store(inputLevelLeft.load());
+//        for (int channel {0}; channel < chunk.getNumChannels(); ++channel)
+//            inputSquareSum += juce::square (chunk.getRMSLevel (channel, 0, chunkLength)) * static_cast<float> (chunkLength);
 //========================    EQ part    ========================
         filters.process(chunk);
 
@@ -234,6 +240,13 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     outputLevelLeft.store(juce::jmax(outputLevelLeft.load(), buffer.getMagnitude(0, 0, numSamples)));
     if (buffer.getNumChannels() > 1)
         outputLevelRight.store(juce::jmax(outputLevelRight.load(), buffer.getMagnitude(1, 0, numSamples)));
+    else
+        outputLevelRight.store(outputLevelLeft.load());
+
+//    auto outputSquareSum = 0.f;
+//    for (int channel {0}; channel < buffer.getNumChannels(); ++channel)
+//        outputSquareSum += juce::square (buffer.getRMSLevel (channel, 0, numSamples));
+//    outputMeanSquare.store (outputSquareSum / static_cast<float> (juce::jmax (1, buffer.getNumChannels())));
 }
 
 //==============================================================================
@@ -270,7 +283,9 @@ void GuitarToolsAudioProcessor::setStateInformation (const void* data, int sizeI
         if (auto* showTooltipsProp = state.getPropertyPointer("ShowTooltips"))
             showTooltips = static_cast<bool>(*showTooltipsProp);
 
+        state.removeAllProperties (nullptr);
         treeState.replaceState(state);
+        stateRestoredBroadcaster.sendChangeMessage();
     }
 }
 
@@ -280,6 +295,7 @@ void GuitarToolsAudioProcessor::savePreset(const juce::File& file)
     auto xml = state.createXml();
     if (xml)
     {
+        xml->setAttribute ("PluginVersion", JucePlugin_VersionString);
         xml->writeTo(file);
     }
 }
@@ -290,8 +306,7 @@ void GuitarToolsAudioProcessor::loadPreset(const juce::File& file)
     if (xml && xml->hasTagName(treeState.state.getType()))
     {
         juce::ValueTree state = juce::ValueTree::fromXml(*xml);
-        if (auto* presetNameProp = state.getPropertyPointer("CurrentPresetName"))
-            currentPresetName = presetNameProp->toString(); // restore preset name
+        state.removeAllProperties (nullptr);
         treeState.replaceState(state);
     }
 }
@@ -309,6 +324,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout GuitarToolsAudioProcessor::c
     auto lowCutFrequencyRange = juce::NormalisableRange<float> (DefaultValues::lowCutRangeStart, DefaultValues::lowCutRangeEnd, DefaultValues::frequencyIntervalValue);
     auto highCutFrequencyRange = juce::NormalisableRange<float> (DefaultValues::highCutRangeStart, DefaultValues::highCutRangeEnd, DefaultValues::frequencyIntervalValue);
     auto gainRange = juce::NormalisableRange<float> (DefaultValues::gainRangeStart, DefaultValues::gainRangeEnd, DefaultValues::decibelIntervalValue, 1.f);
+    auto resoFrequencyRange = juce::NormalisableRange<float> (DefaultValues::resoRangeStart, DefaultValues::resoRangeEnd, DefaultValues::frequencyIntervalValue);
+    resoFrequencyRange.setSkewForCentre (std::sqrt (DefaultValues::resoRangeStart * DefaultValues::resoRangeEnd));
+    auto mudFrequencyRange = juce::NormalisableRange<float> (DefaultValues::mudRangeStart, DefaultValues::mudRangeEnd, DefaultValues::frequencyIntervalValue);
+    mudFrequencyRange.setSkewForCentre (std::sqrt (DefaultValues::mudRangeStart * DefaultValues::mudRangeEnd));
 
 //    ========== HICUT LOW CUT ===========
     auto name = ParamIDs::getLowCutFreqName();
@@ -341,7 +360,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout GuitarToolsAudioProcessor::c
 
 //    ========== RESONANCE TAMER ===========
     name = ParamIDs::getResoFreqName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name,juce::NormalisableRange<float>(DefaultValues::resoRangeStart, DefaultValues::resoRangeEnd, DefaultValues::frequencyIntervalValue, 1.f), DefaultValues::resoFreq, juce::AudioParameterFloatAttributes().withLabel ("Hz").withStringFromValueFunction (frequencyStringFromValue)));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, resoFrequencyRange, DefaultValues::resoFreq, juce::AudioParameterFloatAttributes().withLabel ("Hz").withStringFromValueFunction (frequencyStringFromValue)));
     name = ParamIDs::getResoActiveName();
     layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::resoActive));
     name = ParamIDs::getResoExtremeActiveName();
@@ -349,7 +368,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout GuitarToolsAudioProcessor::c
 
 //    ========== MUD KILLER TAMER ===========
     name = ParamIDs::getMudFreqName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name,juce::NormalisableRange<float>(DefaultValues::mudRangeStart, DefaultValues::mudRangeEnd, DefaultValues::frequencyIntervalValue, 1.f), DefaultValues::mudFreq, juce::AudioParameterFloatAttributes().withLabel ("Hz").withStringFromValueFunction (frequencyStringFromValue)));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, mudFrequencyRange, DefaultValues::mudFreq, juce::AudioParameterFloatAttributes().withLabel ("Hz").withStringFromValueFunction (frequencyStringFromValue)));
     name = ParamIDs::getMudActiveName();
     layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::mudActive));
     name = ParamIDs::getMudExtremeActiveName();
@@ -412,11 +431,11 @@ ChainSettings GuitarToolsAudioProcessor::getChainSettings() const
 
 void GuitarToolsAudioProcessor::loadDefaultPreset()
 {
-    const auto defaultPresetFile = PresetManager::getPresetFolder().getChildFile ("DefaultStarter.xml");
+    const auto defaultPresetFile = PresetManager::getPresetFolder().getChildFile ("Default.xml");
     if (! defaultPresetFile.existsAsFile())
         return;
     loadPreset (defaultPresetFile);
-    currentPresetName = "DefaultStarter";
+    currentPresetName = "Default";
 }
 
 //==============================================================================

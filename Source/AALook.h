@@ -9,36 +9,28 @@
 
 namespace  GTColors //project specific
 {
-    inline juce::Colour transparent { juce::Colours::transparentBlack };
-
-    inline juce::Colour superDarkBackground {15, 15, 15};
-    inline juce::Colour almostWhite {190, 190, 190};
-    inline juce::Colour sectionTitleText {215, 215, 215};
-    inline juce::Colour activeNeonBlue { 64, 196, 255 };
-
-    inline juce::Colour dividerLinesEnd{12, 12, 12};
-    inline juce::Colour dividerLinesStart {5, 5, 5};
-
-    inline juce::Colour headerPanelStart {12, 12, 16};
-    inline juce::Colour headerPanelEnd {22, 28, 45};
-
-    inline juce::Colour popupDarkBackground {30, 34, 44};
-
-    inline juce::Colour iconSVGColor {100, 100, 100};
-    inline juce::Colour iconNormalColor {200, 200, 200};
-    inline juce::Colour iconOverColor {120, 120, 120};
-
-    inline juce::Colour presetBox {35, 42, 60};
-    inline juce::Colour presetPopupHighlight {30, 50, 80};
-    inline juce::Colour tabButtonSelected {34, 56, 90};
-    inline juce::Colour tabButtonUnselected {21, 24, 40};
-
-    inline juce::Colour infoPanelSecondaryText {140, 152, 185};
-    inline juce::Colour infoPanelDivider {juce::Colour (190, 200, 225).withAlpha (0.27f)};
-
-    inline juce::Colour meterGreen {60, 200, 80};
-    inline juce::Colour meterYellow {235, 200, 40};
-    inline juce::Colour meterRed {235, 50, 40};
+    inline const juce::Colour transparent { juce::Colours::transparentBlack };
+    inline const juce::Colour superDarkBackground {15, 15, 15};
+    inline const juce::Colour almostWhite {190, 190, 190};
+    inline const juce::Colour sectionTitleText {215, 215, 215};
+    inline const juce::Colour activeNeonBlue { 64, 196, 255 };
+    inline const juce::Colour dividerLinesEnd{12, 12, 12};
+    inline const juce::Colour dividerLinesStart {5, 5, 5};
+    inline const juce::Colour headerPanelStart {12, 12, 16};
+    inline const juce::Colour headerPanelEnd {22, 28, 45};
+    inline const juce::Colour popupDarkBackground {30, 34, 44};
+    inline const juce::Colour iconSVGColor {100, 100, 100};
+    inline const juce::Colour iconNormalColor {200, 200, 200};
+    inline const juce::Colour iconOverColor {120, 120, 120};
+    inline const juce::Colour presetBox {35, 42, 60};
+    inline const juce::Colour presetPopupHighlight {30, 50, 80};
+    inline const juce::Colour tabButtonSelected {34, 56, 90};
+    inline const juce::Colour tabButtonUnselected {21, 24, 40};
+    inline const juce::Colour infoPanelSecondaryText {140, 152, 185};
+    inline const juce::Colour infoPanelDivider {juce::Colour (190, 200, 225).withAlpha (0.27f)};
+    inline const juce::Colour meterGreen {60, 200, 80};
+    inline const juce::Colour meterYellow {235, 200, 40};
+    inline const juce::Colour meterRed {235, 50, 40};
 }
 
 namespace AAUITools

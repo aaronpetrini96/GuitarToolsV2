@@ -5,17 +5,19 @@
 
 #include <functional>
 
-#include "AAListOptionsPopup.h"
+#include "../PopupPanels/AAListOptionsPopup.h"
 #include "../../Utils/AAResizeUI.h"
 #include "../../Utils/AAParamUtils.h"
 
 class SettingsOptionsPanel : public AAListOptionsPopup
 {
 public:
-    SettingsOptionsPanel (AAResizeUI& resizeUIToUse, bool& showTooltipsToUse, juce::RangedAudioParameter& autoGainParamToUse, juce::RangedAudioParameter& gainLimitParamToUse)
-        : AAListOptionsPopup ("SETTINGS"), resizeUI (resizeUIToUse), showTooltips (showTooltipsToUse), autoGainParam (autoGainParamToUse), gainLimitParam (gainLimitParamToUse)
+    SettingsOptionsPanel (AAResizeUI& resizeUIToUse, bool& showTooltipsToUse, juce::RangedAudioParameter& autoGainParamToUse, juce::RangedAudioParameter& gainLimitParamToUse, juce::RangedAudioParameter& lowTuningParamToUse)
+        : AAListOptionsPopup ("SETTINGS"), resizeUI (resizeUIToUse), showTooltips (showTooltipsToUse), autoGainParam (autoGainParamToUse), gainLimitParam (gainLimitParamToUse), lowTuningParam (lowTuningParamToUse)
     {
         listOptionsLAF.leftAlignText = true;
+        listOptionsLAF.setColour (ListOptionsPopupLAF::backgroundColourId, GTColors::headerPanelStart);
+        listOptionsLAF.setColour (ListOptionsPopupLAF::backgroundEndColourId, GTColors::headerPanelEnd);
     }
 
     void updateItems()
@@ -23,12 +25,16 @@ public:
         juce::Array<AAListOptionsPopup::Item> settingsOptions;
         settingsOptions.add ({"Show Tooltips", [this] { toggleTooltips(); }, true, showTooltips, true});
         settingsOptions.add ({"Match Loudness", [this] { toggleBoolParameter (autoGainParam); }, true, autoGainParam.getValue() >= 0.5f, true, ParamHelpers::getTooltipForParam (ParamIDs::getLoudnessMatchActiveName())});
+        settingsOptions.add ({"Low Tuning Mode", [this] { toggleBoolParameter (lowTuningParam); }, true, lowTuningParam.getValue() >= 0.5f, true, ParamHelpers::getTooltipForParam (ParamIDs::getLowTuningActiveName())});
         // settingsOptions.add ({"Clip Guard",[this] { toggleBoolParameter (gainLimitParam); }, true, gainLimitParam.getValue() >= 0.5f, true, ParamHelpers::getTooltipForParam (ParamIDs::getGainLimitActiveName())});
         settingsOptions.add (resizeUI.getMakeDefaultOption());
-        settingsOptions.add ({"About...", [this] { if (onAboutClicked != nullptr) onAboutClicked(); }});
-        settingsOptions.add ({"Contact Me", [] { sendMail ({}); }});
+        settingsOptions.add ({"About...", [this] { if (onAboutClicked != nullptr) onAboutClicked(); }, true, false, false, {},
+                              juce::Drawable::createFromImageData (BinaryData::infoLetterIcon_svg, BinaryData::infoLetterIcon_svgSize)});
+        settingsOptions.add ({"Get In Touch", [] { sendMail ({}); }, true, false, false, {},
+                              juce::Drawable::createFromImageData (BinaryData::mailIcon_svg, BinaryData::mailIcon_svgSize)});
         // settingsOptions.add ({"Report a Bug", [] { sendMail ("?subject=BugReport_GuitarTools2&body=Please include DAW used and the action that caused the problem. Thanks!"); }});
-        settingsOptions.add ({"Get the Manual", [] { openUserManual(); }});
+        // settingsOptions.add ({"Get the Manual", [] { openUserManual(); }, true, false, false, {},
+        //                       juce::Drawable::createFromImageData (BinaryData::questionMarkIcon_svg, BinaryData::questionMarkIcon_svgSize)});
         setItems (settingsOptions);
     }
 
@@ -51,13 +57,13 @@ private:
             onTooltipsToggled();
     }
 
-    static void openUserManual()
-    {
-        const auto manualFile = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("GuitarTools2_User_Manual.pdf");
-
-        if (manualFile.replaceWithData (BinaryData::guitarTools2UserManual_pdf, BinaryData::guitarTools2UserManual_pdfSize))
-            manualFile.startAsProcess();
-    }
+    // static void openUserManual()
+    // {
+    //     const auto manualFile = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("GuitarTools2_User_Manual.pdf");
+    //
+    //     if (manualFile.replaceWithData (BinaryData::guitarTools2UserManual_pdf, BinaryData::guitarTools2UserManual_pdfSize))
+    //         manualFile.startAsProcess();
+    // }
 
     static void sendMail (const juce::String& mailQuery)
     {
@@ -68,6 +74,7 @@ private:
     bool& showTooltips;
     juce::RangedAudioParameter& autoGainParam;
     juce::RangedAudioParameter& gainLimitParam;
+    juce::RangedAudioParameter& lowTuningParam;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SettingsOptionsPanel)
 };

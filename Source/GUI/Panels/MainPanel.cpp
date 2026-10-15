@@ -42,11 +42,11 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
     }
 
     resoActiveButton.onClick = [this] { fadersPlatePanel.resoFreqFader.setThumbActive (resoActiveButton.getToggleState()); };
-    mudActiveButton.onClick = [this] { fadersPlatePanel.mudFreqFader.setThumbActive (mudActiveButton.getToggleState()); };
+    mudActiveButton.onClick = [this] { fadersPlatePanel.mudAmountFader.setThumbActive (mudActiveButton.getToggleState()); };
     compActiveButton.onClick = [this] { fadersPlatePanel.compAmountFader.setThumbActive (compActiveButton.getToggleState()); };
 
     fadersPlatePanel.resoFreqFader.setThumbActive (resoActiveButton.getToggleState());
-    fadersPlatePanel.mudFreqFader.setThumbActive (mudActiveButton.getToggleState());
+    fadersPlatePanel.mudAmountFader.setThumbActive (mudActiveButton.getToggleState());
     fadersPlatePanel.compAmountFader.setThumbActive (compActiveButton.getToggleState());
 
     addAndMakeVisible (fadersPlatePanel);

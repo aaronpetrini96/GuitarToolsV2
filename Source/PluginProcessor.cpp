@@ -107,6 +107,7 @@ void GuitarToolsAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 //    Compressor Section
     midBandCompressor.setActive(compActiveParam->get());
     midBandCompressor.setExtremeMode(compExtremeActiveParam->get());
+    midBandCompressor.setLowTuning(lowTuningActiveParam->get());
     midBandCompressor.prepare(spec);
 
 //==============================================================================
@@ -126,7 +127,7 @@ void GuitarToolsAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     for (const auto& [param, smoother] : smootherBindings)
         smoother->reset(sampleRate, DefaultValues::parameterSmoothingTime);
 
-    for (auto* smoother : {&resoGainDbSmoother, &mudGainDbSmoother, &resoQSmoother, &mudQSmoother,
+    for (auto* smoother : {&resoGainDbSmoother, &mudGainDbSmoother, &resoQSmoother, &mudQSmoother, &mudFreqSmoother,
                            &presenceFreqSmoother, &presenceResonanceSmoother, &depthFreqSmoother, &depthResonanceSmoother})
         smoother->reset(sampleRate, DefaultValues::parameterSmoothingTime);
 
@@ -181,6 +182,7 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     updateGainState();
     midBandCompressor.setActive(compActiveParam->get());
     midBandCompressor.setExtremeMode(compExtremeActiveParam->get());
+    midBandCompressor.setLowTuning(lowTuningActiveParam->get());
 
     const auto bypassActive = pluginBypassActiveParam->get(); // Update smoothed bypass target
     smoothedBypassValue.setTargetValue(bypassActive ? 0.0f : 1.0f);
@@ -195,7 +197,7 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
         juce::AudioBuffer<float> chunk {buffer.getArrayOfWritePointers(), buffer.getNumChannels(), chunkStart, chunkLength};
 
         updateSmootherFromParams(chunkLength, SmootherUpdateMode::liveInRealTime);
-        midBandCompressor.setAmount(compAmountParamSmoother.getCurrentValue() / DefaultValues::compAmountRangeEnd);
+        midBandCompressor.setAmount(compAmountParamSmoother.getCurrentValue() / 100.f);
         filters.update(getChainSettings());
 
 //========================    LEVELS part    ========================
@@ -317,15 +319,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout GuitarToolsAudioProcessor::c
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
     constexpr auto versionHint {1};
-
-
     auto lowCutFrequencyRange = juce::NormalisableRange<float> (DefaultValues::lowCutRangeStart, DefaultValues::lowCutRangeEnd, DefaultValues::frequencyIntervalValue);
     auto highCutFrequencyRange = juce::NormalisableRange<float> (DefaultValues::highCutRangeStart, DefaultValues::highCutRangeEnd, DefaultValues::frequencyIntervalValue);
     auto gainRange = juce::NormalisableRange<float> (DefaultValues::gainRangeStart, DefaultValues::gainRangeEnd, DefaultValues::decibelIntervalValue, 1.f);
     auto resoFrequencyRange = juce::NormalisableRange<float> (DefaultValues::resoRangeStart, DefaultValues::resoRangeEnd, DefaultValues::frequencyIntervalValue);
     resoFrequencyRange.setSkewForCentre (std::sqrt (DefaultValues::resoRangeStart * DefaultValues::resoRangeEnd));
-    auto mudFrequencyRange = juce::NormalisableRange<float> (DefaultValues::mudRangeStart, DefaultValues::mudRangeEnd, DefaultValues::frequencyIntervalValue);
-    mudFrequencyRange.setSkewForCentre (std::sqrt (DefaultValues::mudRangeStart * DefaultValues::mudRangeEnd));
+    auto amountRange = juce::NormalisableRange<float> (0.f, 100.f, DefaultValues::amountIntervalValue);
 
 //    ========== HICUT LOW CUT ===========
     auto name = ParamIDs::getLowCutFreqName();
@@ -365,8 +364,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout GuitarToolsAudioProcessor::c
     layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::resoExtremeActive));
 
 //    ========== MUD KILLER TAMER ===========
-    name = ParamIDs::getMudFreqName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, mudFrequencyRange, DefaultValues::mudFreq, juce::AudioParameterFloatAttributes().withLabel ("Hz").withStringFromValueFunction (ParamHelpers::getStringFromValue (0))));
+    name = ParamIDs::getMudAmountName();
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, amountRange, DefaultValues::mudAmount, juce::AudioParameterFloatAttributes().withLabel ("%").withStringFromValueFunction (ParamHelpers::getStringFromValue (0))));
     name = ParamIDs::getMudActiveName();
     layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::mudActive));
     name = ParamIDs::getMudExtremeActiveName();
@@ -377,13 +376,14 @@ juce::AudioProcessorValueTreeState::ParameterLayout GuitarToolsAudioProcessor::c
     layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::pluginBypassActive));
 
 //  ========== COMP ===========
-    auto compAmountRange = juce::NormalisableRange<float>(DefaultValues::compAmountRangeStart, DefaultValues::compAmountRangeEnd, DefaultValues::compAmountIntervalValue, 1.f);
     name = ParamIDs::getCompAmountName();
-    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name, compAmountRange, DefaultValues::compAmount, juce::AudioParameterFloatAttributes().withLabel ("%").withStringFromValueFunction (ParamHelpers::getStringFromValue (0))));
+    layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name, amountRange, DefaultValues::compAmount, juce::AudioParameterFloatAttributes().withLabel ("%").withStringFromValueFunction (ParamHelpers::getStringFromValue (0))));
     name = ParamIDs::getCompActiveName();
     layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::compActive));
     name = ParamIDs::getCompExtremeActiveName();
     layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::compExtremeActive));
+    name = ParamIDs::getLowTuningActiveName();
+    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::lowTuningActive));
 
 //  ========== LEVELS ===========
     name = ParamIDs::getInputGainName();
@@ -412,7 +412,7 @@ ChainSettings GuitarToolsAudioProcessor::getChainSettings() const
     settings.resoFreq = resoFreqParamSmoother.getCurrentValue();
     settings.resoGainDb = resoGainDbSmoother.getCurrentValue();
     settings.resoQ = resoQSmoother.getCurrentValue();
-    settings.mudFreq = mudFreqParamSmoother.getCurrentValue();
+    settings.mudFreq = mudFreqSmoother.getCurrentValue();
     settings.mudGainDb = mudGainDbSmoother.getCurrentValue();
     settings.mudQ = mudQSmoother.getCurrentValue();
 
@@ -443,14 +443,14 @@ void GuitarToolsAudioProcessor::linkParameters()
 {
     auto floatParams = std::array
     {
-        &lowCutFreqParam, &highCutFreqParam, &resoFreqParam, &mudFreqParam,
+        &lowCutFreqParam, &highCutFreqParam, &resoFreqParam, &mudAmountParam,
         &presenceGainParam, &depthGainParam, &compAmountParam,
         &inputGainParam, &outputGainParam
     };
 
     auto floatParamIDs = std::array
     {
-        &ParamIDs::getLowCutFreqName, &ParamIDs::getHighCutFreqName, &ParamIDs::getResoFreqName, &ParamIDs::getMudFreqName,
+        &ParamIDs::getLowCutFreqName, &ParamIDs::getHighCutFreqName, &ParamIDs::getResoFreqName, &ParamIDs::getMudAmountName,
         &ParamIDs::getPresenceGainName, &ParamIDs::getDepthGainName, &ParamIDs::getCompAmountName,
         &ParamIDs::getInputGainName, &ParamIDs::getOutputGainName
     };
@@ -474,14 +474,14 @@ void GuitarToolsAudioProcessor::linkParameters()
     {
         &resoActiveParam, &resoExtremeActiveParam, &mudActiveParam, &mudExtremeActiveParam,
         &compActiveParam, &compExtremeActiveParam, &loudnessMatchActiveParam, &pluginBypassActiveParam,
-        &gainLimitActiveParam
+        &gainLimitActiveParam, &lowTuningActiveParam
     };
 
     auto boolParamIDs = std::array
     {
         &ParamIDs::getResoActiveName, &ParamIDs::getResoExtremeActiveName, &ParamIDs::getMudActiveName, &ParamIDs::getMudExtremeActiveName,
         &ParamIDs::getCompActiveName, &ParamIDs::getCompExtremeActiveName, &ParamIDs::getLoudnessMatchActiveName, &ParamIDs::getPluginBypassActiveName,
-        &ParamIDs::getGainLimitActiveName
+        &ParamIDs::getGainLimitActiveName, &ParamIDs::getLowTuningActiveName
     };
 
     initCachedParams<juce::AudioParameterBool*>(boolParams, boolParamIDs);
@@ -491,7 +491,6 @@ void GuitarToolsAudioProcessor::linkParameters()
         {lowCutFreqParam, &lowCutFreqParamSmoother},
         {highCutFreqParam, &highCutFreqParamSmoother},
         {resoFreqParam, &resoFreqParamSmoother},
-        {mudFreqParam, &mudFreqParamSmoother},
         {presenceGainParam, &presenceGainParamSmoother},
         {depthGainParam, &depthGainParamSmoother},
         {compAmountParam, &compAmountParamSmoother}
@@ -519,9 +518,10 @@ void GuitarToolsAudioProcessor::updateSmootherFromParams(int numSamplesToSkip, S
     const auto depthIndex = static_cast<size_t>(juce::jlimit(0, 3, depthModeParam->getIndex()));
 
     updateSmoother(resoGainDbSmoother, resoActiveParam->get() ? (resoExtremeActive ? DefaultValues::resoExtremeGainDb : DefaultValues::resoGainDb) : 0.f);
-    updateSmoother(mudGainDbSmoother, mudActiveParam->get() ? (mudExtremeActive ? DefaultValues::mudExtremeGainDb : DefaultValues::mudGainDb) : 0.f);
     updateSmoother(resoQSmoother, resoExtremeActive ? DefaultValues::resoExtremeQ : DefaultValues::resoQ);
+    updateSmoother(mudGainDbSmoother, mudActiveParam->get() ? mudAmountParam->get() / 100.f * DefaultValues::mudMaxCutDb : 0.f);
     updateSmoother(mudQSmoother, mudExtremeActive ? DefaultValues::mudExtremeQ : DefaultValues::mudQ);
+    updateSmoother(mudFreqSmoother, lowTuningActiveParam->get() ? DefaultValues::lowTuningMudFreq : DefaultValues::mudFreq);
     updateSmoother(presenceFreqSmoother, DefaultValues::presenceFreqByMode[presenceIndex]);
     updateSmoother(presenceResonanceSmoother, DefaultValues::presenceResonanceByMode[presenceIndex]);
     updateSmoother(depthFreqSmoother, DefaultValues::depthFreqByMode[depthIndex]);

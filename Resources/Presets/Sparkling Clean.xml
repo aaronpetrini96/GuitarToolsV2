@@ -11,7 +11,7 @@
   <PARAM id="Reso Freq" value="3850"/>
   <PARAM id="Reso Active" value="0"/>
   <PARAM id="Reso Mode Active" value="0"/>
-  <PARAM id="Mud Freq" value="180"/>
+  <PARAM id="Mud Amount" value="25"/>
   <PARAM id="Mud Active" value="1"/>
   <PARAM id="Mud Mode Active" value="0"/>
   <PARAM id="Comp Amount" value="50"/>

@@ -63,7 +63,7 @@ private:
     TooltipsPanel tooltipsPanel;
     bool dismissInfoPanelOnMouseUp {false};
 
-    SettingsOptionsPanel settingsOptionsPopup {uiResize, audioProcessor.showTooltips, *audioProcessor.treeState.getParameter (ParamIDs::getLoudnessMatchActiveName()), *audioProcessor.treeState.getParameter (ParamIDs::getGainLimitActiveName())};
+    SettingsOptionsPanel settingsOptionsPopup {uiResize, audioProcessor.showTooltips, *audioProcessor.treeState.getParameter (ParamIDs::getLoudnessMatchActiveName()), *audioProcessor.treeState.getParameter (ParamIDs::getGainLimitActiveName()), *audioProcessor.treeState.getParameter (ParamIDs::getLowTuningActiveName())};
     AAListOptionsPopup resizeOptionsPopup {"UI SIZE"};
     juce::DrawableButton resizeButton {"GUI Size", juce::DrawableButton::ImageFitted};
     juce::Image backgroundWithDividers = juce::ImageCache::getFromMemory (BinaryData::mainPanelBackgroundLevelsDarkNoText_png, BinaryData::mainPanelBackgroundLevelsDarkNoText_pngSize);

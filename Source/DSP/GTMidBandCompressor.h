@@ -9,15 +9,20 @@ public:
     void setAmount(float newAmountProportion);
     void setActive(bool shouldBeActive);
     void setExtremeMode(bool shouldBeExtreme);
+    void setLowTuning(bool shouldUseLowTuning);
     void process(juce::AudioBuffer<float>& buffer);
 
 private:
     void splitBands(const juce::AudioBuffer<float>& inputBuffer);
+    void updateSettings();
 
     static constexpr float crossoverLowFreq {65.f};
-    static constexpr float crossoverHighFreq {280.f};
+    static constexpr float crossoverHighFreq {250.f};
     static constexpr float attackTimeConstantMs {16.f};
     static constexpr float releaseTimeConstantMs {50.f};
+    static constexpr float lowTuningCrossoverLowFreq {45.f};
+    static constexpr float lowTuningCrossoverHighFreq {200.f};
+    static constexpr float lowTuningReleaseTimeConstantMs {75.f};
     static constexpr float referenceLevelDb {-18.f};
     static constexpr float softKneeWidthDb {6.f};
     static constexpr float minRatio {2.f};
@@ -35,6 +40,8 @@ private:
     float thresholdDb {referenceLevelDb};
     float attackCoefficient {0.f};
     float releaseCoefficient {0.f};
+    float samplesPerMs {0.f};
+    bool lowTuning {false};
     float smoothedGainReductionDb {0.f};
 
     float amountProportion {0.f};

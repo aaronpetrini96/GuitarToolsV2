@@ -31,24 +31,19 @@ public:
         const auto boundsFHeight = boundsF.getHeight();
         const auto boundsFWidth = boundsF.getWidth();
 
-        g.fillAll(juce::Colours::black);
         g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
         g.drawImage(back, boundsF, juce::RectanglePlacement::stretchToFit);
+        g.fillAll(juce::Colours::black.withAlpha(0.15f));
 
-        // g.setGradientFill(juce::ColourGradient::vertical(GTColors::infoPanelTop, 0.f, GTColors::infoPanelBottom, boundsFHeight));
-        // g.fillRect(boundsF);
-        // g.setColour (GTColors::presetBox);
-        // g.drawRoundedRectangle (boundsF.reduced (borderThickness * 0.5f), cardCorners - borderThickness * 0.5f, borderThickness);
-
+        g.setOpacity(0.85f);
         const auto logoAPSize = boundsFHeight * 0.4f;
         const auto apLogoBounds = boundsF.withSizeKeepingCentre(logoAPSize, logoAPSize).withY(boundsFHeight * 0.055f);
-
-        g.drawImage(apLogo, apLogoBounds, juce::RectanglePlacement::fillDestination, false);
+        g.drawImage(apLogo, apLogoBounds, juce::RectanglePlacement::fillDestination);
 
         const auto gtLogoHeight = boundsFHeight * 0.125f;
         const auto gtLogoWidth = gtLogoHeight * (static_cast<float>(gtLogo.getWidth())/ static_cast<float>(gtLogo.getHeight()));
         const auto gtLogoBounds = boundsF.withSizeKeepingCentre(gtLogoWidth, gtLogoHeight).withY(apLogoBounds.getBottom());
-        g.drawImage(gtLogo, gtLogoBounds, juce::RectanglePlacement::fillDestination, false);
+        g.drawImage(gtLogo, gtLogoBounds, juce::RectanglePlacement::fillDestination);
 
         const auto dividerWidth = boundsFWidth * 0.46f;
         const auto dividerThickness = boundsFHeight * 0.003f;
@@ -64,12 +59,12 @@ public:
         const auto versionBounds = gtLogoBounds.withSizeKeepingCentre(gtLogoWidth, versionTextHeight).withY(dividerBounds.getBottom() + boundsFHeight * 0.055f);
         const auto copyrightBounds = versionBounds.withHeight(copyrightTextHeight).withY(versionBounds.getBottom() + boundsFHeight * 0.035f);
 
-        g.setFont(AAFonts::interMedium(versionTextHeight).withExtraKerningFactor(0.025f));
-        g.setColour(GTColors::sectionTitleText);
-        g.drawText(juce::String("Version 1.00"), versionBounds, juce::RectanglePlacement::centred);
-        g.setFont(AAFonts::interMedium(copyrightTextHeight).withExtraKerningFactor(0.025f));
+        g.setFont(AAFonts::montserratMedium(versionTextHeight).withExtraKerningFactor(0.025f));
+        g.setColour(GTColors::almostWhite);
+        g.drawText(juce::String ("Version ") + JucePlugin_VersionString, versionBounds, juce::Justification::centred);
+        g.setFont(AAFonts::montserratMedium(copyrightTextHeight).withExtraKerningFactor(0.025f));
         g.setColour(GTColors::infoPanelSecondaryText);
-        g.drawText(juce::String(juce::CharPointer_UTF8("Copyright \xc2\xa9 APAudio 2026")), copyrightBounds, juce::RectanglePlacement::centred);
+        g.drawText(juce::String(juce::CharPointer_UTF8("Copyright \xc2\xa9 APAudio 2026")), copyrightBounds, juce::Justification::centred);
     }
 
     void resized() override
@@ -84,7 +79,7 @@ public:
 private:
     juce::DrawableButton closeButton {"closeButton", juce::DrawableButton::ImageFitted};
     juce::Image apLogo {juce::ImageCache::getFromMemory(BinaryData::logoAP_png, BinaryData::logoAP_pngSize)};
-    juce::Image gtLogo {juce::ImageCache::getFromMemory(BinaryData::guitarTools2Logo2_png, BinaryData::guitarTools2Logo2_pngSize)};
+    juce::Image gtLogo {juce::ImageCache::getFromMemory(BinaryData::GTLogoV2Shadow_png, BinaryData::GTLogoV2Shadow_pngSize)};
     juce::Image back {juce::ImageCache::getFromMemory(BinaryData::infoBlueBack_png, BinaryData::infoBlueBack_pngSize)};
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (InfoPanel)
 };

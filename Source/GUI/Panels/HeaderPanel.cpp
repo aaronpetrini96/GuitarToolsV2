@@ -28,7 +28,7 @@ HeaderPanel::HeaderPanel (GuitarToolsAudioProcessor& processor, AAPresetBox& pre
 
     addAndMakeVisible (presetBox);
 
-    setupIconButton (savePresetButton, BinaryData::saveIcon_svg, BinaryData::saveIcon_svgSize);
+    setupIconButton (savePresetButton, BinaryData::saveIcon2_svg, BinaryData::saveIcon2_svgSize);
     savePresetButton.setTooltip ("Save: Save the current settings as a preset");
     savePresetButton.onClick = [this] { if (onSaveClicked != nullptr) onSaveClicked(); };
 }
@@ -55,10 +55,6 @@ void HeaderPanel::paint (juce::Graphics& g)
     const auto boundsF = getLocalBounds().toFloat();
     g.setGradientFill(juce::ColourGradient::horizontal(GTColors::headerPanelStart, 0.f, GTColors::headerPanelEnd, boundsF.getWidth()));
     g.fillRect(boundsF);
-
-    const auto logoH = boundsF.getHeight() * 0.75f;
-    const auto logoW = logoH * (float) guitarToolsLogo.getWidth() / (float) guitarToolsLogo.getHeight();
-    const auto logoBounds = boundsF.withSize (logoW, logoH).withCentre({boundsF.getWidth() * logoCentreXPOW, boundsF.getCentreY()});
     g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
     g.drawImage (guitarToolsLogo, logoBounds, juce::RectanglePlacement::fillDestination);
 }
@@ -69,12 +65,17 @@ void HeaderPanel::resized()
     const auto boundsFWidth = boundsF.getWidth();
     const auto boundsFHeight = boundsF.getHeight();
 
+    const auto logoH = boundsFHeight * 0.75f;
+    const auto logoW = logoH * (float) guitarToolsLogo.getWidth() / (float) guitarToolsLogo.getHeight();
+    logoBounds = boundsF.withSize (logoW, logoH).withCentre ({boundsFWidth * logoCentreXPOW, boundsF.getCentreY()});
+
     const auto presetBoxHeight = boundsFHeight * 0.675f;
     const auto presetBoxWidth = boundsFWidth * 0.45f;
     presetBoxBounds = boundsF.withSizeKeepingCentre (presetBoxWidth, presetBoxHeight);
     presetBox.setBounds (presetBoxBounds.toNearestInt());
 
-    const auto saveIconSize = presetBoxHeight * 0.88f;
+    const auto saveIconSize = boundsFHeight * 0.6f;
+    // const auto saveIconSize = presetBoxHeight * 0.88f;
     const auto saveButtonBounds = presetBoxBounds.withSizeKeepingCentre (saveIconSize, saveIconSize).withRightX (presetBoxBounds.getX() + presetBoxWidth * 0.975f);
     savePresetButton.setBounds (saveButtonBounds.toNearestInt());
 
@@ -90,6 +91,12 @@ void HeaderPanel::resized()
     const auto undoRedoOffset = (iconButtonSize + iconGap) * 0.5f;
     undoButton.setBounds (iconButtonBounds.withCentre ({undoRedoCentreX - undoRedoOffset, boundsF.getCentreY()}).toNearestInt());
     redoButton.setBounds (iconButtonBounds.withCentre ({undoRedoCentreX + undoRedoOffset, boundsF.getCentreY()}).toNearestInt());
+}
+
+void HeaderPanel::mouseUp (const juce::MouseEvent& event)
+{
+    if (logoBounds.contains (event.position) && onInfoClicked != nullptr)
+        onInfoClicked();
 }
 
 void HeaderPanel::setupIconButton (juce::DrawableButton& iconButton, const void* iconData, const int iconDataSize)

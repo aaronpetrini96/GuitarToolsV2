@@ -19,6 +19,7 @@ public:
 
     void paint (juce::Graphics& g) override;
     void resized() override;
+    void mouseUp (const juce::MouseEvent& event) override;
 
     bool isBypassed() const;
 
@@ -48,6 +49,7 @@ private:
 
     juce::Image guitarToolsLogo = juce::ImageCache::getFromMemory (BinaryData::GTLogoV2Shadow_png, BinaryData::GTLogoV2Shadow_pngSize);
     juce::Rectangle<float> presetBoxBounds;
+    juce::Rectangle<float> logoBounds;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (HeaderPanel)
 };

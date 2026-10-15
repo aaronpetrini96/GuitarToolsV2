@@ -164,20 +164,18 @@ void GuitarToolsAudioProcessorEditor::resized()
     resizeButton.setBounds (resizeBtnBounds.toNearestInt());
 
     const auto rowH = headerH * 0.65f;
-    const auto popupsY = mainPanelBounds.getHeight() * 0.06f;
+    const auto popupsY = presetBox.getBounds().toFloat().getY();
 
     const auto sizeOptionsWidth = boundsFWidth * 0.175f;
     const auto sizeOptionsHeight = rowH * resizeOptionsPopup.getNumRows();
-    resizeOptionsPopup.setBounds (juce::Rectangle<float> (sizeOptionsWidth, sizeOptionsHeight).withPosition (resizeBtnBounds.getCentreX() - sizeOptionsWidth, resizeBtnBounds.getCentreY() - sizeOptionsHeight).toNearestInt());
-
-    const auto settingsOptionsWidth = boundsFWidth * 0.295f;
-    const auto settingsOptionsHeight = rowH * settingsOptionsPopup.getNumRows();
-    settingsOptionsPopup.setBounds (mainPanelBounds.withSize(settingsOptionsWidth, settingsOptionsHeight).withY(popupsY).withRightX(static_cast<float>(headerPanel.settingsButton.getRight())).toNearestInt());
+    resizeOptionsPopup.setBounds (juce::Rectangle<float> (sizeOptionsWidth, sizeOptionsHeight).withRightX (static_cast<float> (headerPanel.settingsButton.getRight())).withBottomY (resizeBtnBounds.getCentreY()).toNearestInt());
+    settingsOptionsPopup.setBounds (mainPanelBounds.withSize (boundsFWidth * 0.2925f, rowH * settingsOptionsPopup.getNumRows()).withY (popupsY).withRightX (static_cast<float> (headerPanel.settingsButton.getRight())).toNearestInt());
 
     const auto presetBoxBounds = getLocalArea (&headerPanel, presetBox.getBounds().toFloat());
     const auto presetBrowserH = rowH * presetBrowser.getNumRows();
     const auto presetBrowserBounds = presetBoxBounds.withSizeKeepingCentre(boundsFWidth * 0.33f, presetBrowserH).withY(popupsY);
     presetBrowser.setBounds (presetBrowserBounds.toNearestInt());
+
 
     const auto saveDeletePopupBounds = mainPanelBounds.withSizeKeepingCentre(presetBrowserBounds.getWidth(), rowH * savePresetPopup.numRows).withY(popupsY);
     savePresetPopup.setBounds (saveDeletePopupBounds.toNearestInt());

@@ -7,6 +7,7 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 
 #include "../GUI/PopupPanels/AAListOptionsPopup.h"
+#include "BinaryData.h"
 
 class AAResizeUI
 {
@@ -77,7 +78,8 @@ public:
     AAListOptionsPopup::Item getMakeDefaultOption() const
     {
         const auto isAlreadyDefault = juce::approximatelyEqual (currentScale, getDefaultScale());
-        return {"Set UI Size As Default", [this] { makeCurrentSizeDefault(); }, ! isAlreadyDefault};
+        return {"Set UI Size As Default", [this] { makeCurrentSizeDefault(); }, ! isAlreadyDefault, false, false, {},
+                juce::Drawable::createFromImageData (BinaryData::resizeLines_svg, BinaryData::resizeLines_svgSize)};
     }
 
     void makeCurrentSizeDefault() const

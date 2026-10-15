@@ -55,16 +55,6 @@ namespace AAUITools
         }
     }
 
-    inline void drawShadowAround (juce::Graphics& g, const juce::Rectangle<float> bounds, const float opacity = 0.85f, const float blurPOH = 0.03f, const float offsetYPOH = 0.01f)
-    {
-        const auto shadowBounds = bounds.toNearestInt();
-        const auto shadow = juce::DropShadow (juce::Colours::black.withAlpha (opacity), juce::roundToInt (bounds.getHeight() * blurPOH), {0, juce::roundToInt (bounds.getHeight() * offsetYPOH)});
-
-        const juce::Graphics::ScopedSaveState saveState (g);
-        g.excludeClipRegion (shadowBounds);
-        shadow.drawForRectangle (g, shadowBounds);
-    }
-
     class PrintedText : public juce::Component
     {
     public:

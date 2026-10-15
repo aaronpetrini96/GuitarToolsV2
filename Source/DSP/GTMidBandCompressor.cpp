@@ -13,18 +13,12 @@ void GTMidBandCompressor::prepare(const juce::dsp::ProcessSpec& spec)
     LP2.setType(FilterType::lowpass);
     HP2.setType(FilterType::highpass);
 
-    LP1.setCutoffFrequency(crossoverLowFreq);
-    HP1.setCutoffFrequency(crossoverLowFreq);
-    AP2.setCutoffFrequency(crossoverHighFreq);
-    LP2.setCutoffFrequency(crossoverHighFreq);
-    HP2.setCutoffFrequency(crossoverHighFreq);
-
     for (auto& bandBuffer : bandBuffers)
         bandBuffer.setSize(static_cast<int>(spec.numChannels), static_cast<int>(spec.maximumBlockSize));
 
-    const auto samplesPerMs = static_cast<float>(spec.sampleRate) / 1000.f;
+    samplesPerMs = static_cast<float>(spec.sampleRate) / 1000.f;
     attackCoefficient = std::exp(-1.f / (attackTimeConstantMs * samplesPerMs));
-    releaseCoefficient = std::exp(-1.f / (releaseTimeConstantMs * samplesPerMs));
+    updateSettings();
     smoothedGainReductionDb = 0.f;
 
     activeAmount.reset(spec.sampleRate, activeRampSeconds);
@@ -135,4 +129,25 @@ void GTMidBandCompressor::splitBands(const juce::AudioBuffer<float>& inputBuffer
     auto highBandBlock = juce::dsp::AudioBlock<float>(bandBuffers[2]);
     auto highBandContext = juce::dsp::ProcessContextReplacing<float>(highBandBlock);
     HP2.process(highBandContext);
+}
+
+void GTMidBandCompressor::setLowTuning(bool shouldUseLowTuning)
+{
+    if (lowTuning == shouldUseLowTuning)
+        return;
+
+    lowTuning = shouldUseLowTuning;
+    updateSettings();
+}
+
+void GTMidBandCompressor::updateSettings()
+{
+    const auto lowCrossoverFreq = lowTuning ? lowTuningCrossoverLowFreq : crossoverLowFreq;
+    LP1.setCutoffFrequency(lowCrossoverFreq);
+    HP1.setCutoffFrequency(lowCrossoverFreq);
+    const auto highCrossoverFreq = lowTuning ? lowTuningCrossoverHighFreq : crossoverHighFreq;
+    AP2.setCutoffFrequency(highCrossoverFreq);
+    LP2.setCutoffFrequency(highCrossoverFreq);
+    HP2.setCutoffFrequency(highCrossoverFreq);
+    releaseCoefficient = std::exp(-1.f / ((lowTuning ? lowTuningReleaseTimeConstantMs : releaseTimeConstantMs) * samplesPerMs));
 }

@@ -97,7 +97,7 @@ private:
     juce::AudioParameterFloat* resoFreqParam {nullptr};
     juce::AudioParameterBool* resoActiveParam {nullptr};
     juce::AudioParameterBool* resoExtremeActiveParam {nullptr};
-    juce::AudioParameterFloat* mudFreqParam {nullptr};
+    juce::AudioParameterFloat* mudAmountParam {nullptr};
     juce::AudioParameterBool* mudActiveParam {nullptr};
     juce::AudioParameterBool* mudExtremeActiveParam {nullptr};
     juce::AudioParameterChoice* presenceModeParam {nullptr};
@@ -110,7 +110,6 @@ private:
     lowCutFreqParamSmoother,
     highCutFreqParamSmoother,
     resoFreqParamSmoother,
-    mudFreqParamSmoother,
     presenceGainParamSmoother,
     depthGainParamSmoother,
     compAmountParamSmoother;
@@ -120,6 +119,7 @@ private:
     mudGainDbSmoother,
     resoQSmoother,
     mudQSmoother,
+    mudFreqSmoother,
     presenceFreqSmoother,
     presenceResonanceSmoother,
     depthFreqSmoother,
@@ -137,6 +137,7 @@ private:
     juce::AudioParameterFloat* compAmountParam {nullptr};
     juce::AudioParameterBool* compActiveParam {nullptr};
     juce::AudioParameterBool* compExtremeActiveParam {nullptr};
+    juce::AudioParameterBool* lowTuningActiveParam {nullptr};
 
     //==============================================================================
 //    LEVELS PART

@@ -14,7 +14,7 @@ namespace ParamIDs
     inline juce::String getHighCutSlopeName() { return "HighCut Slope"; }
     inline juce::String getResoFreqName() { return "Reso Freq"; }
     inline juce::String getResoActiveName() { return "Reso Active"; }
-    inline juce::String getMudFreqName() { return "Mud Freq"; }
+    inline juce::String getMudAmountName() { return "Mud Amount"; }
     inline juce::String getMudActiveName() { return "Mud Active"; }
     inline juce::String getPresenceModeName() { return "Presence Mode"; }
     inline juce::String getPresenceGainName() { return "Presence Gain"; }
@@ -30,6 +30,7 @@ namespace ParamIDs
     inline juce::String getResoExtremeActiveName() { return "Reso Mode Active"; }
     inline juce::String getMudExtremeActiveName() { return "Mud Mode Active"; }
     inline juce::String getCompExtremeActiveName() { return "Comp Mode Active"; }
+    inline juce::String getLowTuningActiveName() { return "Low Tuning Active"; }
 }
 
 namespace DefaultValues
@@ -63,22 +64,20 @@ namespace DefaultValues
     inline constexpr float resoExtremeQ {10.f};
     inline constexpr float resoExtremeGainDb {-12.f};
 
-    inline constexpr float mudFreq {120.f};
-    inline constexpr float mudRangeStart {60.f};
-    inline constexpr float mudRangeEnd {300.f};
+    inline constexpr float mudFreq {250.f};
+    inline constexpr float lowTuningMudFreq {180.f};
+    inline constexpr float mudAmount {33.f};
+    inline constexpr float mudMaxCutDb {-12.f};
     inline constexpr bool mudActive {false};
     inline constexpr bool mudExtremeActive {false};
     inline constexpr float mudQ {0.7f};
-    inline constexpr float mudGainDb {-4.f};
-    inline constexpr float mudExtremeQ {0.7f};
-    inline constexpr float mudExtremeGainDb {-8.f};
+    inline constexpr float mudExtremeQ {0.4f};
 
     inline constexpr float compAmount {50.f};
-    inline constexpr float compAmountRangeStart {0.f};
-    inline constexpr float compAmountRangeEnd {100.f};
-    inline constexpr float compAmountIntervalValue {0.1f};
+    inline constexpr float amountIntervalValue {0.1f};
     inline constexpr bool compActive {false};
     inline constexpr bool compExtremeActive {false};
+    inline constexpr bool lowTuningActive {false};
 
 //    ========== COLOR ===========
     inline constexpr int presenceMode {1};
@@ -124,17 +123,18 @@ namespace ParamTooltips
         {ParamIDs::getResoActiveName(),             "Kill reso: Tame harsh resonances"},
         {ParamIDs::getResoFreqName(),               "Reso frequency: Find the harsh resonance you want to tame"},
         {ParamIDs::getMudActiveName(),              "Clear mud: Reduce muddy buildup"},
-        {ParamIDs::getMudFreqName(),                "Mud frequency: Find the muddy frequency you want to reduce"},
+        {ParamIDs::getMudAmountName(),              "Mud amount: Adjust how much mud is removed"},
         {ParamIDs::getCompActiveName(),             "Tame lows: Tighten the dynamics of your low end"},
-        {ParamIDs::getCompAmountName(),             "Tame lows amount: Adjust how much the low end is tightened"},
-        {ParamIDs::getResoExtremeActiveName(),      "Kill reso max: Tame harsh resonances even harder"},
-        {ParamIDs::getMudExtremeActiveName(),       "Clear mud max: Reduce muddy buildup even harder"},
-        {ParamIDs::getCompExtremeActiveName(),      "Tame lows max: Tighten your low end even harder"},
-        {ParamIDs::getInputGainName(),             "Input: Adjust the level going into the plugin"},
-        {ParamIDs::getOutputGainName(),             "Output: Adjust the level leaving the plugin"},
-        {ParamIDs::getLoudnessMatchActiveName(),    "Match level: Match the output loudness to the input"},
-        {ParamIDs::getGainLimitActiveName(),        "Clip guard: Stop the gain from pushing the output into clipping"},
-        {ParamIDs::getPluginBypassActiveName(),     "Bypass: Bypass all plugin processing"},
+        {ParamIDs::getCompAmountName(), "Tame lows amount: Adjust how much the low end is tightened"},
+        {ParamIDs::getResoExtremeActiveName(), "Kill reso max: Tame harsh resonances even harder"},
+        {ParamIDs::getMudExtremeActiveName(), "Clear mud max: Clear a wider range of mud"},
+        {ParamIDs::getCompExtremeActiveName(), "Tame lows max: Tighten your low end even harder"},
+        {ParamIDs::getLowTuningActiveName(), "Low tuning: Adapt the plugin for lower tunings"},
+        {ParamIDs::getInputGainName(), "Input: Adjust the level going into the plugin"},
+        {ParamIDs::getOutputGainName(), "Output: Adjust the level leaving the plugin"},
+        {ParamIDs::getLoudnessMatchActiveName(), "Match level: Match the output loudness to the input"},
+        {ParamIDs::getGainLimitActiveName(), "Clip guard: Stop the gain from pushing the output into clipping"},
+        {ParamIDs::getPluginBypassActiveName(), "Bypass: Bypass all plugin processing"},
     };
 }
 

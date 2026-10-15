@@ -55,6 +55,16 @@ namespace AAUITools
         }
     }
 
+    inline void drawShadowAround (juce::Graphics& g, const juce::Rectangle<float> bounds, const float opacity = 0.85f, const float blurPOH = 0.03f, const float offsetYPOH = 0.01f)
+    {
+        const auto shadowBounds = bounds.toNearestInt();
+        const auto shadow = juce::DropShadow (juce::Colours::black.withAlpha (opacity), juce::roundToInt (bounds.getHeight() * blurPOH), {0, juce::roundToInt (bounds.getHeight() * offsetYPOH)});
+
+        const juce::Graphics::ScopedSaveState saveState (g);
+        g.excludeClipRegion (shadowBounds);
+        shadow.drawForRectangle (g, shadowBounds);
+    }
+
     class PrintedText : public juce::Component
     {
     public:
@@ -173,76 +183,6 @@ namespace AAFonts
         return juce::Font {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))}.withExtraKerningFactor (0.04f);
     }
 
-    inline juce::Font ibmPlexSansLight (const float fontHeight)
-    {
-        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
-            BinaryData::IBMPlexSansLight_ttf, BinaryData::IBMPlexSansLight_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
-    }
-
-    inline juce::Font ibmPlexSansRegular (const float fontHeight)
-    {
-        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
-            BinaryData::IBMPlexSansRegular_ttf, BinaryData::IBMPlexSansRegular_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
-    }
-
-    inline juce::Font ibmPlexSansSemiBold (const float fontHeight)
-    {
-        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
-            BinaryData::IBMPlexSansSemiBold_ttf, BinaryData::IBMPlexSansSemiBold_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
-    }
-
-    inline juce::Font ibmPlexSansBold (const float fontHeight)
-    {
-        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
-            BinaryData::IBMPlexSansBold_ttf, BinaryData::IBMPlexSansBold_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
-    }
-
-    inline juce::Font ibmPlexMonoMedium (const float fontHeight)
-    {
-        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
-            BinaryData::IBMPlexMonoMedium_ttf, BinaryData::IBMPlexMonoMedium_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
-    }
-
-    inline juce::Font jetBrainsMonoLight (const float fontHeight)
-    {
-        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
-            BinaryData::JetBrainsMonoLight_ttf, BinaryData::JetBrainsMonoLight_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
-    }
-
-    inline juce::Font jetBrainsMonoRegular (const float fontHeight)
-    {
-        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
-            BinaryData::JetBrainsMonoRegular_ttf, BinaryData::JetBrainsMonoRegular_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
-    }
-
-    inline juce::Font jetBrainsMonoMedium (const float fontHeight)
-    {
-        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
-            BinaryData::JetBrainsMonoMedium_ttf, BinaryData::JetBrainsMonoMedium_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
-    }
-
-    inline juce::Font jetBrainsMonoSemiBold (const float fontHeight)
-    {
-        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
-            BinaryData::JetBrainsMonoSemiBold_ttf, BinaryData::JetBrainsMonoSemiBold_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
-    }
-
-    inline juce::Font jetBrainsMonoBold (const float fontHeight)
-    {
-        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
-            BinaryData::JetBrainsMonoBold_ttf, BinaryData::JetBrainsMonoBold_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
-    }
-
     inline juce::Font interMedium (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
@@ -271,10 +211,17 @@ namespace AAFonts
         return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 
-    inline juce::Font montserratLight (const float fontHeight)
+    inline juce::Font montserratSemiBold (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
-            BinaryData::MontserratLight_ttf, BinaryData::MontserratLight_ttfSize);
+            BinaryData::MontserratSemiBold_ttf, BinaryData::MontserratSemiBold_ttfSize);
+        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
+    }
+
+    inline juce::Font montserratBold (const float fontHeight)
+    {
+        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
+            BinaryData::MontserratBold_ttf, BinaryData::MontserratBold_ttfSize);
         return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
     }
 

@@ -173,7 +173,7 @@ void MainPanel::resizeLevelsSectionCentred(const juce::Rectangle<float>& boundsF
 {
     const auto levelsArea = buttonsArea.withTop (boundsF.getHeight() * 0.775f);
     const auto levelsAreaHeight = levelsArea.getHeight();
-    const auto gainKnobSize = levelsAreaHeight * 0.55f;
+    const auto gainKnobSize = levelsAreaHeight * 0.5f;
     const auto meterHeight = levelsAreaHeight * 0.85f;
     const auto meterWidth = meterHeight * 0.25f;
     const auto meterCY = buttonsArea.getHeight() * 0.905f;
@@ -183,12 +183,18 @@ void MainPanel::resizeLevelsSectionCentred(const juce::Rectangle<float>& boundsF
     outputLevelMeter.setBounds (meterBounds.translated (meterGap, 0.f).toNearestInt());
 
     const auto gainKnobGap = levelsArea.getCentreX() - (buttonsArea.getX() + meterBounds.getX() - meterGap) * 0.5f;
-    const auto gainKnobBounds = levelsArea.withSize (gainKnobSize, gainKnobSize * 1.17f).withCentre ({levelsArea.getCentreX(), meterBounds.getCentreY()});
+    const auto knobTitleLabelHeight = knobSizeReference * 0.1f;
+    const auto knobTitleLabelBounds = levelsArea.withSize (gainKnobGap, knobTitleLabelHeight).withCentre ({levelsArea.getCentreX(), meterBounds.getY() + knobTitleLabelHeight * 0.95f});
+    for (auto* l : {&inputLevelTitle, &outputLevelTitle})
+        l->setFont (AAFonts::ibmPlexSansMedium (knobTitleLabelHeight * 0.85f).withExtraKerningFactor (0.03f));
+    inputLevelTitle.setBounds (knobTitleLabelBounds.translated (-gainKnobGap, 0.f).toNearestInt());
+    outputLevelTitle.setBounds (knobTitleLabelBounds.translated (gainKnobGap, 0.f).toNearestInt());
+
+    const auto gainKnobBounds = levelsArea.withSizeKeepingCentre (gainKnobSize, gainKnobSize * 1.17f).withY (knobTitleLabelBounds.getBottom());
     inputGainKnob.setBounds (gainKnobBounds.translated (-gainKnobGap, 0.f).toNearestInt());
     outputGainKnob.setBounds (gainKnobBounds.translated (gainKnobGap, 0.f).toNearestInt());
 
-    const auto levelsTitleHeight = knobSizeReference * 0.112f;
-    const auto levelsTitleKerning = 0.03f;
-    levelsTitle.setFont (AAFonts::ibmPlexSansMedium (levelsTitleHeight).withExtraKerningFactor (levelsTitleKerning));
-    levelsTitle.setBounds (levelsArea.withHeight (levelsTitleHeight).withCentre ({levelsArea.getCentreX(), levelsArea.getY() + levelsTitleHeight * 0.5f}).toNearestInt());
+    const auto levelsLabelHeight = knobSizeReference * 0.112f;
+    levelsTitle.setFont (AAFonts::ibmPlexSansMedium (levelsLabelHeight).withExtraKerningFactor (0.03f));
+    levelsTitle.setBounds (levelsArea.withHeight (levelsLabelHeight).withCentre ({levelsArea.getCentreX(), levelsArea.getY() + levelsLabelHeight * 0.5f}).toNearestInt());
 }

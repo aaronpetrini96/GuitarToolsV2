@@ -54,6 +54,8 @@ private:
     AAUITools::PrintedText presenceModeLabel {"MODE", textWhiteColor};
     AAUITools::PrintedText depthModeLabel    {"MODE", textWhiteColor};
     AAUITools::PrintedText levelsTitle {"LEVELS", GTColors::almostWhite};
+    AAUITools::PrintedText inputLevelTitle {"INPUT", GTColors::almostWhite};
+    AAUITools::PrintedText outputLevelTitle {"OUTPUT", GTColors::almostWhite};
 
     AASquareSSLButton resoActiveButton {*audioProcessor.treeState.getParameter (ParamIDs::getResoActiveName()), "KILL\nRESO"};
     AASquareSSLButton mudActiveButton {*audioProcessor.treeState.getParameter (ParamIDs::getMudActiveName()), "CLEAR\nMUD"};
@@ -63,8 +65,8 @@ private:
     AARectSSLButton compModeSwitch {*audioProcessor.treeState.getParameter (ParamIDs::getCompExtremeActiveName()), "MAX"};
     AARectSSLButton mudModeSwitch {*audioProcessor.treeState.getParameter (ParamIDs::getMudExtremeActiveName()), "MAX"};
 
-    AANotchSSLKnob inputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getInputGainName()), "IN"};
-    AANotchSSLKnob outputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getOutputGainName()), "OUT"};
+    AANotchSSLKnob inputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getInputGainName()), "dB"};
+    AANotchSSLKnob outputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getOutputGainName()), "dB"};
 
     GTLevelMeter outputLevelMeter{audioProcessor.outputLevelLeft, audioProcessor.outputLevelRight, GTLevelMeter::ScalePlacement::none};
     GTLevelMeter inputLevelMeter{audioProcessor.inputLevelLeft, audioProcessor.inputLevelRight, GTLevelMeter::ScalePlacement::none};

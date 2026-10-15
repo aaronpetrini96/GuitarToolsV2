@@ -15,10 +15,10 @@ class FadersPlatePanel : public juce::Component
 public:
     explicit FadersPlatePanel (GuitarToolsAudioProcessor& processor)
         : resoFreqFader (*processor.treeState.getParameter (ParamIDs::getResoFreqName()), "Hz"),
-          mudFreqFader (*processor.treeState.getParameter (ParamIDs::getMudFreqName()), "Hz"),
+          mudAmountFader (*processor.treeState.getParameter (ParamIDs::getMudAmountName()), "%"),
           compAmountFader (*processor.treeState.getParameter (ParamIDs::getCompAmountName()), "%")
     {
-        for (auto* fader : {&resoFreqFader, &mudFreqFader, &compAmountFader})
+        for (auto* fader : {&resoFreqFader, &mudAmountFader, &compAmountFader})
         {
             addAndMakeVisible (*fader);
             fader->setTooltip (ParamHelpers::getTooltipForParam (fader->getComponentID()));
@@ -55,7 +55,7 @@ public:
         const auto boundsFWidth = boundsF.getWidth();
 
         faderBounds = boundsF.withSizeKeepingCentre(boundsFWidth * 0.3f , boundsFHeight);
-        mudFreqFader.setBounds (faderBounds.toNearestInt());
+        mudAmountFader.setBounds (faderBounds.toNearestInt());
         resoFreqFader.setBounds (faderBounds.translated(-faderSpacing, 0.f).toNearestInt());
         compAmountFader.setBounds (faderBounds.translated(faderSpacing, 0.f).toNearestInt());
 
@@ -76,7 +76,7 @@ public:
         resized();
     }
 
-    AAVerticalSSLFader resoFreqFader, mudFreqFader, compAmountFader;
+    AAVerticalSSLFader resoFreqFader, mudAmountFader, compAmountFader;
     float faderSpacing {0.f};
 private:
     const juce::RectanglePlacement imgPlacement {juce::RectanglePlacement::fillDestination};

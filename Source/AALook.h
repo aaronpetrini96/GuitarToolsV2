@@ -35,8 +35,8 @@ namespace  GTColors //project specific
 
 namespace AAUITools
 {
-    constexpr float outlineThicknessPOH {0.1f};
-    constexpr float cornerPOH {0.0f};
+    constexpr float outlineThicknessPOH {0.0f};
+    constexpr float cornerPOH {0.02f};
     constexpr float fontHeightPOH {0.625f};
 
     inline void setIconButtonImages (juce::DrawableButton& button, const void* iconData, const int iconDataSize)

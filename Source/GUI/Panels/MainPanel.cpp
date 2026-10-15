@@ -165,7 +165,7 @@ void MainPanel::resizeMagicButtons()
 
     const auto modeSwitchWidth = magicButtonSize * 0.8f;
     const auto modeSwitchHeight = modeSwitchWidth * 683.0f / 1206.0f;
-    const auto switchBounds = plateBounds.withSizeKeepingCentre (modeSwitchWidth, modeSwitchHeight).withY (buttonsArea.getHeight() * 0.7f);
+    const auto switchBounds = plateBounds.withSizeKeepingCentre (modeSwitchWidth, modeSwitchHeight).withY (buttonsArea.getHeight() * 0.705f);
     mudModeSwitch.setBounds (switchBounds.toNearestInt());
     resoModeSwitch.setBounds (switchBounds.translated (-magicButtonsGap, 0.0f).toNearestInt());
     compModeSwitch.setBounds (switchBounds.translated (magicButtonsGap, 0.0f).toNearestInt());

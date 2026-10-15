@@ -17,7 +17,9 @@ public:
         textColourId            = 0x2a20005,
         tabTextColourId         = 0x2a20006,
         tabTextHoverColourId    = 0x2a20007,
-        outlineColourId         = 0x2a20008
+        outlineColourId         = 0x2a20008,
+        tabSelectedColourId     = 0x2a20009,
+        tabUnselectedColourId   = 0x2a2000a
     };
 
     PresetBrowserLAF()
@@ -30,6 +32,8 @@ public:
         setColour (tabTextColourId, GTColors::sectionTitleText);
         setColour (tabTextHoverColourId, GTColors::sectionTitleText.brighter(2.f));
         setColour (outlineColourId, GTColors::dividerLinesStart);
+        setColour (tabSelectedColourId, GTColors::tabButtonSelected);
+        setColour (tabUnselectedColourId, GTColors::tabButtonUnselected);
     }
 
     void drawMenuListBackground (juce::Graphics& g, juce::Rectangle<float> bounds, const float numRows)
@@ -50,17 +54,6 @@ public:
         g.drawRoundedRectangle (bounds.reduced (outlineThickness * 0.5f), cornerSize, outlineThickness);
     }
 
-    void drawMenuListHeader (juce::Graphics& g, juce::Rectangle<float> bounds, const juce::String& text)
-    {
-        //bounds
-        const auto fontHeight = bounds.getHeight() * tabTextFontPOH;
-        //Colors
-        const auto textColour = findColour (textColourId);
-        g.setColour (textColour);
-        g.setFont (AAFonts::interMedium (fontHeight));
-        g.drawFittedText (text, bounds.toNearestInt(), juce::Justification::centred, 1);
-    }
-
     void drawButtonBackground(juce::Graphics& g, juce::Button& button, const juce::Colour& , bool isHighlighted, bool) override
     {
         //bounds
@@ -73,7 +66,7 @@ public:
 
         if (isTabButton)
         {
-            g.setColour (isSelected ? GTColors::tabButtonSelected : GTColors::tabButtonUnselected);
+            g.setColour (findColour (isSelected ? tabSelectedColourId : tabUnselectedColourId));
             g.fillRect(boundsF);
             g.setColour (findColour(outlineColourId));
             const auto tabOutlineThickness = outlineThickness * 0.5f;
@@ -85,7 +78,7 @@ public:
         if (!isTabButton && isHighlighted)
         {
             g.setColour (findColour(highlightColourId));
-            g.fillRoundedRectangle (boundsF.reduced(outlineThickness), cornerSize);
+            g.fillRoundedRectangle (boundsF.reduced(outlineThickness, outlineThickness * 0.5f), cornerSize);
         }
     }
 

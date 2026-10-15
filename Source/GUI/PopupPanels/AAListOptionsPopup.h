@@ -4,11 +4,7 @@
 
 #pragma once
 
-#include <juce_gui_basics/juce_gui_basics.h>
-
 #include <functional>
-
-#include "../../AALook.h"
 #include "../LAF/ListOptionsPopupLAF.h"
 
 class AAListOptionsPopup : public juce::Component
@@ -22,6 +18,7 @@ public:
         bool isSelected {false};
         bool isCheckbox {false};
         juce::String tooltip;
+        std::shared_ptr<juce::Drawable> icon;
     };
 
     explicit AAListOptionsPopup (const juce::String& titleToUse) : title (titleToUse)
@@ -38,7 +35,7 @@ public:
     void setItems (const juce::Array<Item>& newItems)
     {
         rows.clear();
-
+        rowIcons.clear();
         for (const auto& item : newItems)
         {
             auto* row = rows.add (item.isCheckbox ? static_cast<juce::Button*> (new juce::ToggleButton (item.text)) : new juce::TextButton (item.text));
@@ -54,6 +51,10 @@ public:
                     onSelected();
             };
             addAndMakeVisible (row);
+
+            if (item.icon != nullptr)
+                item.icon->replaceColour(GTColors::iconSVGColor, listOptionsLAF.findColour(juce::TextButton::textColourOffId));
+            rowIcons.push_back (item.icon);
         }
 
         resized();
@@ -65,6 +66,20 @@ public:
     {
         listOptionsLAF.drawListOptionsBackground (g, getLocalBounds().toFloat(), getNumRows(), drawRowDividers);
         listOptionsLAF.drawListOptionsTitle (g, titleBounds, title);
+    }
+
+    void paintOverChildren (juce::Graphics& g) override
+    {
+        for (int rowIndex = 0; rowIndex < rows.size(); ++rowIndex)
+        {
+            if (const auto& icon = rowIcons[(size_t) rowIndex])
+            {
+                const auto rowBounds = rows[rowIndex]->getBounds().toFloat();
+                const auto iconSize = rowBounds.getHeight() * 0.55f;
+                const auto iconBounds = rowBounds.withSizeKeepingCentre (iconSize, iconSize).withRightX (rowBounds.getRight() - rowBounds.getHeight() * 0.45f);
+                icon->drawWithin (g, iconBounds, juce::RectanglePlacement::centred, rows[rowIndex]->isEnabled() ? 1.f : 0.3f);
+            }
+        }
     }
 
     void resized() override
@@ -87,6 +102,7 @@ private:
     juce::String title;
     juce::Rectangle<float> titleBounds;
     juce::OwnedArray<juce::Button> rows;
+    std::vector<std::shared_ptr<juce::Drawable>> rowIcons;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AAListOptionsPopup)
 };

@@ -15,16 +15,17 @@ public:
         dividerColourId    = 0x2a10003,
         highlightColourId  = 0x2a10004,
         titleBackgroundColourId = 0x2a10005,
-        titleTextColourId  = 0x2a10006
+        titleTextColourId  = 0x2a10006,
+        backgroundEndColourId = 0x2a10007
     };
 
     ListOptionsPopupLAF()
     {
-        setColour (backgroundColourId, GTColors::popupDarkBackground);
-        setColour (outlineColourId, GTColors::dividerLinesStart);
-        setColour (dividerColourId, GTColors::dividerLinesStart);
+        setColour (backgroundColourId, GTColors::headerPanelEnd);
+        setColour (outlineColourId, GTColors::popupDarkBackground);
+        setColour (dividerColourId, GTColors::popupDarkBackground);
         setColour (highlightColourId, GTColors::presetPopupHighlight);
-        setColour (titleBackgroundColourId, GTColors::tabButtonSelected);
+        setColour (titleBackgroundColourId, GTColors::tabButtonUnselected);
         setColour (titleTextColourId, GTColors::sectionTitleText);
         setColour (juce::TextButton::textColourOffId, GTColors::sectionTitleText);
         setColour (juce::TextButton::textColourOnId, GTColors::activeNeonBlue);
@@ -63,7 +64,7 @@ public:
         g.fillRect (titleBounds.withTop (titleBounds.getBottom() - titleDividerThickness));
 
         g.setColour (findColour (titleTextColourId));
-        g.setFont (AAFonts::montserratMedium (titleBounds.getHeight() * titleTextPOH));
+        g.setFont (AAFonts::montserratSemiBold (titleBounds.getHeight() * titleTextPOH));
         g.drawText (title, titleBounds, juce::Justification::centred, true);
     }
 
@@ -101,7 +102,7 @@ public:
             g.fillRoundedRectangle (boundsF.reduced (boundsFHeight * outlineThicknessPOH), boundsFHeight * 0.15f);
         }
 
-        const auto tickBoxSize = boundsFHeight * 0.5f;
+        const auto tickBoxSize = boundsFHeight * 0.55f;
         const auto tickBoxBounds = boundsF.withSizeKeepingCentre (tickBoxSize, tickBoxSize).withRightX (boundsF.getRight() - boundsFHeight * 0.45f);
         const auto tickBoxLineThickness = tickBoxSize * 0.08f;
         g.setColour (textColour);

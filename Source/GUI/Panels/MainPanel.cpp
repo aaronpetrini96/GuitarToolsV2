@@ -73,6 +73,8 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
     addAndMakeVisible (inputLevelMeter);
     addAndMakeVisible (outputLevelMeter);
     addAndMakeVisible (levelsTitle);
+    addAndMakeVisible (inputLevelTitle);
+    addAndMakeVisible (outputLevelTitle);
 
     levelMatchAttachment = std::make_unique<juce::ParameterAttachment> (*audioProcessor.treeState.getParameter (ParamIDs::getLoudnessMatchActiveName()),
                                                                         [this] (float newValue) { outputGainKnob.setEnabled (newValue < 0.5f); });

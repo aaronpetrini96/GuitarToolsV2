@@ -24,15 +24,16 @@ public:
     void paint (juce::Graphics& g) override;
     void paintOverChildren(juce::Graphics& g) override;
     void resized() override;
-    void resizeLevelsSectionCentred(const juce::Rectangle<float>&);
-    void resizeKnobs(const juce::Rectangle<float>&);
-    void resizeMagicButtons();
 
     bool shouldDim {false};
     float sectionTitleH {0.f};
     float sideSectionPOW {0.32f};
 
 private:
+    void resizeLevelsSectionCentred(const juce::Rectangle<float>&);
+    void resizeKnobs(const juce::Rectangle<float>&);
+    void resizeMagicButtons();
+
     GuitarToolsAudioProcessor& audioProcessor;
     float knobSizeReference {0.f};
     const juce::StringArray levelScaleLabels {"  0", " -9", "-20", "-48"};

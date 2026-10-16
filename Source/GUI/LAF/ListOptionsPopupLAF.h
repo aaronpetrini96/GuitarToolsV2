@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "../../AALook.h"
+#include "../../GTLook.h"
 
 class ListOptionsPopupLAF : public juce::LookAndFeel_V4
 {
@@ -21,11 +21,11 @@ public:
 
     ListOptionsPopupLAF()
     {
-        setColour (backgroundColourId, GTColors::headerPanelEnd);
-        setColour (outlineColourId, GTColors::popupDarkBackground);
-        setColour (dividerColourId, GTColors::popupDarkBackground);
-        setColour (highlightColourId, GTColors::presetPopupHighlight);
-        setColour (titleBackgroundColourId, GTColors::tabButtonUnselected);
+        setColour (backgroundColourId, GTColors::popupDarkBackground);
+        setColour (outlineColourId, GTColors::sectionTitleText);
+        setColour (dividerColourId, GTColors::sectionTitleText);
+        setColour (highlightColourId, GTColors::popupBlueHighlight);
+        setColour (titleBackgroundColourId, GTColors::tabButtonSelected);
         setColour (titleTextColourId, GTColors::sectionTitleText);
         setColour (juce::TextButton::textColourOffId, GTColors::sectionTitleText);
         setColour (juce::TextButton::textColourOnId, GTColors::activeNeonBlue);

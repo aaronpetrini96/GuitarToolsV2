@@ -27,7 +27,8 @@ public:
         settingsOptions.add ({"Match Loudness", [this] { toggleBoolParameter (autoGainParam); }, true, autoGainParam.getValue() >= 0.5f, true, ParamHelpers::getTooltipForParam (ParamIDs::getLoudnessMatchActiveName())});
         settingsOptions.add ({"Low Tuning Mode", [this] { toggleBoolParameter (lowTuningParam); }, true, lowTuningParam.getValue() >= 0.5f, true, ParamHelpers::getTooltipForParam (ParamIDs::getLowTuningActiveName())});
         // settingsOptions.add ({"Clip Guard",[this] { toggleBoolParameter (gainLimitParam); }, true, gainLimitParam.getValue() >= 0.5f, true, ParamHelpers::getTooltipForParam (ParamIDs::getGainLimitActiveName())});
-        settingsOptions.add (resizeUI.getMakeDefaultOption());
+        settingsOptions.add ({"Set UI Size As Default", [this] { resizeUI.makeCurrentSizeDefault(); }, ! resizeUI.isCurrentScaleDefault(), false, false, {},
+                              juce::Drawable::createFromImageData (BinaryData::resizeLines_svg, BinaryData::resizeLines_svgSize)});
         settingsOptions.add ({"About...", [this] { if (onAboutClicked != nullptr) onAboutClicked(); }, true, false, false, {},
                               juce::Drawable::createFromImageData (BinaryData::infoLetterIcon_svg, BinaryData::infoLetterIcon_svgSize)});
         settingsOptions.add ({"Get In Touch", [] { sendMail ({}); }, true, false, false, {},

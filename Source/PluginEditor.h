@@ -61,7 +61,6 @@ private:
     MainPanel mainPanel {audioProcessor};
     InfoPanel infoPanel;
     TooltipsPanel tooltipsPanel;
-    bool dismissInfoPanelOnMouseUp {false};
 
     SettingsOptionsPanel settingsOptionsPopup {uiResize, audioProcessor.showTooltips, *audioProcessor.treeState.getParameter (ParamIDs::getLoudnessMatchActiveName()), *audioProcessor.treeState.getParameter (ParamIDs::getGainLimitActiveName()), *audioProcessor.treeState.getParameter (ParamIDs::getLowTuningActiveName())};
     AAListOptionsPopup resizeOptionsPopup {"UI SIZE"};

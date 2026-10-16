@@ -89,12 +89,20 @@ void MainPanel::paint(juce::Graphics& g)
     const auto levelScaleTopY = meterBounds.getCentreY() - levelScaleSpan * 0.5f;
     const auto levelScaleCentreX = (meterBounds.getCentreX() + outputLevelMeter.getBounds().toFloat().getCentreX()) * 0.5f;
     g.setColour (GTColors::almostWhite.withAlpha (0.85f));
-    g.setFont (AAFonts::ibmPlexSansCondensedSemiBold (meterHeight * 0.11f));
+    g.setFont (GTFonts::ibmPlexSansCondensedSemiBold (meterHeight * 0.11f));
 
     for (int labelIndex {0}; labelIndex < levelScaleLabels.size(); ++labelIndex)
     {
         const auto labelCentreY = levelScaleTopY + levelScaleSpan * static_cast<float> (labelIndex) / static_cast<float> (levelScaleLabels.size() - 1);
         g.drawText (levelScaleLabels[labelIndex], meterBounds.withHeight (meterHeight * 0.1f).withCentre ({levelScaleCentreX, labelCentreY}), juce::Justification::centred);
+    }
+}
+
+void MainPanel::paintOverChildren(juce::Graphics& g)
+{
+    if (shouldDim)
+    {
+        g.fillAll(GTColors::almostBlack.withAlpha (0.425f));
     }
 }
 
@@ -141,7 +149,7 @@ void MainPanel::resizeKnobs(const juce::Rectangle<float>& boundsF)
 
     const auto knobButtonsLabelBounds = cutFiltersArea.withSizeKeepingCentre(knobButtonsWidth, knobSizeReference * 0.115f);
     for (const auto l : {&lowCutSlopeLabel, &highCutSlopeLabel, &presenceModeLabel, &depthModeLabel})
-        l->setFont (AAFonts::ibmPlexSansMedium (knobButtonsLabelBounds.getHeight() * 0.825f));
+        l->setFont (GTFonts::ibmPlexSansMedium (knobButtonsLabelBounds.getHeight() * 0.825f));
 
     const auto knobButtonsLabelGap = knobSizeReference * 0.212f;
     lowCutSlopeLabel.setBounds(knobButtonsLabelBounds.withBottomY(knobButtonsTopCY + knobButtonsLabelGap).toNearestInt());
@@ -188,7 +196,7 @@ void MainPanel::resizeLevelsSectionCentred(const juce::Rectangle<float>& boundsF
     const auto knobTitleLabelHeight = knobSizeReference * 0.1f;
     const auto knobTitleLabelBounds = levelsArea.withSize (gainKnobGap, knobTitleLabelHeight).withCentre ({levelsArea.getCentreX(), meterBounds.getY() + knobTitleLabelHeight * 0.95f});
     for (auto* l : {&inputLevelTitle, &outputLevelTitle})
-        l->setFont (AAFonts::ibmPlexSansMedium (knobTitleLabelHeight * 0.85f).withExtraKerningFactor (0.03f));
+        l->setFont (GTFonts::ibmPlexSansMedium (knobTitleLabelHeight * 0.85f).withExtraKerningFactor (0.03f));
     inputLevelTitle.setBounds (knobTitleLabelBounds.translated (-gainKnobGap, 0.f).toNearestInt());
     outputLevelTitle.setBounds (knobTitleLabelBounds.translated (gainKnobGap, 0.f).toNearestInt());
 
@@ -197,6 +205,6 @@ void MainPanel::resizeLevelsSectionCentred(const juce::Rectangle<float>& boundsF
     outputGainKnob.setBounds (gainKnobBounds.translated (gainKnobGap, 0.f).toNearestInt());
 
     const auto levelsLabelHeight = knobSizeReference * 0.112f;
-    levelsTitle.setFont (AAFonts::ibmPlexSansMedium (levelsLabelHeight).withExtraKerningFactor (0.03f));
+    levelsTitle.setFont (GTFonts::ibmPlexSansMedium (levelsLabelHeight).withExtraKerningFactor (0.03f));
     levelsTitle.setBounds (levelsArea.withHeight (levelsLabelHeight).withCentre ({levelsArea.getCentreX(), levelsArea.getY() + levelsLabelHeight * 0.5f}).toNearestInt());
 }

@@ -12,7 +12,7 @@
 #include <utility>
 
 #include "BinaryData.h"
-#include "../../AALook.h"
+#include "../../GTLook.h"
 
 class AASquareSSLButton : public juce::Button
 {
@@ -61,7 +61,7 @@ public:
 private:
     void updateLabelFont()
     {
-        printedName.setFont (getToggleState() ? AAFonts::interBold (labelFontHeight) : AAFonts::interSemiBold (labelFontHeight));
+        printedName.setFont (getToggleState() ? GTFonts::interBold (labelFontHeight) : GTFonts::interSemiBold (labelFontHeight));
     }
 
     float labelFontHeight {0.f};

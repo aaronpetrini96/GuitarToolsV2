@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../../AALook.h"
+#include "../../GTLook.h"
 
 class TooltipsPanel : public juce::Component
 {
@@ -21,10 +21,10 @@ public:
     {
         const auto boundsF = getLocalBounds().toFloat();
         const auto boundsFHeight = boundsF.getHeight();
-        g.setColour(GTColors::popupDarkBackground);
+        g.setColour(GTColors::almostBlack);
         g.fillRect (boundsF);
         g.setColour (GTColors::sectionTitleText);
-        g.setFont (AAFonts::ibmPlexSansMedium (boundsFHeight * 0.65f).withExtraKerningFactor(0.04f));
+        g.setFont (GTFonts::ibmPlexSansMedium (boundsFHeight * 0.65f).withExtraKerningFactor(0.04f));
         g.drawText (tooltipText, boundsF, juce::Justification::centred);
     }
 

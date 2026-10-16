@@ -9,7 +9,7 @@
 #include <cmath>
 #include <memory>
 
-#include "../../AALook.h"
+#include "../../GTLook.h"
 
 class AANotchSSLKnob : public juce::Slider
 {
@@ -94,7 +94,7 @@ public:
         const auto knobSize = boundsF.getWidth();
         const auto labelBounds = boundsF.withTop (knobSize * 0.92f);
 
-        valueLabel.setFont (AAFonts::ibmPlexSansMedium (labelBounds.getHeight() * 0.9f));
+        valueLabel.setFont (GTFonts::ibmPlexSansMedium (labelBounds.getHeight() * 0.9f));
         valueLabel.setBounds (labelBounds.toNearestInt());
     }
 

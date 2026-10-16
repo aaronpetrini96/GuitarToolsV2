@@ -64,7 +64,7 @@ public:
         g.fillRect (titleBounds.withTop (titleBounds.getBottom() - titleDividerThickness));
 
         g.setColour (findColour (titleTextColourId));
-        g.setFont (AAFonts::montserratSemiBold (titleBounds.getHeight() * titleTextPOH));
+        g.setFont (GTFonts::montserratSemiBold (titleBounds.getHeight() * titleTextPOH));
         g.drawText (title, titleBounds, juce::Justification::centred, true);
     }
 
@@ -85,7 +85,7 @@ public:
         g.setColour (shouldDrawButtonAsHighlighted ? textColour.withBrightness (2.f) : textColour);
         if (!button.isEnabled())
             g.setColour (textColour.withAlpha (0.3f));
-        g.setFont (AAFonts::montserratMedium (boundsF.getHeight() * textPOH));
+        g.setFont (GTFonts::montserratMedium (boundsF.getHeight() * textPOH));
         const auto textBounds = leftAlignText ? boundsF.withLeft (boundsF.getHeight() * 0.45f) : boundsF;
         g.drawText (button.getButtonText(), textBounds, leftAlignText ? juce::Justification::centredLeft : juce::Justification::centred, true);
     }
@@ -119,7 +119,7 @@ public:
         }
 
         g.setColour (shouldDrawButtonAsHighlighted ? textColour.withBrightness (2.f) : textColour);
-        g.setFont (AAFonts::montserratMedium (boundsFHeight * textPOH));
+        g.setFont (GTFonts::montserratMedium (boundsFHeight * textPOH));
         g.drawText (button.getButtonText(), boundsF.withLeft (boundsFHeight * 0.45f).withRight (tickBoxBounds.getX()), juce::Justification::centredLeft, true);
     }
 

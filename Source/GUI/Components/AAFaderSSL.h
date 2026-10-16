@@ -6,7 +6,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <memory>
-#include "../../AALook.h"
+#include "../../GTLook.h"
 
 class AAVerticalSSLFader : public juce::Slider
 {

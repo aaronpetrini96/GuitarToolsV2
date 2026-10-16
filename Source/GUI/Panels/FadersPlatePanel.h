@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../../AALook.h"
+#include "../../GTLook.h"
 #include "../../Utils/AAParamUtils.h"
 #include "PluginProcessor.h"
 

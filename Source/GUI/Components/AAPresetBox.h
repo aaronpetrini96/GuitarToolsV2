@@ -45,8 +45,8 @@ public:
         nameButton.onClick = [this] { if (onNameClicked != nullptr) onNameClicked(); };
         addAndMakeVisible (nameButton);
 
-        AAUITools::setIconButtonImages (leftArrowButton, BinaryData::leftChevronArrow_svg, BinaryData::leftChevronArrow_svgSize);
-        AAUITools::setIconButtonImages (rightArrowButton, BinaryData::rightChevronArrow_svg, BinaryData::rightChevronArrow_svgSize);
+        AAUITools::setIconButtonImages (leftArrowButton, BinaryData::leftChevronArrow_svg, BinaryData::leftChevronArrow_svgSize, GTColors::iconSVGColor, GTColors::iconNormalColor, GTColors::iconOverColor, GTColors::activeNeonBlue);
+        AAUITools::setIconButtonImages (rightArrowButton, BinaryData::rightChevronArrow_svg, BinaryData::rightChevronArrow_svgSize, GTColors::iconSVGColor, GTColors::iconNormalColor, GTColors::iconOverColor, GTColors::activeNeonBlue);
         leftArrowButton.onClick = [this] { presetManager.loadAdjacentPreset (-1); };
         rightArrowButton.onClick = [this] { presetManager.loadAdjacentPreset (1); };
         addAndMakeVisible (leftArrowButton);

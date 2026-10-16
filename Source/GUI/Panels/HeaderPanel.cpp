@@ -53,7 +53,8 @@ void HeaderPanel::paint (juce::Graphics& g)
 {
 
     const auto boundsF = getLocalBounds().toFloat();
-    g.setGradientFill(juce::ColourGradient::horizontal(GTColors::headerPanelStart, 0.f, GTColors::headerPanelEnd, boundsF.getWidth()));
+    // g.setGradientFill(juce::ColourGradient::horizontal(GTColors::headerPanelStart, 0.f, GTColors::headerPanelEnd, boundsF.getWidth()));
+    g.setColour (GTColors::almostBlack);
     g.fillRect(boundsF);
     g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
     g.drawImage (guitarToolsLogo, logoBounds, juce::RectanglePlacement::fillDestination);
@@ -102,5 +103,5 @@ void HeaderPanel::mouseUp (const juce::MouseEvent& event)
 void HeaderPanel::setupIconButton (juce::DrawableButton& iconButton, const void* iconData, const int iconDataSize)
 {
     addAndMakeVisible (iconButton);
-    AAUITools::setIconButtonImages (iconButton, iconData, iconDataSize);
+    AAUITools::setIconButtonImages (iconButton, iconData, iconDataSize, GTColors::iconSVGColor, GTColors::iconNormalColor, GTColors::iconOverColor, GTColors::activeNeonBlue);
 }

@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "../../AALook.h"
+#include "../../GTLook.h"
 
 class PresetPopupLAF : public juce::LookAndFeel_V4
 {
@@ -20,9 +20,9 @@ public:
     {
         setColour (backgroundColourId, GTColors::popupDarkBackground);
         setColour (textColourId, GTColors::sectionTitleText);
-        setColour (outlineColourId, GTColors::dividerLinesStart);
-        setColour (highlightColourId, GTColors::presetPopupHighlight);
-        setColour (juce::TextEditor::backgroundColourId, GTColors::dividerLinesEnd);
+        setColour (outlineColourId, GTColors::sectionTitleText);
+        setColour (highlightColourId, GTColors::popupBlueHighlight);
+        setColour (juce::TextEditor::backgroundColourId, GTColors::popupDarkBackground);
         setColour (juce::TextEditor::textColourId, GTColors::sectionTitleText);
     }
 
@@ -30,7 +30,7 @@ public:
     {
         cornerSize = bounds.getHeight() * cornerSizePOH;
         const auto outlineThickness = bounds.getHeight() / numRows * outlineThicknessPOH;
-        g.setGradientFill(juce::ColourGradient::vertical(GTColors::popupDarkBackground, 0, GTColors::presetBox.darker(0.15f), bounds.getHeight()));
+        g.setGradientFill(juce::ColourGradient::vertical(GTColors::popupDarkBackground, 0, GTColors::presetBoxBackground.darker(0.15f), bounds.getHeight()));
         g.fillRoundedRectangle (bounds, cornerSize);
 
         g.setColour (findColour (outlineColourId));
@@ -52,7 +52,7 @@ public:
         }
 
         g.setColour ((shouldDrawButtonAsHighlighted ? textColour.withBrightness(2.f) : textColour).withMultipliedAlpha (button.isEnabled() ? 1.0f : 0.5f));
-        g.setFont (AAFonts::montserratMedium (fontHeight));
+        g.setFont (GTFonts::montserratMedium (fontHeight));
         g.drawFittedText (button.getButtonText(), boundsF.reduced (boundsF.getWidth() * 0.05f, boundsF.getHeight() * 0.04f).toNearestInt(), juce::Justification::centred, 1);
     }
 

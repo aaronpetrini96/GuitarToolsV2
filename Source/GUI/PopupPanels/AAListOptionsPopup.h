@@ -93,7 +93,7 @@ public:
     }
 
     bool drawRowDividers {false};
-    float titleHeightRowRatio {1.1f};
+    float titleHeightRowRatio {1.0f};
 
 protected:
     ListOptionsPopupLAF listOptionsLAF;

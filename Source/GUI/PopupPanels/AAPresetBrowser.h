@@ -121,7 +121,7 @@ public:
     }
 
 
-    float tabHeightRowRatio {1.1f};
+    float tabHeightRowRatio {1.0f};
     std::function<void (const juce::File& presetFile)> onDeleteRequested;
     std::function<void()> onRowsChanged;
 

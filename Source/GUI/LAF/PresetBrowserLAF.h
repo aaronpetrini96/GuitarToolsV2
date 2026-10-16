@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "../../AALook.h"
+#include "../../GTLook.h"
 
 class PresetBrowserLAF : public juce::LookAndFeel_V4
 {
@@ -16,7 +16,6 @@ public:
         activeColourId          = 0x2a20004,
         textColourId            = 0x2a20005,
         tabTextColourId         = 0x2a20006,
-        tabTextHoverColourId    = 0x2a20007,
         outlineColourId         = 0x2a20008,
         tabSelectedColourId     = 0x2a20009,
         tabUnselectedColourId   = 0x2a2000a
@@ -25,13 +24,12 @@ public:
     PresetBrowserLAF()
     {
         setColour (backgroundColourId, GTColors::popupDarkBackground);
-        setColour (dividerColourId,GTColors::dividerLinesStart);
-        setColour (highlightColourId, GTColors::presetPopupHighlight);
+        setColour (dividerColourId,GTColors::sectionTitleText);
+        setColour (highlightColourId, GTColors::popupBlueHighlight);
         setColour (activeColourId, GTColors::activeNeonBlue);
         setColour (textColourId, GTColors::sectionTitleText);
         setColour (tabTextColourId, GTColors::sectionTitleText);
-        setColour (tabTextHoverColourId, GTColors::sectionTitleText.brighter(2.f));
-        setColour (outlineColourId, GTColors::dividerLinesStart);
+        setColour (outlineColourId, GTColors::sectionTitleText);
         setColour (tabSelectedColourId, GTColors::tabButtonSelected);
         setColour (tabUnselectedColourId, GTColors::tabButtonUnselected);
     }
@@ -97,7 +95,7 @@ public:
         const auto buttonTextColour = isTabButton ? tabButtonTextColour : presetTextColour;
 
         g.setColour (isHighlighted ? buttonTextColour.withBrightness(2.f) : buttonTextColour);
-        g.setFont (AAFonts::montserratMedium (boundsF.getHeight() * (isTabButton ? tabTextFontPOH : presetFontPOH)));
+        g.setFont (GTFonts::montserratMedium (boundsF.getHeight() * (isTabButton ? tabTextFontPOH : presetFontPOH)));
         g.drawText (button.getButtonText(), button.getLocalBounds(), juce::Justification::centred, true);
     }
 

@@ -7,7 +7,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <cmath>
 #include <memory>
-#include "../../AALook.h"
+#include "../../GTLook.h"
 
 class AALightStrokeKnob : public juce::Slider
 {
@@ -39,9 +39,9 @@ public:
     {
         const auto boundsF = getLocalBounds().toFloat();
         const auto fontBounds = boundsF.withHeight (boundsF.getHeight() * 0.14f);
-        nameText.setFont (AAFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.8f).withExtraKerningFactor(0.03f));
+        nameText.setFont (GTFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.8f).withExtraKerningFactor(0.03f));
         nameText.setBounds (fontBounds.toNearestInt());
-        valueText.setFont (AAFonts::interMedium (fontBounds.getHeight() * 0.7f));
+        valueText.setFont (GTFonts::interMedium (fontBounds.getHeight() * 0.7f));
         valueText.setBounds (fontBounds.withBottomY (boundsF.getHeight()).toNearestInt());
     }
 
@@ -54,7 +54,7 @@ public:
         g.setOpacity(0.9f);
         g.drawImage (knobImage, imageBounds, juce::RectanglePlacement::centred);
         const auto activeColor = GTColors::activeNeonBlue.withAlpha (0.9f);
-        const auto offColor = GTColors::dividerLinesStart.withAlpha (0.9f);
+        const auto offColor = GTColors::almostBlack.withAlpha (0.9f);
 
         //========   POINTS DRAWING  ========//
         const auto radiusReference = imageBounds.getWidth() * 0.255f;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../AALook.h"
+#include "../../GTLook.h"
 #include <functional>
 
 class InfoPanel : public juce::Component
@@ -59,10 +59,10 @@ public:
         const auto versionBounds = gtLogoBounds.withSizeKeepingCentre(gtLogoWidth, versionTextHeight).withY(dividerBounds.getBottom() + boundsFHeight * 0.055f);
         const auto copyrightBounds = versionBounds.withHeight(copyrightTextHeight).withY(versionBounds.getBottom() + boundsFHeight * 0.035f);
 
-        g.setFont(AAFonts::montserratMedium(versionTextHeight).withExtraKerningFactor(0.025f));
+        g.setFont(GTFonts::montserratMedium(versionTextHeight).withExtraKerningFactor(0.025f));
         g.setColour(GTColors::almostWhite);
         g.drawText(juce::String ("Version ") + JucePlugin_VersionString, versionBounds, juce::Justification::centred);
-        g.setFont(AAFonts::montserratMedium(copyrightTextHeight).withExtraKerningFactor(0.025f));
+        g.setFont(GTFonts::montserratMedium(copyrightTextHeight).withExtraKerningFactor(0.025f));
         g.setColour(GTColors::infoPanelSecondaryText);
         g.drawText(juce::String(juce::CharPointer_UTF8("Copyright \xc2\xa9 APAudio 2026")), copyrightBounds, juce::Justification::centred);
     }

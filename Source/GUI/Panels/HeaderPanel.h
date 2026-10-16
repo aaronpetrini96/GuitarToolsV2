@@ -6,7 +6,7 @@
 
 #include "PluginProcessor.h"
 #include "BinaryData.h"
-#include "../../AALook.h"
+#include "../../GTLook.h"
 #include "../../Utils/AAParamUtils.h"
 #include "../Components/AAPresetBox.h"
 

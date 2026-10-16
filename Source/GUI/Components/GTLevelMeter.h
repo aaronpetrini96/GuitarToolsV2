@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../AALook.h"
+#include "../../GTLook.h"
 
 class GTLevelMeter : public juce::Component, private juce::Timer
 {
@@ -23,7 +23,7 @@ public:
         const auto lightCentreDistance = lightDiameter + lightGap;
 
         const auto lightRowCentreDistance = lightDiameter + lightRowGap;
-        const auto scaleFont = AAFonts::ibmPlexSansMedium ( boundsF.getHeight() * 0.095f);
+        const auto scaleFont = GTFonts::ibmPlexSansMedium ( boundsF.getHeight() * 0.095f);
         const auto scaleLabelsGap = lightGap * 3.5f;
         auto scaleLabelsWidth = 0.f;
         for (const auto& label : scaleLabels)

@@ -14,16 +14,16 @@ namespace  GTColors //project specific
     inline const juce::Colour almostWhite {190, 190, 190};
     inline const juce::Colour sectionTitleText {215, 215, 215};
     inline const juce::Colour activeNeonBlue { 64, 196, 255 };
-    inline const juce::Colour dividerLinesEnd{12, 12, 12};
-    inline const juce::Colour dividerLinesStart {5, 5, 5};
+    inline const juce::Colour almostBlack {5, 5, 5};
     inline const juce::Colour headerPanelStart {12, 12, 16};
     inline const juce::Colour headerPanelEnd {22, 28, 45};
-    inline const juce::Colour popupDarkBackground {30, 34, 44};
+    inline const juce::Colour popupDarkBackground {25, 34, 44};
+    inline const juce::Colour popupBlueHighlight {30, 50, 80};
     inline const juce::Colour iconSVGColor {100, 100, 100};
     inline const juce::Colour iconNormalColor {200, 200, 200};
     inline const juce::Colour iconOverColor {120, 120, 120};
-    inline const juce::Colour presetBox {35, 42, 60};
-    inline const juce::Colour presetPopupHighlight {30, 50, 80};
+    inline const juce::Colour presetBoxBackground {35, 42, 60};
+
     inline const juce::Colour tabButtonSelected {34, 56, 90};
     inline const juce::Colour tabButtonUnselected {21, 24, 40};
     inline const juce::Colour infoPanelSecondaryText {140, 152, 185};
@@ -38,6 +38,11 @@ namespace AAUITools
     constexpr float outlineThicknessPOH {0.0f};
     constexpr float cornerPOH {0.02f};
     constexpr float fontHeightPOH {0.625f};
+
+    inline juce::Font makeFont (const juce::Typeface::Ptr& typeface, const float fontHeight, const float kerning = 0.0f)
+    {
+        return juce::Font {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))}.withExtraKerningFactor (kerning);
+    }
 
     inline void setIconButtonImages (juce::DrawableButton& button, const void* iconData, const int iconDataSize)
     {
@@ -157,62 +162,62 @@ namespace AAUITools
     };
 }
 
-namespace AAFonts
+namespace GTFonts
 {
     inline juce::Font ibmPlexSansCondensedSemiBold (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::IBMPlexSansCondensedSemiBold_ttf, BinaryData::IBMPlexSansCondensedSemiBold_ttfSize);
-        return juce::Font {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))}.withExtraKerningFactor (0.08f);
+        return AAUITools::makeFont (typeface, fontHeight, 0.08f);
     }
 
     inline juce::Font ibmPlexSansMedium (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::IBMPlexSansMedium_ttf, BinaryData::IBMPlexSansMedium_ttfSize);
-        return juce::Font {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))}.withExtraKerningFactor (0.04f);
+        return AAUITools::makeFont (typeface, fontHeight, 0.04f);
     }
 
     inline juce::Font interMedium (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::Inter_18ptMedium_ttf, BinaryData::Inter_18ptMedium_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
+        return AAUITools::makeFont (typeface, fontHeight);
     }
 
     inline juce::Font interSemiBold (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::Inter_18ptSemiBold_ttf, BinaryData::Inter_18ptSemiBold_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
+        return AAUITools::makeFont (typeface, fontHeight);
     }
 
     inline juce::Font interBold (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::Inter_18ptBold_ttf, BinaryData::Inter_18ptBold_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
+        return AAUITools::makeFont (typeface, fontHeight);
     }
 
     inline juce::Font montserratMedium (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::MontserratMedium_ttf, BinaryData::MontserratMedium_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
+        return AAUITools::makeFont (typeface, fontHeight);
     }
 
     inline juce::Font montserratSemiBold (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::MontserratSemiBold_ttf, BinaryData::MontserratSemiBold_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
+        return AAUITools::makeFont (typeface, fontHeight);
     }
 
     inline juce::Font montserratBold (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::MontserratBold_ttf, BinaryData::MontserratBold_ttfSize);
-        return {juce::FontOptions (typeface).withHeight (juce::jmax (1.0f, fontHeight))};
+        return AAUITools::makeFont (typeface, fontHeight);
     }
 
 }

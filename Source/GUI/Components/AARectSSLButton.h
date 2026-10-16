@@ -5,7 +5,7 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
-#include "AALook.h"
+#include "GTLook.h"
 
 class AARectSSLButton : public juce::Button
 {
@@ -52,7 +52,7 @@ private:
         const auto faceCentreYPOH = getToggleState() ? 0.5f : 0.42f;
         const auto textBounds = imageBounds.withSizeKeepingCentre (imageBounds.getWidth(), imageBoundsHeight * 0.5f)
                                            .withCentre ({imageBounds.getCentreX(), imageBounds.getY() + imageBoundsHeight * faceCentreYPOH});
-        printedName.setFont (AAFonts::interBold (textBounds.getHeight() * 0.875f));
+        printedName.setFont (GTFonts::interBold (textBounds.getHeight() * 0.875f));
         printedName.setBounds (textBounds.toNearestInt());
     }
 

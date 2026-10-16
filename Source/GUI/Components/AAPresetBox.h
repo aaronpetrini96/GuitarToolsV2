@@ -9,7 +9,7 @@
 #include <functional>
 
 #include "BinaryData.h"
-#include "../../AALook.h"
+#include "../../GTLook.h"
 #include "../../Utils/PresetManager.h"
 
 class PresetBoxLAF : public juce::LookAndFeel_V4
@@ -26,7 +26,7 @@ public:
         const auto boundsF = button.getLocalBounds().toFloat();
 
         g.setColour (highlighted ? GTColors::sectionTitleText.withMultipliedBrightness(2.f) : GTColors::sectionTitleText);
-        g.setFont (AAFonts::montserratMedium (boundsF.getHeight() * AAUITools::fontHeightPOH * 0.95f));
+        g.setFont (GTFonts::montserratMedium (boundsF.getHeight() * AAUITools::fontHeightPOH * 0.95f));
         g.drawFittedText (button.getButtonText(), boundsF.toNearestInt(), juce::Justification::centred, 1);
     }
 
@@ -68,9 +68,9 @@ public:
         const auto boundsF = getLocalBounds().toFloat();
         const auto outlineThickness = boundsF.getHeight() * AAUITools::outlineThicknessPOH * 0.75f;
         const auto corner = boundsF.getHeight() * AAUITools::cornerPOH;
-        g.setColour(GTColors::presetBox);
+        g.setColour(GTColors::presetBoxBackground);
         g.fillRoundedRectangle(boxBounds, corner);
-        g.setColour (GTColors::dividerLinesStart);
+        g.setColour (GTColors::almostBlack);
         g.drawRoundedRectangle (boxBounds.reduced (outlineThickness * 0.5f), corner, outlineThickness);
     }
 

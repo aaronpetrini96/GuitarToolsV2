@@ -104,13 +104,13 @@ public:
         const auto lineHeight = boundsFHeight * 0.2f;
         const auto fontHeight = lineHeight * presetPopupLAF.fontPOH;
 
-        titleLabel.setFont (AAFonts::interMedium (fontHeight));
+        titleLabel.setFont (GTFonts::interMedium (fontHeight));
         titleLabel.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.1f).toNearestInt());
 
-        nameEditor.applyFontToAllText (AAFonts::montserratMedium (fontHeight * 0.95f));
+        nameEditor.applyFontToAllText (GTFonts::montserratMedium (fontHeight * 0.95f));
         nameEditor.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.4f).toNearestInt());
 
-        messageLabel.setFont (AAFonts::interMedium (fontHeight));
+        messageLabel.setFont (GTFonts::interMedium (fontHeight));
         messageLabel.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.9f, lineHeight).withY (boundsFHeight * 0.4f).toNearestInt());
 
         const auto buttonsBounds = boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.7f);

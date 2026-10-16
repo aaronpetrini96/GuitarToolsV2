@@ -12,10 +12,7 @@ GuitarToolsAudioProcessorEditor::GuitarToolsAudioProcessorEditor (GuitarToolsAud
     addChildComponent (tooltipsPanel);
     tooltipsPanel.setVisible (audioProcessor.showTooltips);
 
-    headerPanel.onInfoClicked = [this]
-    {
-        infoPanel.setVisible (! infoPanel.isVisible());
-    };
+    headerPanel.onInfoClicked = [this] { showPopup (infoPanel); };
 
     infoPanel.addComponentListener (this);
 
@@ -66,11 +63,7 @@ GuitarToolsAudioProcessorEditor::GuitarToolsAudioProcessorEditor (GuitarToolsAud
         updateEditorSize();
     };
 
-    settingsOptionsPopup.onAboutClicked = [this]
-    {
-        infoPanel.setVisible (true);
-        infoPanel.toFront (true);
-    };
+    settingsOptionsPopup.onAboutClicked = [this] { showPopup (infoPanel); };
 
     presetBrowser.onRowsChanged = [this] { resized(); };
 
@@ -138,7 +131,7 @@ void GuitarToolsAudioProcessorEditor::paint (juce::Graphics& g)
     g.fillAll(juce::Colours::black);
     g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
     g.drawImage(backgroundWithDividers, imageBounds, juce::RectanglePlacement::fillDestination);
-    g.fillAll(juce::Colours::black.withAlpha(0.075f));
+    g.fillAll(juce::Colours::black.withAlpha(0.1f));
 }
 
 void GuitarToolsAudioProcessorEditor::resized()
@@ -187,22 +180,16 @@ void GuitarToolsAudioProcessorEditor::resized()
 
 void GuitarToolsAudioProcessorEditor::mouseDown (const juce::MouseEvent& event)
 {
-    if (modalBlocker.isVisible())
+    if (event.eventComponent == &modalBlocker)
     {
-        if (event.eventComponent == &modalBlocker)
-        {
-            savePresetPopup.setVisible (false);
-            deletePresetPopup.setVisible (false);
-            presetBrowser.setVisible (false);
-        }
-
-        return;
+        savePresetPopup.setVisible (false);
+        deletePresetPopup.setVisible (false);
+        infoPanel.setVisible (false);
     }
+}
 
-    dismissInfoPanelOnMouseUp = infoPanel.isVisible()
-        && event.eventComponent != &infoPanel
-        && ! infoPanel.isParentOf (event.eventComponent);
-
+void GuitarToolsAudioProcessorEditor::mouseUp (const juce::MouseEvent& event)
+{
     const auto isClickInside = [&event] (const juce::Component& component)
     {
         return event.eventComponent == &component || component.isParentOf (event.eventComponent);
@@ -216,15 +203,7 @@ void GuitarToolsAudioProcessorEditor::mouseDown (const juce::MouseEvent& event)
 
     hidePopupUnlessClickedIn (settingsOptionsPopup, headerPanel.settingsButton);
     hidePopupUnlessClickedIn (resizeOptionsPopup, resizeButton);
-    hidePopupUnlessClickedIn (presetBrowser, presetBox, deletePresetPopup);
-}
-
-void GuitarToolsAudioProcessorEditor::mouseUp (const juce::MouseEvent&)
-{
-    if (dismissInfoPanelOnMouseUp)
-        infoPanel.setVisible (false);
-
-    dismissInfoPanelOnMouseUp = false;
+    hidePopupUnlessClickedIn (presetBrowser, presetBox, deletePresetPopup, modalBlocker);
 }
 
 void GuitarToolsAudioProcessorEditor::mouseEnter (const juce::MouseEvent& event)
@@ -248,12 +227,8 @@ void GuitarToolsAudioProcessorEditor::mouseExit (const juce::MouseEvent&)
 
 void GuitarToolsAudioProcessorEditor::updateMainPanelAlpha()
 {
-    if (headerPanel.isBypassed())
-        mainPanel.setAlpha (0.2f);
-    else if (infoPanel.isVisible() || modalBlocker.isVisible() || settingsOptionsPopup.isVisible() || resizeOptionsPopup.isVisible() || presetBrowser.isVisible())
-        mainPanel.setAlpha (0.45f);
-    else
-        mainPanel.setAlpha (1.0f);
+    mainPanel.shouldDim = headerPanel.isBypassed() || infoPanel.isVisible() || modalBlocker.isVisible() || settingsOptionsPopup.isVisible() || resizeOptionsPopup.isVisible() || presetBrowser.isVisible();
+    mainPanel.repaint();
 }
 
 void GuitarToolsAudioProcessorEditor::componentVisibilityChanged (juce::Component& component)
@@ -262,9 +237,9 @@ void GuitarToolsAudioProcessorEditor::componentVisibilityChanged (juce::Componen
         headerPanel.settingsButton.setToggleState (settingsOptionsPopup.isVisible(), juce::dontSendNotification);
     else if (&component == &resizeOptionsPopup)
         resizeButton.setToggleState (resizeOptionsPopup.isVisible(), juce::dontSendNotification);
-    else if (&component == &savePresetPopup || &component == &deletePresetPopup)
+    else if (&component == &savePresetPopup || &component == &deletePresetPopup || &component == &infoPanel)
     {
-        modalBlocker.setVisible (savePresetPopup.isVisible() || deletePresetPopup.isVisible());
+        modalBlocker.setVisible (savePresetPopup.isVisible() || deletePresetPopup.isVisible() || infoPanel.isVisible());
         modalBlocker.toBehind (&component);
     }
 
@@ -305,6 +280,6 @@ void GuitarToolsAudioProcessorEditor::showUISizeOptions()
 void GuitarToolsAudioProcessorEditor::showPopup (juce::Component& popup)
 {
     resized();
-    popup.setVisible (true);
     popup.toFront (false);
+    popup.setVisible (true);
 }

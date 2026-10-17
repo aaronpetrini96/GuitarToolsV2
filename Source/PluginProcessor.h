@@ -80,7 +80,6 @@ public:
 
     std::atomic<float> inputLevelLeft {0.f}, inputLevelRight {0.f};
     std::atomic<float> outputLevelLeft {0.f}, outputLevelRight {0.f};
-//    std::atomic<float> inputMeanSquare {0.f}, outputMeanSquare {0.f};
 
 private:
     //==============================================================================

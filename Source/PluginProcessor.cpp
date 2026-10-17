@@ -189,7 +189,6 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 
     constexpr int parameterUpdateInterval {32};
     const auto numSamples = buffer.getNumSamples();
-//    auto inputSquareSum = 0.f;
 
     for (int chunkStart {0}; chunkStart < numSamples; chunkStart += parameterUpdateInterval)
     {
@@ -207,15 +206,12 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
             inputLevelRight.store(juce::jmax(inputLevelRight.load(), chunk.getMagnitude(1, 0, chunkLength)));
         else
             inputLevelRight.store(inputLevelLeft.load());
-//        for (int channel {0}; channel < chunk.getNumChannels(); ++channel)
-//            inputSquareSum += juce::square (chunk.getRMSLevel (channel, 0, chunkLength)) * static_cast<float> (chunkLength);
 //========================    EQ part    ========================
         filters.process(chunk);
 
 //========================    COMP part    ========================
         midBandCompressor.process(chunk);
     }
-//    inputMeanSquare.store (inputSquareSum / static_cast<float> (juce::jmax (1, numSamples * buffer.getNumChannels())));
 
     levelMatch.update (dryBuffer, buffer);
     applyGain(buffer, outputGain);
@@ -238,11 +234,6 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
         outputLevelRight.store(juce::jmax(outputLevelRight.load(), buffer.getMagnitude(1, 0, numSamples)));
     else
         outputLevelRight.store(outputLevelLeft.load());
-
-//    auto outputSquareSum = 0.f;
-//    for (int channel {0}; channel < buffer.getNumChannels(); ++channel)
-//        outputSquareSum += juce::square (buffer.getRMSLevel (channel, 0, numSamples));
-//    outputMeanSquare.store (outputSquareSum / static_cast<float> (juce::jmax (1, buffer.getNumChannels())));
 }
 
 //==============================================================================

@@ -39,11 +39,29 @@ namespace AAUITools
     class PrintedText : public juce::Component
     {
     public:
-        PrintedText (const juce::String& textToUse, const juce::Colour inkColorToUse, const juce::Justification justificationToUse = juce::Justification::centred)
+        PrintedText (const juce::String& textToUse, const juce::Colour inkColorToUse = juce::Colours::whitesmoke, const juce::Justification justificationToUse = juce::Justification::centred)
             : text (textToUse), inkColor (inkColorToUse), justification (justificationToUse)
         {
             jassert (grainTile.isValid());
             setInterceptsMouseClicks (false, false);
+        }
+
+        void paint (juce::Graphics& g) override
+        {
+            if (textPathIsStale)
+                rebuildTextPath();
+
+            g.setColour (inkColor);
+            g.fillPath (textPath);
+
+            const auto originInTopLevel = getTopLevelComponent()->getLocalPoint (this, juce::Point<float>());
+            g.setFillType (juce::FillType (grainTile, juce::AffineTransform::translation (-originInTopLevel)));
+            g.fillPath (textPath);
+        }
+
+        void resized() override
+        {
+            textPathIsStale = true;
         }
 
         void setText (const juce::String& newText)
@@ -75,32 +93,10 @@ namespace AAUITools
             repaint();
         }
 
-        void setSideLinesVisible (bool shouldShowSideLines)
+        void setJustification (juce::Justification newJustification)
         {
-            if (sideLinesVisible == shouldShowSideLines)
-                return;
-
-            sideLinesVisible = shouldShowSideLines;
-            textPathIsStale = true;
+            justification = newJustification;
             repaint();
-        }
-
-        void resized() override
-        {
-            textPathIsStale = true;
-        }
-
-        void paint (juce::Graphics& g) override
-        {
-            if (textPathIsStale)
-                rebuildTextPath();
-
-            g.setColour (inkColor);
-            g.fillPath (textPath);
-
-            const auto originInTopLevel = getTopLevelComponent()->getLocalPoint (this, juce::Point<float>());
-            g.setFillType (juce::FillType (grainTile, juce::AffineTransform::translation (-originInTopLevel)));
-            g.fillPath (textPath);
         }
 
     private:
@@ -128,7 +124,7 @@ namespace AAUITools
         juce::Image grainTile = juce::ImageCache::getFromMemory (BinaryData::inkGrainTile_png, BinaryData::inkGrainTile_pngSize);
         juce::String text;
         juce::Colour inkColor;
-        const juce::Justification justification;
+        juce::Justification justification;
         juce::Font font {juce::FontOptions {}};
         juce::Path textPath;
         bool textPathIsStale {true};

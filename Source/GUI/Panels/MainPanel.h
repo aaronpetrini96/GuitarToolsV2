@@ -36,7 +36,8 @@ private:
 
     GuitarToolsAudioProcessor& audioProcessor;
     float knobSizeReference {0.f};
-    const juce::StringArray levelScaleLabels {"  0", " -9", "-20", "-48"};
+    const juce::StringArray levelScaleLabels {"CLIP", "-6", "-12", "-18", "-24", "-48"};
+    juce::Image grainTile = juce::ImageCache::getFromMemory (BinaryData::inkGrainTile_png, BinaryData::inkGrainTile_pngSize);
 
 
     juce::Rectangle<float> cutFiltersArea, buttonsArea, shelfFiltersArea, plateBounds;
@@ -62,7 +63,6 @@ private:
     AARectSSLButton mudModeSwitch {*audioProcessor.treeState.getParameter (ParamIDs::getMudExtremeActiveName()), "MAX"};
     FadersPlatePanel fadersPlatePanel {audioProcessor};
 
-    AAUITools::PrintedText levelsSectionTitleText {"LEVELS", GTColors::almostWhite};
     AAUITools::PrintedText inputLevelTitle {"INPUT", GTColors::almostWhite};
     AAUITools::PrintedText outputLevelTitle {"OUTPUT", GTColors::almostWhite};
 

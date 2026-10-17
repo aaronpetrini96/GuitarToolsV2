@@ -72,7 +72,6 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
     addAndMakeVisible (outputGainKnob);
     addAndMakeVisible (inputLevelMeter);
     addAndMakeVisible (outputLevelMeter);
-    addAndMakeVisible (levelsSectionTitleText);
     addAndMakeVisible (inputLevelTitle);
     addAndMakeVisible (outputLevelTitle);
 
@@ -93,13 +92,18 @@ void MainPanel::paint(juce::Graphics& g)
     const auto levelScaleSpan = meterHeight * 0.68f;
     const auto levelScaleTopY = meterBounds.getCentreY() - levelScaleSpan * 0.5f;
     const auto levelScaleCentreX = (meterBounds.getCentreX() + outputLevelMeter.getBounds().toFloat().getCentreX()) * 0.5f;
-    g.setColour (GTColors::almostWhite);
+    const auto originInTopLevel = getTopLevelComponent()->getLocalPoint (this, juce::Point<float>());
+    const juce::FillType grainFill (grainTile, juce::AffineTransform::translation (-originInTopLevel));
     g.setFont (GTFonts::ibmPlexSansMedium (meterHeight * 0.11f).withExtraKerningFactor (0.03f));
 
     for (int labelIndex {0}; labelIndex < levelScaleLabels.size(); ++labelIndex)
     {
         const auto labelCentreY = levelScaleTopY + levelScaleSpan * static_cast<float> (labelIndex) / static_cast<float> (levelScaleLabels.size() - 1);
-        g.drawText (levelScaleLabels[labelIndex], meterBounds.withHeight (meterHeight * 0.1f).withCentre ({levelScaleCentreX, labelCentreY}), juce::Justification::centred);
+        const auto labelBounds = meterBounds.withHeight (meterHeight * 0.1f).withCentre ({levelScaleCentreX, labelCentreY});
+        g.setColour (GTColors::almostWhite);
+        g.drawText (levelScaleLabels[labelIndex], labelBounds, juce::Justification::centred);
+        g.setFillType (grainFill);
+        g.drawText (levelScaleLabels[labelIndex], labelBounds, juce::Justification::centred);
     }
 }
 
@@ -208,8 +212,4 @@ void MainPanel::resizeLevelsSectionCentred(const juce::Rectangle<float>& boundsF
     const auto gainKnobBounds = levelsArea.withSizeKeepingCentre (gainKnobSize, gainKnobSize * 1.17f).withY (knobTitleLabelBounds.getBottom());
     inputGainKnob.setBounds (gainKnobBounds.translated (-gainKnobGap, 0.f).toNearestInt());
     outputGainKnob.setBounds (gainKnobBounds.translated (gainKnobGap, 0.f).toNearestInt());
-
-    const auto levelsLabelHeight = knobSizeReference * 0.112f;
-    levelsSectionTitleText.setFont (GTFonts::ibmPlexSansMedium (levelsLabelHeight).withExtraKerningFactor (0.03f));
-    levelsSectionTitleText.setBounds (levelsArea.withHeight (levelsLabelHeight).withCentre ({levelsArea.getCentreX(), levelsArea.getY() + levelsLabelHeight * 0.5f}).toNearestInt());
 }

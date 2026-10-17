@@ -14,7 +14,7 @@ class HeaderPanel : public juce::Component,
                     private juce::ChangeListener
 {
 public:
-    HeaderPanel (GuitarToolsAudioProcessor& processor, AAPresetBox& presetBoxToUse);
+    HeaderPanel (GuitarToolsAudioProcessor& processor, PresetManager& presetManagerToUse);
     ~HeaderPanel() override;
 
     void paint (juce::Graphics& g) override;
@@ -29,6 +29,7 @@ public:
     std::function<void()> onSaveClicked;
     // std::function<void()> onResizeClicked;
     juce::DrawableButton settingsButton {"Settings", juce::DrawableButton::ImageFitted};
+    AAPresetBox presetBox;
     // juce::DrawableButton resizeButton {"GUI Size", juce::DrawableButton::ImageFitted};
     juce::DrawableButton bypassButton {"Bypass", juce::DrawableButton::ImageFitted};
     float logoCentreXPOW {0.16f};
@@ -45,7 +46,6 @@ private:
 
     juce::AudioProcessorValueTreeState::ButtonAttachment bypassAttachment;
     juce::UndoManager& undoManager;
-    AAPresetBox& presetBox;
 
     juce::Image guitarToolsLogo = juce::ImageCache::getFromMemory (BinaryData::GTLogoV2Shadow_png, BinaryData::GTLogoV2Shadow_pngSize);
     juce::Rectangle<float> presetBoxBounds;

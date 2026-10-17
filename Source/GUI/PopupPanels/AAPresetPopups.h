@@ -13,54 +13,47 @@
 class AAPresetPopup : public juce::Component
 {
 public:
-    enum class Action { save, remove };
+    enum class Action { save, rename, remove };
 
-    explicit AAPresetPopup (Action popupAction)
-        : action (popupAction)
+    AAPresetPopup()
     {
         setAlwaysOnTop (true);
         setLookAndFeel (&presetPopupLAF);
 
-        titleLabel.setText (action == Action::save ? "SAVE PRESET" : "DELETE PRESET", juce::dontSendNotification);
         titleLabel.setJustificationType (juce::Justification::centred);
         titleLabel.setColour (juce::Label::textColourId, GTColors::sectionTitleText);
         titleLabel.setInterceptsMouseClicks (false, false);
         addAndMakeVisible (titleLabel);
 
-        if (action == Action::save)
+        nameEditor.setJustification (juce::Justification::centred);
+        nameEditor.setInputRestrictions (24);
+        nameEditor.onTextChange = [this]
         {
-            nameEditor.setJustification (juce::Justification::centred);
-            nameEditor.setInputRestrictions (24);
-            nameEditor.onTextChange = [this]
-            {
-                confirmButton.setEnabled (juce::File::createLegalFileName (nameEditor.getText().trim()).isNotEmpty() && ! (isNameReserved != nullptr && isNameReserved (nameEditor.getText())));
-                isConfirmingOverwrite = false;
-                confirmButton.setButtonText ("SAVE");
-            };
-            addAndMakeVisible (nameEditor);
-        }
-        else
-        {
-            messageLabel.setJustificationType (juce::Justification::centred);
-            messageLabel.setColour (juce::Label::textColourId, GTColors::almostWhite);
-            messageLabel.setInterceptsMouseClicks (false, false);
-            addAndMakeVisible (messageLabel);
-        }
+            confirmButton.setEnabled (juce::File::createLegalFileName (nameEditor.getText().trim()).isNotEmpty() && ! (isNameReserved != nullptr && isNameReserved (nameEditor.getText())));
+            isConfirmingOverwrite = false;
+            confirmButton.setButtonText (getConfirmText());
+        };
+        addChildComponent (nameEditor);
 
-        confirmButton.setButtonText (action == Action::save ? "SAVE" : "DELETE");
+        messageLabel.setJustificationType (juce::Justification::centred);
+        messageLabel.setColour (juce::Label::textColourId, GTColors::almostWhite);
+        messageLabel.setInterceptsMouseClicks (false, false);
+        addChildComponent (messageLabel);
+
         confirmButton.onClick = [this]
         {
-            const auto presetName = action == Action::save ? nameEditor.getText() : preparedPresetName;
+            const auto isRemove = action == Action::remove;
+            const auto presetName = isRemove ? preparedPresetName : nameEditor.getText();
 
-            if (! isConfirmingOverwrite && presetExists != nullptr && presetExists (presetName))
+            if (! isRemove && ! isConfirmingOverwrite && presetExists != nullptr && presetExists (presetName))
             {
                 isConfirmingOverwrite = true;
-                confirmButton.setButtonText ("OVERWRITE");
+                confirmButton.setButtonText ("Overwrite");
                 return;
             }
 
             if (onConfirm != nullptr)
-                onConfirm (presetName);
+                onConfirm (action, presetName);
         };
         cancelButton.onClick = [this] { setVisible (false); };
 
@@ -73,20 +66,27 @@ public:
         setLookAndFeel (nullptr);
     }
 
-    void prepare (const juce::String& presetName)
+    void prepare (const Action newAction, const juce::String& presetName)
     {
+        action = newAction;
         preparedPresetName = presetName;
+        isConfirmingOverwrite = false;
+        confirmButton.setButtonText (getConfirmText());
 
-        if (action == Action::remove)
+        const auto isRemove = action == Action::remove;
+        titleLabel.setText (isRemove ? "DELETE PRESET" : action == Action::save ? "SAVE PRESET" : "RENAME PRESET", juce::dontSendNotification);
+        nameEditor.setVisible (! isRemove);
+        messageLabel.setVisible (isRemove);
+
+        if (isRemove)
         {
-            messageLabel.setText ("DELETE \"" + presetName.toUpperCase() + "\"?", juce::dontSendNotification);
+            messageLabel.setText ("Delete \"" + presetName + "\"?", juce::dontSendNotification);
+            confirmButton.setEnabled (true);
             return;
         }
 
         nameEditor.setText (presetName, juce::dontSendNotification);
         confirmButton.setEnabled (juce::File::createLegalFileName (presetName.trim()).isNotEmpty() && ! (isNameReserved != nullptr && isNameReserved (presetName)));
-        isConfirmingOverwrite = false;
-        confirmButton.setButtonText ("SAVE");
         nameEditor.grabKeyboardFocus();
         nameEditor.selectAll();
     }
@@ -102,15 +102,15 @@ public:
         const auto boundsFWidth = boundsF.getWidth();
         const auto boundsFHeight = boundsF.getHeight();
         const auto lineHeight = boundsFHeight * 0.2f;
-        const auto fontHeight = lineHeight * presetPopupLAF.fontPOH;
+        const auto fontHeight = lineHeight * GTFontHeightPOH;
 
-        titleLabel.setFont (GTFonts::interMedium (fontHeight));
+        titleLabel.setFont (GTFonts::montserratMedium (fontHeight));
         titleLabel.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.1f).toNearestInt());
 
-        nameEditor.applyFontToAllText (GTFonts::montserratMedium (fontHeight * 0.95f));
+        nameEditor.applyFontToAllText (GTFonts::montserratMedium (fontHeight));
         nameEditor.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.4f).toNearestInt());
 
-        messageLabel.setFont (GTFonts::interMedium (fontHeight));
+        messageLabel.setFont (GTFonts::montserratMedium (fontHeight));
         messageLabel.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.9f, lineHeight).withY (boundsFHeight * 0.4f).toNearestInt());
 
         const auto buttonsBounds = boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.7f);
@@ -118,18 +118,23 @@ public:
         cancelButton.setBounds (confirmButton.getBounds().toFloat().withRightX (buttonsBounds.getRight()).toNearestInt());
     }
 
-    std::function<void (const juce::String& presetName)> onConfirm;
+    std::function<void (Action action, const juce::String& presetName)> onConfirm;
     std::function<bool (const juce::String& presetName)> presetExists;
     std::function<bool (const juce::String& presetName)> isNameReserved;
     float numRows {5.f};
 
 private:
-    const Action action;
+    juce::String getConfirmText() const
+    {
+        return action == Action::save ? "Save" : action == Action::rename ? "Rename" : "Delete";
+    }
+
+    Action action {Action::save};
     PresetPopupLAF presetPopupLAF;
     juce::Label titleLabel {"titleLabel", ""};
     juce::Label messageLabel {"messageLabel", ""};
     juce::TextEditor nameEditor;
-    juce::TextButton confirmButton, cancelButton {"CANCEL"};
+    juce::TextButton confirmButton, cancelButton {"Cancel"};
     juce::String preparedPresetName;
     bool isConfirmingOverwrite {false};
 

@@ -3,10 +3,10 @@
 //
 #include "HeaderPanel.h"
 
-HeaderPanel::HeaderPanel (GuitarToolsAudioProcessor& processor, AAPresetBox& presetBoxToUse) :
+HeaderPanel::HeaderPanel (GuitarToolsAudioProcessor& processor, PresetManager& presetManagerToUse) :
+    presetBox (presetManagerToUse),
     bypassAttachment(processor.treeState, ParamIDs::getPluginBypassActiveName(), bypassButton),
-    undoManager (processor.undoManager),
-    presetBox (presetBoxToUse)
+    undoManager (processor.undoManager)
 {
     setupIconButton (bypassButton, BinaryData::bypassIcon_svg, BinaryData::bypassIcon_svgSize);
     bypassButton.setTooltip (ParamHelpers::getTooltipForParam (ParamIDs::getPluginBypassActiveName()));
@@ -51,11 +51,10 @@ void HeaderPanel::changeListenerCallback (juce::ChangeBroadcaster*)
 
 void HeaderPanel::paint (juce::Graphics& g)
 {
-
-    const auto boundsF = getLocalBounds().toFloat();
-    // g.setGradientFill(juce::ColourGradient::horizontal(GTColors::headerPanelStart, 0.f, GTColors::headerPanelEnd, boundsF.getWidth()));
-    g.setColour (GTColors::almostBlack);
-    g.fillRect(boundsF);
+    // const auto boundsF = getLocalBounds().toFloat();
+    g.fillAll(GTColors::almostBlack);
+    // g.setGradientFill(juce::ColourGradient::horizontal(GTColors::darkGradientStart, 0.f, GTColors::darkGradientEnd, boundsF.getWidth()));
+    // g.fillRect(boundsF);
     g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
     g.drawImage (guitarToolsLogo, logoBounds, juce::RectanglePlacement::fillDestination);
 }
@@ -70,21 +69,21 @@ void HeaderPanel::resized()
     const auto logoW = logoH * (float) guitarToolsLogo.getWidth() / (float) guitarToolsLogo.getHeight();
     logoBounds = boundsF.withSize (logoW, logoH).withCentre ({boundsFWidth * logoCentreXPOW, boundsF.getCentreY()});
 
-    const auto presetBoxHeight = boundsFHeight * 0.675f;
+    const auto presetBoxHeight = boundsFHeight * 0.625f;
     const auto presetBoxWidth = boundsFWidth * 0.45f;
     presetBoxBounds = boundsF.withSizeKeepingCentre (presetBoxWidth, presetBoxHeight);
     presetBox.setBounds (presetBoxBounds.toNearestInt());
 
-    const auto saveIconSize = boundsFHeight * 0.6f;
-    // const auto saveIconSize = presetBoxHeight * 0.88f;
-    const auto saveButtonBounds = presetBoxBounds.withSizeKeepingCentre (saveIconSize, saveIconSize).withRightX (presetBoxBounds.getX() + presetBoxWidth * 0.975f);
-    savePresetButton.setBounds (saveButtonBounds.toNearestInt());
-
-    const auto iconButtonSize = boundsFHeight * 0.6f;
+    const auto iconButtonSize = boundsFHeight * 0.575f;
     const auto iconGap = boundsFWidth * 0.0125f;
     const auto iconButtonBounds = boundsF.withSizeKeepingCentre (iconButtonSize, iconButtonSize);
+
+    const auto saveButtonBounds = presetBoxBounds.withSizeKeepingCentre (iconButtonSize, iconButtonSize).withRightX (presetBoxBounds.getX() + presetBoxWidth * 0.975f);
+    savePresetButton.setBounds (saveButtonBounds.toNearestInt());
+
     const auto settingsButtonBounds = iconButtonBounds.withRightX (boundsFWidth - iconGap);
     settingsButton.setBounds (settingsButtonBounds.toNearestInt());
+
     const auto bypassButtonBounds = iconButtonBounds.withRightX (settingsButtonBounds.getX() - iconGap);
     bypassButton.setBounds (bypassButtonBounds.toNearestInt());
 

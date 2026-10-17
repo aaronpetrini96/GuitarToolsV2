@@ -8,15 +8,14 @@
 #include "PluginProcessor.h"
 #include "GUI/Panels/TooltipsPanel.h"
 #include "GUI/Panels/HeaderPanel.h"
-#include "GUI/Panels/InfoPanel.h"
+#include "GUI/PopupPanels/InfoPopupPanel.h"
 #include "GUI/Panels/MainPanel.h"
-#include "GUI/Panels/SettingsOptionsPanel.h"
-#include "Utils/AAResizeUI.h"
-#include "GUI/PopupPanels/AAListOptionsPopup.h"
-#include "Utils/PresetManager.h"
-#include "GUI/Components/AAPresetBox.h"
+#include "GUI/PopupPanels/SettingsOptionsPanel.h"
+#include "GUI/PopupPanels/UISizeOptionsPanel.h"
 #include "GUI/PopupPanels/AAPresetBrowser.h"
 #include "GUI/PopupPanels/AAPresetPopups.h"
+#include "Utils/PresetManager.h"
+#include "Utils/AAResizeUI.h"
 //==============================================================================
 /**
 */
@@ -35,14 +34,14 @@ public:
     void mouseUp (const juce::MouseEvent& event) override;
     void mouseEnter (const juce::MouseEvent& event) override;
     void mouseExit (const juce::MouseEvent& event) override;
+    void componentVisibilityChanged (juce::Component& component) override;
 
 private:
     GuitarToolsAudioProcessor& audioProcessor;
     void showSettingsOptionsPopup();
     void showUISizeOptions();
     void showPopup (juce::Component& popup);
-    void updateMainPanelAlpha();
-    void componentVisibilityChanged (juce::Component& component) override;
+    void updateMainPanelDarkening();
     void updateEditorSize();
 
     const float headerHeightRatio = 0.0575f;
@@ -51,19 +50,17 @@ private:
     juce::Rectangle<float> imageBounds{};
 
     PresetManager presetManager {audioProcessor};
-    AAPresetBox presetBox {presetManager};
     AAPresetBrowser presetBrowser {presetManager};
-    AAPresetPopup savePresetPopup {AAPresetPopup::Action::save};
-    AAPresetPopup deletePresetPopup {AAPresetPopup::Action::remove};
+    AAPresetPopup presetPopup;
     juce::Component modalBlocker;
-    juce::File presetToDelete;
-    HeaderPanel headerPanel {audioProcessor, presetBox};
+    juce::File targetPresetFile;
+    HeaderPanel headerPanel {audioProcessor, presetManager};
     MainPanel mainPanel {audioProcessor};
-    InfoPanel infoPanel;
+    InfoPopupPanel infoPanel;
     TooltipsPanel tooltipsPanel;
 
     SettingsOptionsPanel settingsOptionsPopup {uiResize, audioProcessor.showTooltips, *audioProcessor.treeState.getParameter (ParamIDs::getLoudnessMatchActiveName()), *audioProcessor.treeState.getParameter (ParamIDs::getGainLimitActiveName()), *audioProcessor.treeState.getParameter (ParamIDs::getLowTuningActiveName())};
-    AAListOptionsPopup resizeOptionsPopup {"UI SIZE"};
+    UISizeOptionsPanel resizeOptionsPopup {uiResize};
     juce::DrawableButton resizeButton {"GUI Size", juce::DrawableButton::ImageFitted};
     juce::Image backgroundWithDividers = juce::ImageCache::getFromMemory (BinaryData::mainPanelBackgroundLevelsDarkNoText_png, BinaryData::mainPanelBackgroundLevelsDarkNoText_pngSize);
 

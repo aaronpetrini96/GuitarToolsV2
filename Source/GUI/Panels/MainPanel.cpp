@@ -102,7 +102,7 @@ void MainPanel::paintOverChildren(juce::Graphics& g)
 {
     if (shouldDim)
     {
-        g.fillAll(GTColors::almostBlack.withAlpha (0.425f));
+        g.fillAll(GTColors::almostBlack.withAlpha (0.25f));
     }
 }
 

@@ -11,28 +11,7 @@
 #include "BinaryData.h"
 #include "../../GTLook.h"
 #include "../../Utils/PresetManager.h"
-
-class PresetBoxLAF : public juce::LookAndFeel_V4
-{
-public:
-    PresetBoxLAF() = default;
-
-    void drawButtonBackground(juce::Graphics&, juce::Button&, const juce::Colour& , bool , bool ) override
-    {
-    }
-
-    void drawButtonText (juce::Graphics& g, juce::TextButton& button, bool highlighted, bool) override
-    {
-        const auto boundsF = button.getLocalBounds().toFloat();
-
-        g.setColour (highlighted ? GTColors::sectionTitleText.withMultipliedBrightness(2.f) : GTColors::sectionTitleText);
-        g.setFont (GTFonts::montserratMedium (boundsF.getHeight() * AAUITools::fontHeightPOH * 0.95f));
-        g.drawFittedText (button.getButtonText(), boundsF.toNearestInt(), juce::Justification::centred, 1);
-    }
-
-private:
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PresetBoxLAF)
-};
+#include "../LAF/PresetBoxLAF.h"
 
 class AAPresetBox : public juce::Component
 {
@@ -65,13 +44,7 @@ public:
 
     void paint(juce::Graphics& g) override
     {
-        const auto boundsF = getLocalBounds().toFloat();
-        const auto outlineThickness = boundsF.getHeight() * AAUITools::outlineThicknessPOH * 0.75f;
-        const auto corner = boundsF.getHeight() * AAUITools::cornerPOH;
-        g.setColour(GTColors::presetBoxBackground);
-        g.fillRoundedRectangle(boxBounds, corner);
-        g.setColour (GTColors::almostBlack);
-        g.drawRoundedRectangle (boxBounds.reduced (outlineThickness * 0.5f), corner, outlineThickness);
+        presetBoxLAF.drawBoxBackground (g, boxBounds);
     }
 
     void resized() override

@@ -19,17 +19,13 @@ namespace  GTColors //project specific
     inline const juce::Colour superDarkBackground {15, 15, 15};
     inline const juce::Colour almostWhite {190, 190, 190};
     inline const juce::Colour sectionTitleText {215, 215, 215};
-    inline const juce::Colour whiteOutline {220, 220, 220};
     inline const juce::Colour activeNeonBlue { 64, 196, 255 };
     inline const juce::Colour almostBlack {5, 5, 5};
     inline const juce::Colour popupBackground {5, 7, 14};
-    inline const juce::Colour blueGradientStart {9, 12, 25};
-    inline const juce::Colour blueGradientEnd {22, 28, 60};
-    inline const juce::Colour darkGradientStart {4, 5, 11};
-    inline const juce::Colour darkGradientEnd {9, 12, 25};
+    // inline const juce::Colour blueGradientStart {9, 12, 25};
+    // inline const juce::Colour blueGradientEnd {22, 28, 60};
     inline const juce::Colour popupDarkBackground {20, 28, 50};
-    inline const juce::Colour popupBlueHighlight {30, 50, 80};
-    inline const juce::Colour popupBlueHighlight2 {45, 65, 91};
+    // inline const juce::Colour popupBlueHighlight {30, 50, 80};
     inline const juce::Colour iconSVGColor {100, 100, 100};
     inline const juce::Colour iconNormalColor {200, 200, 200};
     inline const juce::Colour iconOverColor {120, 120, 120};
@@ -37,9 +33,6 @@ namespace  GTColors //project specific
     inline const juce::Colour presetBoxOutlineColor {70, 85, 115};
     inline const juce::Colour popupOutlineColor {40, 50, 70};
 
-    inline const juce::Colour tabButtonSelected {34, 56, 90};
-    inline const juce::Colour tabButtonUnselected {10, 15, 28};
-    inline const juce::Colour infoPanelBackground {20, 30, 57};
     inline const juce::Colour infoPanelSecondaryText {140, 152, 185};
     inline const juce::Colour infoPanelDivider {juce::Colour (190, 200, 225).withAlpha (0.27f)};
     inline const juce::Colour meterGreen {60, 200, 80};
@@ -48,7 +41,7 @@ namespace  GTColors //project specific
 }
 
 inline const juce::Colour GTPopupBackgroundColor {GTColors::popupBackground};
-inline const juce::Colour GTPopupOutlineColor {GTColors::almostBlack};
+inline const juce::Colour GTPopupOutlineColor {GTColors::popupOutlineColor};
 inline const juce::Colour GTPopupTextColor {GTColors::sectionTitleText};
 inline const juce::Colour GTPopupSelectedTextColor {GTColors::activeNeonBlue};
 

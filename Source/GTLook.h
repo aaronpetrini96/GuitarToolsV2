@@ -8,10 +8,10 @@
 #include "BinaryData.h"
 #include "Utils/AAUITools.h"
 
-constexpr float GTOutlineThicknessPOH {0.05f};
+constexpr float GTOutlineThicknessPOH {0.07f};
 constexpr float GTCornerPOH {0.025f};
 constexpr float GTFontHeightPOH {0.62f};
-constexpr float GTPopupTitleRowRatio {1.05f};
+constexpr float GTPopupTitleRowRatio {1.025f};
 
 namespace  GTColors //project specific
 {

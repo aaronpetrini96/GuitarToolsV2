@@ -12,8 +12,8 @@
 class SettingsOptionsPanel : public AAListOptionsPopup
 {
 public:
-    SettingsOptionsPanel (AAResizeUI& resizeUIToUse, bool& showTooltipsToUse, juce::RangedAudioParameter& autoGainParamToUse, juce::RangedAudioParameter& gainLimitParamToUse, juce::RangedAudioParameter& lowTuningParamToUse)
-        : AAListOptionsPopup ("SETTINGS"), resizeUI (resizeUIToUse), showTooltips (showTooltipsToUse), autoGainParam (autoGainParamToUse), gainLimitParam (gainLimitParamToUse), lowTuningParam (lowTuningParamToUse)
+    SettingsOptionsPanel (AAResizeUI& resizeUIToUse, bool& showTooltipsToUse, juce::RangedAudioParameter& autoGainParamToUse, juce::RangedAudioParameter& lowTuningParamToUse)
+        : AAListOptionsPopup ("SETTINGS"), resizeUI (resizeUIToUse), showTooltips (showTooltipsToUse), autoGainParam (autoGainParamToUse), lowTuningParam (lowTuningParamToUse)
     {
         listOptionsLAF.leftAlignText = true;
     }
@@ -24,7 +24,6 @@ public:
         settingsOptions.add ({"Show Tooltips", [this] { toggleTooltips(); }, true, showTooltips, true});
         settingsOptions.add ({"Match Loudness", [this] { toggleBoolParameter (autoGainParam); }, true, autoGainParam.getValue() >= 0.5f, true, ParamHelpers::getTooltipForParam (ParamIDs::getLoudnessMatchActiveName())});
         settingsOptions.add ({"Low Tuning Mode", [this] { toggleBoolParameter (lowTuningParam); }, true, lowTuningParam.getValue() >= 0.5f, true, ParamHelpers::getTooltipForParam (ParamIDs::getLowTuningActiveName())});
-        // settingsOptions.add ({"Clip Guard",[this] { toggleBoolParameter (gainLimitParam); }, true, gainLimitParam.getValue() >= 0.5f, true, ParamHelpers::getTooltipForParam (ParamIDs::getGainLimitActiveName())});
         settingsOptions.add ({"Set UI Size As Default", [this] { resizeUI.makeCurrentSizeDefault(); }, ! resizeUI.isCurrentScaleDefault(), false, false, {},
                               juce::Drawable::createFromImageData (BinaryData::resizeLines_svg, BinaryData::resizeLines_svgSize)});
         settingsOptions.add ({"Info", [this] { if (onAboutClicked != nullptr) onAboutClicked(); }, true, false, false, {},
@@ -72,7 +71,6 @@ private:
     AAResizeUI& resizeUI;
     bool& showTooltips;
     juce::RangedAudioParameter& autoGainParam;
-    juce::RangedAudioParameter& gainLimitParam;
     juce::RangedAudioParameter& lowTuningParam;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SettingsOptionsPanel)

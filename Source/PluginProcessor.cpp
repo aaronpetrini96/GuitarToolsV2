@@ -219,12 +219,6 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 
     levelMatch.update (dryBuffer, buffer);
     applyGain(buffer, outputGain);
-    // const auto outputPeakDb = juce::Decibels::gainToDecibels (buffer.getMagnitude (0, numSamples));
-    //
-    // if (! gainLimitActiveParam->get())
-    //     maxTotalGainDb = DefaultValues::gainRangeEnd * 2.f;
-    // else if (outputPeakDb > 6.f)
-    //     maxTotalGainDb = juce::jmin (maxTotalGainDb, inputGainParam->get() + outputGain.getGainDecibels() - outputPeakDb);
 
     for (int ch {0}; ch < buffer.getNumChannels(); ++ch)     // Smooth crossfade
     {
@@ -392,8 +386,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout GuitarToolsAudioProcessor::c
     layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, gainRange, DefaultValues::outputGainValue, juce::AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (ParamHelpers::getStringFromValue (1))));
     name = ParamIDs::getLoudnessMatchActiveName();
     layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::loudnessMatchActive));
-    name = ParamIDs::getGainLimitActiveName();
-    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::gainLimitActive));
 
 //    ========== RETURN LAYOUT ===========
     return layout;
@@ -474,14 +466,14 @@ void GuitarToolsAudioProcessor::linkParameters()
     {
         &resoActiveParam, &resoExtremeActiveParam, &mudActiveParam, &mudExtremeActiveParam,
         &compActiveParam, &compExtremeActiveParam, &loudnessMatchActiveParam, &pluginBypassActiveParam,
-        &gainLimitActiveParam, &lowTuningActiveParam
+        &lowTuningActiveParam
     };
 
     auto boolParamIDs = std::array
     {
         &ParamIDs::getResoActiveName, &ParamIDs::getResoExtremeActiveName, &ParamIDs::getMudActiveName, &ParamIDs::getMudExtremeActiveName,
         &ParamIDs::getCompActiveName, &ParamIDs::getCompExtremeActiveName, &ParamIDs::getLoudnessMatchActiveName, &ParamIDs::getPluginBypassActiveName,
-        &ParamIDs::getGainLimitActiveName, &ParamIDs::getLowTuningActiveName
+        &ParamIDs::getLowTuningActiveName
     };
 
     initCachedParams<juce::AudioParameterBool*>(boolParams, boolParamIDs);
@@ -532,8 +524,7 @@ void GuitarToolsAudioProcessor::updateGainState()
 {
     inputGain.setGainDecibels(inputGainParam->get());
     const auto selectedOutputGainDb = loudnessMatchActiveParam->get() ? levelMatch.getGainDb() : outputGainParam->get();
-    const auto excessGainDb = juce::jmax (0.f, inputGainParam->get() + selectedOutputGainDb - maxTotalGainDb);
-    outputGain.setGainDecibels(selectedOutputGainDb - excessGainDb);
+    outputGain.setGainDecibels(selectedOutputGainDb);
 }
 
 // This creates new instances of the plugin..

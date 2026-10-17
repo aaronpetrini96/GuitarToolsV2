@@ -26,8 +26,6 @@ GuitarToolsAudioProcessorEditor::GuitarToolsAudioProcessorEditor (GuitarToolsAud
         showSettingsOptionsPopup();
     };
 
-    // headerPanel.onResizeClicked = [this] { showUISizeOptions(); };
-
     addAndMakeVisible(resizeButton);
     AAUITools::setIconButtonImages (resizeButton, BinaryData::resizeLines_svg, BinaryData::resizeLines_svgSize, GTColors::iconSVGColor, GTColors::iconOverColor, GTColors::iconNormalColor.withAlpha (0.9f), GTColors::activeNeonBlue);
     resizeButton.setToggleable(true);

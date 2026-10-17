@@ -242,7 +242,6 @@ bool GuitarToolsAudioProcessor::hasEditor() const {return true;}
 juce::AudioProcessorEditor* GuitarToolsAudioProcessor::createEditor()
 {
     return new GuitarToolsAudioProcessorEditor (*this);
-//    return new juce::GenericAudioProcessorEditor (*this);
 }
 
 //==============================================================================

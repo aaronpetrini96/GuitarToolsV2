@@ -15,7 +15,6 @@ public:
         const auto outlineThickness = bounds.getHeight() * GTOutlineThicknessPOH;
         const auto cornerSize = bounds.getHeight() * GTCornerPOH;
         AAUITools::drawOutlinedRoundedRectangle (g, bounds, cornerSize, outlineThickness, GTColors::presetBoxBackground, GTColors::presetBoxOutlineColor);
-        // AAUITools::drawOutlinedRoundedRectangle (g, bounds, 0.1F, 0.f, GTColors::almostWhite.withAlpha(0.175f), GTColors::transparent);
     }
 
     void drawButtonBackground(juce::Graphics&, juce::Button&, const juce::Colour& , bool , bool ) override

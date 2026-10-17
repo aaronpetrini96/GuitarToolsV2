@@ -51,15 +51,7 @@ public:
         if (!isEnabled() && onDisabledClicked != nullptr)
             onDisabledClicked();
         juce::Slider::mouseDown(event);
-//        updateValueLabelText();
     }
-
-//    void mouseUp(const juce::MouseEvent& event) override
-//    {
-//        juce::Slider::mouseUp(event);
-//        updateValueLabelText();
-//    }
-
 
     void paint (juce::Graphics& g) override
     {
@@ -122,7 +114,6 @@ private:
     void updateValueLabelText()
     {
         const auto roundedValue = juce::roundToInt (getValue() * 10.0) / 10.0;
-//        valueLabel.setText (isMouseButtonDown() ? (roundedValue > 0.0 ? "+" : "") + juce::String (roundedValue, 1) : "dB");
         valueLabel.setText (isEnabled() ? (roundedValue > 0.0 ? "+" : "") + juce::String (roundedValue, 1) + "dB" : "Auto");
     }
 

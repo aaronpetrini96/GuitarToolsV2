@@ -30,8 +30,7 @@ public:
                               juce::Drawable::createFromImageData (BinaryData::infoLetterIcon_svg, BinaryData::infoLetterIcon_svgSize)});
         settingsOptions.add ({"Get In Touch", [] { sendMail ({}); }, true, false, false, {},
                               juce::Drawable::createFromImageData (BinaryData::atIcon_svg, BinaryData::atIcon_svgSize)});
-        // settingsOptions.add ({"Report a Bug", [] { sendMail ("?subject=BugReport_GuitarTools2&body=Please include DAW used and the action that caused the problem. Thanks!"); }});
-        // settingsOptions.add ({"Get the Manual", [] { openUserManual(); }, true, false, false, {},
+        // settingsOptions.add ({"Get the Manual", [] { juce::URL ("https://MANUAL_URL").launchInDefaultBrowser(); }, true, false, false, {},
         //                       juce::Drawable::createFromImageData (BinaryData::questionMarkIcon_svg, BinaryData::questionMarkIcon_svgSize)});
         setItems (settingsOptions);
     }
@@ -54,14 +53,6 @@ private:
         if (onTooltipsToggled != nullptr)
             onTooltipsToggled();
     }
-
-    // static void openUserManual()
-    // {
-    //     const auto manualFile = juce::File::getSpecialLocation (juce::File::tempDirectory).getChildFile ("GuitarTools2_User_Manual.pdf");
-    //
-    //     if (manualFile.replaceWithData (BinaryData::guitarTools2UserManual_pdf, BinaryData::guitarTools2UserManual_pdfSize))
-    //         manualFile.startAsProcess();
-    // }
 
     static void sendMail (const juce::String& mailQuery)
     {

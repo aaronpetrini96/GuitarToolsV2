@@ -47,7 +47,7 @@ public:
             if (const auto& icon = rowIcons[(size_t) rowIndex])
             {
                 const auto rowBounds = rows[rowIndex]->getBounds().toFloat();
-                const auto iconSize = rowBounds.getHeight() * 0.55f;
+                const auto iconSize = rowBounds.getHeight() * 0.6f;
                 const auto iconBounds = rowBounds.withSizeKeepingCentre (iconSize, iconSize).withRightX (rowBounds.getRight() - rowBounds.getHeight() * 0.45f);
                 icon->drawWithin (g, iconBounds, juce::RectanglePlacement::centred, rows[rowIndex]->isEnabled() ? 1.f : 0.3f);
             }

@@ -35,15 +35,10 @@ public:
         attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, &undoManager);
     }
 
-    void mouseDrag (const juce::MouseEvent& e) override
+    void startedDragging() override
     {
-        if (isEnabled() && ! isDragging && (e.mouseWasDraggedSinceMouseDown()))
-        {
-            isDragging = true;
-            updateValueDisplay();
-        }
-
-        juce::Slider::mouseDrag (e);
+        isDragging = true;
+        updateValueDisplay();
     }
 
     void stoppedDragging() override

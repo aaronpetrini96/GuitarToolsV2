@@ -88,7 +88,7 @@ public:
         const auto tickBoxSize = boundsFHeight * 0.55f;
         const auto tickBoxBounds = boundsF.withSizeKeepingCentre (tickBoxSize, tickBoxSize).withRightX (boundsF.getRight() - boundsFHeight * 0.45f);
         const auto tickBoxLineThickness = tickBoxSize * 0.08f;
-        g.setColour (button.getToggleState() ? GTPopupSelectedTextColor : GTPopupTextColor);
+        g.setColour (button.getToggleState() ? GTPopupSelectedTextColor : (shouldDrawButtonAsHighlighted ? GTColors::iconOverColor : GTPopupTextColor));
         g.drawRoundedRectangle (tickBoxBounds, tickBoxSize * 0.2f, tickBoxLineThickness);
 
         if (button.getToggleState())

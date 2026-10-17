@@ -44,7 +44,8 @@ public:
     {
         for (int rowIndex = 0; rowIndex < rows.size(); ++rowIndex)
         {
-            if (const auto& icon = rowIcons[(size_t) rowIndex])
+            const auto& icon = rows[rowIndex]->isOver() ? rowOverIcons[(size_t) rowIndex] : rowIcons[(size_t) rowIndex];
+            if (icon != nullptr)
             {
                 const auto rowBounds = rows[rowIndex]->getBounds().toFloat();
                 const auto iconSize = rowBounds.getHeight() * 0.6f;
@@ -76,6 +77,8 @@ protected:
     {
         rows.clear();
         rowIcons.clear();
+        rowOverIcons.clear();
+
         for (const auto& item : newItems)
         {
             auto* row = rows.add (item.isCheckbox ? static_cast<juce::Button*> (new juce::ToggleButton (item.text)) : new juce::TextButton (item.text));
@@ -95,6 +98,9 @@ protected:
             if (item.icon != nullptr)
                 item.icon->replaceColour(GTColors::iconSVGColor, GTPopupTextColor);
             rowIcons.push_back (item.icon);
+            rowOverIcons.push_back (item.icon != nullptr ? item.icon->createCopy() : nullptr);
+            if (rowOverIcons.back() != nullptr)
+                rowOverIcons.back()->replaceColour (GTPopupTextColor, GTColors::iconOverColor);
         }
 
         resized();
@@ -104,7 +110,7 @@ private:
     juce::String title;
     juce::Rectangle<float> titleBounds;
     juce::OwnedArray<juce::Button> rows;
-    std::vector<std::shared_ptr<juce::Drawable>> rowIcons;
+    std::vector<std::shared_ptr<juce::Drawable>> rowIcons, rowOverIcons;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AAListOptionsPopup)
 };

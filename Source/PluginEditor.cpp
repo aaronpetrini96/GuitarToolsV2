@@ -27,7 +27,7 @@ GuitarToolsAudioProcessorEditor::GuitarToolsAudioProcessorEditor (GuitarToolsAud
     };
 
     addAndMakeVisible(resizeButton);
-    AAUITools::setIconButtonImages (resizeButton, BinaryData::resizeLines_svg, BinaryData::resizeLines_svgSize, GTColors::iconSVGColor, GTColors::iconOverColor, GTColors::iconNormalColor.withAlpha (0.9f), GTColors::activeNeonBlue);
+    AAUITools::setIconButtonImages (resizeButton, BinaryData::resizeLines_svg, BinaryData::resizeLines_svgSize, GTColors::iconSVGColor, GTColors::iconNormalColor.withAlpha (0.9f), GTColors::iconOverColor, GTColors::activeNeonBlue);
     resizeButton.setToggleable(true);
     resizeButton.setClickingTogglesState(false);
     resizeButton.onClick = [this] { showUISizeOptions(); };

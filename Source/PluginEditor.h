@@ -59,10 +59,10 @@ private:
     InfoPopupPanel infoPanel;
     TooltipsPanel tooltipsPanel;
 
-    SettingsOptionsPanel settingsOptionsPopup {uiResize, audioProcessor.showTooltips, *audioProcessor.treeState.getParameter (ParamIDs::getLoudnessMatchActiveName()), *audioProcessor.treeState.getParameter (ParamIDs::getGainLimitActiveName()), *audioProcessor.treeState.getParameter (ParamIDs::getLowTuningActiveName())};
+    SettingsOptionsPanel settingsOptionsPopup {uiResize, audioProcessor.showTooltips, *audioProcessor.treeState.getParameter (ParamIDs::getLoudnessMatchActiveName()), *audioProcessor.treeState.getParameter (ParamIDs::getLowTuningActiveName())};
     UISizeOptionsPanel resizeOptionsPopup {uiResize};
     juce::DrawableButton resizeButton {"GUI Size", juce::DrawableButton::ImageFitted};
-    juce::Image backgroundWithDividers = juce::ImageCache::getFromMemory (BinaryData::mainPanelBackground_png, BinaryData::mainPanelBackground_pngSize);
+    juce::Image backgroundWithDividers = juce::ImageCache::getFromMemory (BinaryData::mainPanelBackgroundLight_png, BinaryData::mainPanelBackgroundLight_pngSize);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuitarToolsAudioProcessorEditor)
 };

@@ -30,7 +30,7 @@ public:
         settingsOptions.add ({"Info", [this] { if (onAboutClicked != nullptr) onAboutClicked(); }, true, false, false, {},
                               juce::Drawable::createFromImageData (BinaryData::infoLetterIcon_svg, BinaryData::infoLetterIcon_svgSize)});
         settingsOptions.add ({"Get In Touch", [] { sendMail ({}); }, true, false, false, {},
-                              juce::Drawable::createFromImageData (BinaryData::mailIcon_svg, BinaryData::mailIcon_svgSize)});
+                              juce::Drawable::createFromImageData (BinaryData::atIcon_svg, BinaryData::atIcon_svgSize)});
         // settingsOptions.add ({"Report a Bug", [] { sendMail ("?subject=BugReport_GuitarTools2&body=Please include DAW used and the action that caused the problem. Thanks!"); }});
         // settingsOptions.add ({"Get the Manual", [] { openUserManual(); }, true, false, false, {},
         //                       juce::Drawable::createFromImageData (BinaryData::questionMarkIcon_svg, BinaryData::questionMarkIcon_svgSize)});

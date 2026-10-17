@@ -48,7 +48,8 @@ public:
             {
                 const auto rowBounds = rows[rowIndex]->getBounds().toFloat();
                 const auto iconSize = rowBounds.getHeight() * 0.6f;
-                const auto iconBounds = rowBounds.withSizeKeepingCentre (iconSize, iconSize).withRightX (rowBounds.getRight() - rowBounds.getHeight() * 0.45f);
+                const auto iconWidth = iconSize * juce::jmax (1.0f, icon->getDrawableBounds().getWidth() / icon->getDrawableBounds().getHeight());
+                const auto iconBounds = rowBounds.withSizeKeepingCentre (iconWidth, iconSize).withRightX (rowBounds.getRight() - rowBounds.getHeight() * 0.45f);
                 icon->drawWithin (g, iconBounds, juce::RectanglePlacement::centred, rows[rowIndex]->isEnabled() ? 1.f : 0.3f);
             }
         }

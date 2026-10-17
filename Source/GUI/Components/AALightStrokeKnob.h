@@ -130,7 +130,7 @@ private:
     const bool fillFromEnd;
     const float startAngle { 1.25f * juce::MathConstants<float>::pi };
     const float endAngle { 2.75f * juce::MathConstants<float>::pi };
-    const int numberOfDots { 13 };
+    const int numberOfDots { 15 };
     const float knobReducePOW { 0.f };
 
     std::unique_ptr<juce::SliderParameterAttachment> attachment;

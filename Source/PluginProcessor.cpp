@@ -264,7 +264,7 @@ juce::AudioProcessorEditor* GuitarToolsAudioProcessor::createEditor()
 void GuitarToolsAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     auto state = treeState.copyState();
-    state.setProperty("CurrentPresetName", currentPresetName, nullptr);
+    state.setProperty("CurrentPresetName", getCurrentPresetName(), nullptr);
     state.setProperty("UIScale", uiScale, nullptr);
     state.setProperty("ShowTooltips", showTooltips, nullptr);
 
@@ -279,7 +279,7 @@ void GuitarToolsAudioProcessor::setStateInformation (const void* data, int sizeI
     {
         juce::ValueTree state = juce::ValueTree::fromXml(*xml);
         if (auto* presetNameProp = state.getPropertyPointer("CurrentPresetName"))
-            currentPresetName = presetNameProp->toString(); // restore preset name
+            setCurrentPresetName (presetNameProp->toString()); // restore preset name
         if (auto* uiScaleProp = state.getPropertyPointer("UIScale"))
             uiScale = static_cast<float>(*uiScaleProp);
         if (auto* showTooltipsProp = state.getPropertyPointer("ShowTooltips"))

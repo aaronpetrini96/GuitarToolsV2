@@ -38,7 +38,6 @@ private:
     float knobSizeReference {0.f};
     const juce::StringArray levelScaleLabels {"  0", " -9", "-20", "-48"};
 
-    const juce::Colour textWhiteColor = GTColors::almostWhite.withAlpha(0.9f);
 
     juce::Rectangle<float> cutFiltersArea, buttonsArea, shelfFiltersArea, plateBounds;
 
@@ -52,29 +51,28 @@ private:
     AANeveRadioButtons lowCutSlopeButtons {*audioProcessor.treeState.getParameter (ParamIDs::getLowCutSlopeName()), {"12", "24", "36", "48"}};
     AANeveRadioButtons highCutSlopeButtons {*audioProcessor.treeState.getParameter (ParamIDs::getHighCutSlopeName()), {"12", "24", "36", "48"}};
 
-    AAUITools::PrintedText lowCutSlopeLabel  {"SLOPE", textWhiteColor};
-    AAUITools::PrintedText highCutSlopeLabel {"SLOPE", textWhiteColor};
-    AAUITools::PrintedText presenceModeLabel {"MODE", textWhiteColor};
-    AAUITools::PrintedText depthModeLabel    {"MODE", textWhiteColor};
-    AAUITools::PrintedText levelsTitle {"LEVELS", GTColors::almostWhite};
-    AAUITools::PrintedText inputLevelTitle {"INPUT", GTColors::almostWhite};
-    AAUITools::PrintedText outputLevelTitle {"OUTPUT", GTColors::almostWhite};
+    AAUITools::PrintedText lowCutSlopeLabel  {"SLOPE", GTColors::almostWhite}, highCutSlopeLabel {"SLOPE", GTColors::almostWhite};
+    AAUITools::PrintedText presenceModeLabel {"MODE", GTColors::almostWhite}, depthModeLabel {"MODE", GTColors::almostWhite};
 
     AASquareSSLButton resoActiveButton {*audioProcessor.treeState.getParameter (ParamIDs::getResoActiveName()), "KILL\nRESO"};
     AASquareSSLButton mudActiveButton {*audioProcessor.treeState.getParameter (ParamIDs::getMudActiveName()), "CLEAR\nMUD"};
     AASquareSSLButton compActiveButton {*audioProcessor.treeState.getParameter (ParamIDs::getCompActiveName()), "TAME\nLOWS"};
-
     AARectSSLButton resoModeSwitch {*audioProcessor.treeState.getParameter (ParamIDs::getResoExtremeActiveName()), "MAX"};
     AARectSSLButton compModeSwitch {*audioProcessor.treeState.getParameter (ParamIDs::getCompExtremeActiveName()), "MAX"};
     AARectSSLButton mudModeSwitch {*audioProcessor.treeState.getParameter (ParamIDs::getMudExtremeActiveName()), "MAX"};
+    FadersPlatePanel fadersPlatePanel {audioProcessor};
 
-    AANotchSSLKnob inputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getInputGainName()), "dB"};
-    AANotchSSLKnob outputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getOutputGainName()), "dB"};
+    AAUITools::PrintedText levelsSectionTitleText {"LEVELS", GTColors::almostWhite};
+    AAUITools::PrintedText inputLevelTitle {"INPUT", GTColors::almostWhite};
+    AAUITools::PrintedText outputLevelTitle {"OUTPUT", GTColors::almostWhite};
+
+    AANotchSSLKnob inputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getInputGainName())};
+    AANotchSSLKnob outputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getOutputGainName())};
 
     GTLevelMeter outputLevelMeter{audioProcessor.outputLevelLeft, audioProcessor.outputLevelRight, GTLevelMeter::ScalePlacement::none};
     GTLevelMeter inputLevelMeter{audioProcessor.inputLevelLeft, audioProcessor.inputLevelRight, GTLevelMeter::ScalePlacement::none};
     std::unique_ptr<juce::ParameterAttachment> levelMatchAttachment;
-    FadersPlatePanel fadersPlatePanel {audioProcessor};
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainPanel)
 };

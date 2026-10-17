@@ -128,7 +128,6 @@ GuitarToolsAudioProcessorEditor::~GuitarToolsAudioProcessorEditor() = default;
 //==============================================================================
 void GuitarToolsAudioProcessorEditor::paint (juce::Graphics& g)
 {
-
     g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
     g.drawImage(backgroundWithDividers, imageBounds, juce::RectanglePlacement::fillDestination);
 }

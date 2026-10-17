@@ -84,7 +84,7 @@ private:
     float screwSize{0.f};
     juce::Rectangle<float> faderBounds;
     juce::Image screw {juce::ImageCache::getFromMemory(BinaryData::screwDirty_png, BinaryData::screwDirty_pngSize)};
-    juce::Image trackImage = juce::ImageCache::getFromMemory (BinaryData::faderTrackV2_copy_png, BinaryData::faderTrackV2_copy_pngSize);
+    juce::Image trackImage = juce::ImageCache::getFromMemory (BinaryData::faderTrack_png, BinaryData::faderTrack_pngSize);
     juce::Rectangle<float> resoTrackBounds, mudTrackBounds, compTrackBounds;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FadersPlatePanel)
 };

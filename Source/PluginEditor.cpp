@@ -153,7 +153,7 @@ void GuitarToolsAudioProcessorEditor::resized()
     resizeButton.setBounds (resizeBtnBounds.toNearestInt());
 
     const auto rowH = headerH * 0.6f;
-    const auto popupsY = headerH * 0.2f;
+    const auto popupsY = headerH * 1.03f;
 
     const auto sizeOptionsWidth = boundsFWidth * 0.2f;
     const auto sizeOptionsHeight = rowH * resizeOptionsPopup.getNumRows();

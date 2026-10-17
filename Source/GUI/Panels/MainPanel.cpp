@@ -197,7 +197,7 @@ void MainPanel::resizeLevelsSectionCentred(const juce::Rectangle<float>& boundsF
     const auto meterWidth = meterHeight * 0.25f;
     const auto meterCY = buttonsArea.getHeight() * 0.905f;
     const auto meterBounds = levelsArea.withSize (meterWidth, meterHeight).withCentre({levelsArea.getCentreX(), meterCY});
-    const auto meterGap = meterHeight * 0.25f;
+    const auto meterGap = meterHeight * 0.27f;
     inputLevelMeter.setBounds (meterBounds.translated (-meterGap, 0.f).toNearestInt());
     outputLevelMeter.setBounds (meterBounds.translated (meterGap, 0.f).toNearestInt());
 

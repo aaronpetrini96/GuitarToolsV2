@@ -62,7 +62,7 @@ private:
     SettingsOptionsPanel settingsOptionsPopup {uiResize, audioProcessor.showTooltips, *audioProcessor.treeState.getParameter (ParamIDs::getLoudnessMatchActiveName()), *audioProcessor.treeState.getParameter (ParamIDs::getGainLimitActiveName()), *audioProcessor.treeState.getParameter (ParamIDs::getLowTuningActiveName())};
     UISizeOptionsPanel resizeOptionsPopup {uiResize};
     juce::DrawableButton resizeButton {"GUI Size", juce::DrawableButton::ImageFitted};
-    juce::Image backgroundWithDividers = juce::ImageCache::getFromMemory (BinaryData::mainPanelBackgroundLevelsDarkNoText_png, BinaryData::mainPanelBackgroundLevelsDarkNoText_pngSize);
+    juce::Image backgroundWithDividers = juce::ImageCache::getFromMemory (BinaryData::mainPanelBackgroundLevelsDarkTextDimmed_png, BinaryData::mainPanelBackgroundLevelsDarkTextDimmed_pngSize);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuitarToolsAudioProcessorEditor)
 };

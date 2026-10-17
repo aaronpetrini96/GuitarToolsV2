@@ -41,7 +41,7 @@ public:
         const auto fontBounds = boundsF.withHeight (boundsF.getHeight() * 0.14f);
         nameText.setFont (GTFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.8f).withExtraKerningFactor(0.03f));
         nameText.setBounds (fontBounds.toNearestInt());
-        valueText.setFont (GTFonts::interMedium (fontBounds.getHeight() * 0.7f));
+        valueText.setFont (GTFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.7f).withExtraKerningFactor (0.03f));
         valueText.setBounds (fontBounds.withBottomY (boundsF.getHeight()).toNearestInt());
     }
 
@@ -122,7 +122,6 @@ private:
     }
 
     juce::Image knobImage = juce::ImageCache::getFromMemory(BinaryData::darkKnobShadow_png, BinaryData::darkKnobShadow_pngSize);
-    // juce::Image knobImage = juce::ImageCache::getFromMemory(BinaryData::darkKnob_png, BinaryData::darkKnob_pngSize);
     AAUITools::PrintedText nameText;
     AAUITools::PrintedText valueText;
     juce::RangedAudioParameter& parameter;

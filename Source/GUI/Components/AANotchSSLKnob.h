@@ -14,12 +14,11 @@
 class AANotchSSLKnob : public juce::Slider
 {
 public:
-    AANotchSSLKnob (juce::RangedAudioParameter& parameterToUse, const juce::String& nameTextToUse)
-        : nameText (nameTextToUse), parameter (parameterToUse)
+    explicit AANotchSSLKnob (juce::RangedAudioParameter& parameterToUse)
+        : parameter (parameterToUse)
     {
         jassert (knobImage.isValid());
         setSliderStyle (juce::Slider::SliderStyle::RotaryVerticalDrag);
-        setScrollWheelEnabled(false);
         setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
         setMouseDragSensitivity (300);
         setRotaryParameters (startAngle, endAngle, true);
@@ -27,7 +26,7 @@ public:
 
         addAndMakeVisible (valueLabel);
         attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, nullptr);
-        updateValueDisplay();
+        updateValueLabelText();
     }
 
     void setUndoManager (juce::UndoManager& undoManager)
@@ -35,34 +34,36 @@ public:
         attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, &undoManager);
     }
 
-    void startedDragging() override
-    {
-        isDragging = true;
-        updateValueDisplay();
-    }
-
-    void stoppedDragging() override
-    {
-        isDragging = false;
-        updateValueDisplay();
-    }
-
     void valueChanged () override
     {
-        updateValueDisplay();
+        updateValueLabelText();
     }
 
     void enablementChanged() override
     {
-        repaint();
+        valueLabel.setAlpha(isEnabled() ? 1.0f : 0.4f);
+        updateValueLabelText();
+        juce::Slider::enablementChanged();
     }
 
+    void mouseDown(const juce::MouseEvent& event) override
+    {
+        if (!isEnabled() && onDisabledClicked != nullptr)
+            onDisabledClicked();
+        juce::Slider::mouseDown(event);
+//        updateValueLabelText();
+    }
+
+//    void mouseUp(const juce::MouseEvent& event) override
+//    {
+//        juce::Slider::mouseUp(event);
+//        updateValueLabelText();
+//    }
 
 
     void paint (juce::Graphics& g) override
     {
-        const auto boundsF = getLocalBounds().toFloat();
-        const auto knobArea = boundsF.withHeight (boundsF.getWidth());
+        const auto knobArea = getLocalBounds().toFloat().withHeight (getLocalBounds().toFloat().getWidth());
         const auto boundsCentre = knobArea.getCentre();
         const auto sizeRef = knobArea.getWidth();
         const auto scaleThickness = sizeRef * scaleThicknessAdjuster;
@@ -79,7 +80,6 @@ public:
             g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
             g.drawImage (knobImage, knobBounds, juce::RectanglePlacement::fillDestination);
         }
-
         g.endTransparencyLayer();
     }
 
@@ -89,13 +89,17 @@ public:
         const auto knobSize = boundsF.getWidth();
         const auto labelBounds = boundsF.withTop (knobSize * 0.92f);
 
-        valueLabel.setFont (GTFonts::ibmPlexSansMedium (labelBounds.getHeight() * 0.9f));
+        valueLabel.setFont (GTFonts::ibmPlexSansMedium (labelBounds.getHeight() * 0.85f).withExtraKerningFactor (0.03f));
         valueLabel.setBounds (labelBounds.toNearestInt());
     }
 
     int numberOfTicks {11};
-private:
+    float scaleThicknessAdjuster {0.012f};
+    float tickLengthAdjuster {0.065f};
+    float knobBoundsReducer {0.5f};
+    std::function<void()> onDisabledClicked;
 
+private:
     void paintScale (juce::Graphics& g, juce::Point<float> centre, float scaleRadius, float tickLength, float scaleThickness)
     {
         juce::Path scalePath;
@@ -111,27 +115,23 @@ private:
             scalePath.lineTo (centre + tickDirection * (scaleRadius + tickLength));
         }
 
-        g.setColour (GTColors::almostWhite.withAlpha (0.8f));
+        g.setColour (GTColors::almostWhite.withAlpha (0.9f));
         g.strokePath (scalePath, juce::PathStrokeType (scaleThickness, juce::PathStrokeType::curved, juce::PathStrokeType::butt));
     }
 
-    void updateValueDisplay()
+    void updateValueLabelText()
     {
         const auto roundedValue = juce::roundToInt (getValue() * 10.0) / 10.0;
-        valueLabel.setText (isDragging ? (roundedValue > 0.0 ? "+" : "") + juce::String (roundedValue, 1) : nameText);
+//        valueLabel.setText (isMouseButtonDown() ? (roundedValue > 0.0 ? "+" : "") + juce::String (roundedValue, 1) : "dB");
+        valueLabel.setText (isEnabled() ? (roundedValue > 0.0 ? "+" : "") + juce::String (roundedValue, 1) + "dB" : "Auto");
     }
 
     juce::Image knobImage = juce::ImageCache::getFromMemory (BinaryData::knotchKnobShadow2_png, BinaryData::knotchKnobShadow2_pngSize);
     const float startAngle { 1.25f * juce::MathConstants<float>::pi };
     const float endAngle { 2.75f * juce::MathConstants<float>::pi };
-    const float scaleThicknessAdjuster {0.012f};
-    const float tickLengthAdjuster {0.065f};
-    const float knobBoundsReducer {0.5f};
 
-    bool isDragging {false};
-    const juce::String nameText;
     juce::RangedAudioParameter& parameter;
-    AAUITools::PrintedText valueLabel {juce::String(), GTColors::almostWhite.withAlpha (0.85f), juce::Justification::centredTop};
+    AAUITools::PrintedText valueLabel {juce::String(), GTColors::almostWhite, juce::Justification::centredTop};
     std::unique_ptr<juce::SliderParameterAttachment> attachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AANotchSSLKnob)

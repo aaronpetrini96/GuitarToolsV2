@@ -72,12 +72,17 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
     addAndMakeVisible (outputGainKnob);
     addAndMakeVisible (inputLevelMeter);
     addAndMakeVisible (outputLevelMeter);
-    addAndMakeVisible (levelsTitle);
+    addAndMakeVisible (levelsSectionTitleText);
     addAndMakeVisible (inputLevelTitle);
     addAndMakeVisible (outputLevelTitle);
 
     levelMatchAttachment = std::make_unique<juce::ParameterAttachment> (*audioProcessor.treeState.getParameter (ParamIDs::getLoudnessMatchActiveName()),
-                                                                        [this] (float newValue) { outputGainKnob.setEnabled (newValue < 0.5f); });
+                                                                        [this] (float newValue)
+                                                                        {
+                                                                            outputGainKnob.setEnabled (newValue < 0.5f);
+                                                                            outputLevelTitle.setAlpha (newValue < 0.5f ? 1.0f : 0.4f);
+                                                                        });
+    outputGainKnob.onDisabledClicked = [this] { levelMatchAttachment->setValueAsCompleteGesture (0.0f); };
     levelMatchAttachment->sendInitialUpdate();
 }
 
@@ -88,8 +93,8 @@ void MainPanel::paint(juce::Graphics& g)
     const auto levelScaleSpan = meterHeight * 0.68f;
     const auto levelScaleTopY = meterBounds.getCentreY() - levelScaleSpan * 0.5f;
     const auto levelScaleCentreX = (meterBounds.getCentreX() + outputLevelMeter.getBounds().toFloat().getCentreX()) * 0.5f;
-    g.setColour (GTColors::almostWhite.withAlpha (0.85f));
-    g.setFont (GTFonts::ibmPlexSansCondensedSemiBold (meterHeight * 0.11f));
+    g.setColour (GTColors::almostWhite);
+    g.setFont (GTFonts::ibmPlexSansMedium (meterHeight * 0.11f).withExtraKerningFactor (0.03f));
 
     for (int labelIndex {0}; labelIndex < levelScaleLabels.size(); ++labelIndex)
     {
@@ -102,7 +107,7 @@ void MainPanel::paintOverChildren(juce::Graphics& g)
 {
     if (shouldDim)
     {
-        g.fillAll(GTColors::almostBlack.withAlpha (0.25f));
+        g.fillAll(GTColors::almostBlack.withAlpha (0.3f));
     }
 }
 
@@ -149,7 +154,7 @@ void MainPanel::resizeKnobs(const juce::Rectangle<float>& boundsF)
 
     const auto knobButtonsLabelBounds = cutFiltersArea.withSizeKeepingCentre(knobButtonsWidth, knobSizeReference * 0.115f);
     for (const auto l : {&lowCutSlopeLabel, &highCutSlopeLabel, &presenceModeLabel, &depthModeLabel})
-        l->setFont (GTFonts::ibmPlexSansMedium (knobButtonsLabelBounds.getHeight() * 0.825f));
+        l->setFont (GTFonts::ibmPlexSansMedium (knobButtonsLabelBounds.getHeight() * 0.825f).withExtraKerningFactor (0.03f));
 
     const auto knobButtonsLabelGap = knobSizeReference * 0.212f;
     lowCutSlopeLabel.setBounds(knobButtonsLabelBounds.withBottomY(knobButtonsTopCY + knobButtonsLabelGap).toNearestInt());
@@ -205,6 +210,6 @@ void MainPanel::resizeLevelsSectionCentred(const juce::Rectangle<float>& boundsF
     outputGainKnob.setBounds (gainKnobBounds.translated (gainKnobGap, 0.f).toNearestInt());
 
     const auto levelsLabelHeight = knobSizeReference * 0.112f;
-    levelsTitle.setFont (GTFonts::ibmPlexSansMedium (levelsLabelHeight).withExtraKerningFactor (0.03f));
-    levelsTitle.setBounds (levelsArea.withHeight (levelsLabelHeight).withCentre ({levelsArea.getCentreX(), levelsArea.getY() + levelsLabelHeight * 0.5f}).toNearestInt());
+    levelsSectionTitleText.setFont (GTFonts::ibmPlexSansMedium (levelsLabelHeight).withExtraKerningFactor (0.03f));
+    levelsSectionTitleText.setBounds (levelsArea.withHeight (levelsLabelHeight).withCentre ({levelsArea.getCentreX(), levelsArea.getY() + levelsLabelHeight * 0.5f}).toNearestInt());
 }

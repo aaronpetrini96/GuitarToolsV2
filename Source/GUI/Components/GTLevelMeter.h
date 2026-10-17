@@ -75,7 +75,9 @@ private:
     void paintLight (juce::Graphics& g, juce::Point<float> ledCentre, size_t index, float levelDb, bool isClipped, bool isGlowPass)
     {
         const auto ledDiameter = lightDiameter * 0.8f;
-        const auto barPosition = juce::square (juce::jmap (levelDb, minimumDb, 0.f, 0.f, 1.f)) * static_cast<float> (numberOfLights - 1);
+        auto barPosition = 0.f;
+        for (size_t thresholdIndex {0}; thresholdIndex + 1 < lightThresholdsDb.size(); ++thresholdIndex)
+            barPosition += juce::jlimit (0.f, 1.f, juce::jmap (levelDb, lightThresholdsDb[thresholdIndex], lightThresholdsDb[thresholdIndex + 1], 0.f, 1.f));
         const auto litAmount = index == numberOfLights - 1 ? (isClipped ? 1.f : 0.f) : juce::jlimit (0.f, 1.f, barPosition - static_cast<float> (index));
         const auto ledColour = index == numberOfLights - 1 ? GTColors::meterRed : index >= 3 ? GTColors::meterYellow : GTColors::meterGreen;
         const auto ledBounds = juce::Rectangle<float> (ledDiameter, ledDiameter).withCentre (ledCentre);
@@ -153,6 +155,7 @@ private:
     bool leftClipped {false}, rightClipped {false};
 
     const int numberOfLights {6};
+    const std::array<float, 6> lightThresholdsDb {-48.f, -24.f, -18.f, -12.f, -6.f, 0.f};
     float lightDiameter {0.f};
 
     const ScalePlacement scalePlacement;

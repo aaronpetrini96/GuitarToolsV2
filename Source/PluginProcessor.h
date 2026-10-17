@@ -65,14 +65,15 @@ public:
     void savePreset(const juce::File& file);
     void loadPreset(const juce::File& file);
     void loadDefaultPreset();
-    void setCurrentPresetName(const juce::String& name) {currentPresetName = name;}
-    juce::String getCurrentPresetName() const {return currentPresetName;}
+    void setCurrentPresetName(const juce::String& name) { const std::scoped_lock lock (currentPresetNameMutex); currentPresetName = name; }
+    juce::String getCurrentPresetName() const { const std::scoped_lock lock (currentPresetNameMutex); return currentPresetName; }
     //==============================================================================
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     juce::UndoManager undoManager { 100000, 100 };
     juce::AudioProcessorValueTreeState treeState {*this, &undoManager, "Parameters", createParameterLayout()};
 
     juce::String currentPresetName;
+    mutable std::mutex currentPresetNameMutex;
     juce::ChangeBroadcaster stateRestoredBroadcaster;
     float uiScale {0.0f};
     bool showTooltips {false};

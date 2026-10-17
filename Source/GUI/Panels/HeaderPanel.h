@@ -27,10 +27,8 @@ public:
     std::function<void()> onBypassChanged;
     std::function<void()> onSettingsClicked;
     std::function<void()> onSaveClicked;
-    // std::function<void()> onResizeClicked;
     juce::DrawableButton settingsButton {"Settings", juce::DrawableButton::ImageFitted};
     AAPresetBox presetBox;
-    // juce::DrawableButton resizeButton {"GUI Size", juce::DrawableButton::ImageFitted};
     juce::DrawableButton bypassButton {"Bypass", juce::DrawableButton::ImageFitted};
     float logoCentreXPOW {0.16f};
 

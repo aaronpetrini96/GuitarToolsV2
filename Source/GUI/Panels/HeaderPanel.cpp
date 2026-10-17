@@ -51,10 +51,7 @@ void HeaderPanel::changeListenerCallback (juce::ChangeBroadcaster*)
 
 void HeaderPanel::paint (juce::Graphics& g)
 {
-    // const auto boundsF = getLocalBounds().toFloat();
     g.fillAll(GTColors::almostBlack);
-    // g.setGradientFill(juce::ColourGradient::horizontal(GTColors::darkGradientStart, 0.f, GTColors::darkGradientEnd, boundsF.getWidth()));
-    // g.fillRect(boundsF);
     g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
     g.drawImage (guitarToolsLogo, logoBounds, juce::RectanglePlacement::fillDestination);
 }
@@ -69,12 +66,12 @@ void HeaderPanel::resized()
     const auto logoW = logoH * (float) guitarToolsLogo.getWidth() / (float) guitarToolsLogo.getHeight();
     logoBounds = boundsF.withSize (logoW, logoH).withCentre ({boundsFWidth * logoCentreXPOW, boundsF.getCentreY()});
 
-    const auto presetBoxHeight = boundsFHeight * 0.625f;
+    const auto presetBoxHeight = boundsFHeight * 0.6;
     const auto presetBoxWidth = boundsFWidth * 0.45f;
     presetBoxBounds = boundsF.withSizeKeepingCentre (presetBoxWidth, presetBoxHeight);
     presetBox.setBounds (presetBoxBounds.toNearestInt());
 
-    const auto iconButtonSize = boundsFHeight * 0.575f;
+    const auto iconButtonSize = boundsFHeight * 0.6f;
     const auto iconGap = boundsFWidth * 0.0125f;
     const auto iconButtonBounds = boundsF.withSizeKeepingCentre (iconButtonSize, iconButtonSize);
 

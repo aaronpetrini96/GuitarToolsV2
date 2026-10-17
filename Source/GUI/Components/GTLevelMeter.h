@@ -5,10 +5,8 @@
 class GTLevelMeter : public juce::Component, private juce::Timer
 {
 public:
-    enum class ScalePlacement { none, left, right, centre };
-
-    GTLevelMeter (std::atomic<float>& leftLevel, std::atomic<float>& rightLevel, ScalePlacement scalePlacementToUse = ScalePlacement::none)
-        : leftLevelSource (leftLevel), rightLevelSource (rightLevel), scalePlacement (scalePlacementToUse)
+    GTLevelMeter (std::atomic<float>& leftLevel, std::atomic<float>& rightLevel)
+        : leftLevelSource (leftLevel), rightLevelSource (rightLevel)
     {
         smoothingCoefficient = 1.f - std::exp (-1.f / (static_cast<float> (refreshRateHz) * smoothingTimeSeconds));
         startTimerHz (refreshRateHz);
@@ -23,17 +21,10 @@ public:
         const auto lightCentreDistance = lightDiameter + lightGap;
 
         const auto lightRowCentreDistance = lightDiameter + lightRowGap;
-        const auto scaleFont = GTFonts::ibmPlexSansMedium ( boundsF.getHeight() * 0.095f);
-        const auto scaleLabelsGap = lightGap * 3.5f;
-        auto scaleLabelsWidth = 0.f;
-        for (const auto& label : scaleLabels)
-            scaleLabelsWidth = juce::jmax (scaleLabelsWidth, juce::GlyphArrangement::getStringWidth (scaleFont, label));
-        const auto scaleWidth = scalePlacement != ScalePlacement::none ? scaleLabelsWidth + scaleLabelsGap : 0.f;
         const auto lightsWidth = lightCentreDistance + lightDiameter;
-        const auto groupX = boundsF.getCentreX() - (scaleWidth + lightsWidth) * 0.5f;
-        const auto lightsX = scalePlacement == ScalePlacement::left ? groupX + scaleWidth : groupX;
+        const auto lightsX = boundsF.getCentreX() - lightsWidth * 0.5f;
         const auto leftCentreX = lightsX + lightDiameter * 0.5f;
-        const auto rightCentreX = leftCentreX + lightCentreDistance + (scalePlacement == ScalePlacement::centre ? scaleWidth : 0.f);
+        const auto rightCentreX = leftCentreX + lightCentreDistance;
 
         for (const auto isGlowPass : { true, false })
         {
@@ -42,25 +33,6 @@ public:
                 const auto centreY = boundsF.getCentreY() + lightRowCentreDistance * (static_cast<float> (numberOfLights - 1) * 0.5f - static_cast<float> (index));
                 paintLight (g, {leftCentreX, centreY}, index, leftLevelDb, leftClipped, isGlowPass);
                 paintLight (g, {rightCentreX, centreY}, index, rightLevelDb, rightClipped, isGlowPass);
-            }
-        }
-
-        if (scalePlacement != ScalePlacement::none)
-        {
-            const auto scaleSpan = lightRowCentreDistance * static_cast<float> (numberOfLights - 1);
-            const auto scaleTopY = boundsF.getCentreY() - scaleSpan * 0.5f;
-            const auto scaleLabelsX = scalePlacement == ScalePlacement::centre ? boundsF.getCentreX() - scaleLabelsWidth * 0.5f
-                                    : scalePlacement == ScalePlacement::right  ? lightsX + lightsWidth + scaleLabelsGap
-                                                                               : lightsX - scaleLabelsGap - scaleLabelsWidth;
-            const auto scaleLabelsArea = boundsF.withX (scaleLabelsX).withWidth (scaleLabelsWidth);
-
-            g.setColour (GTColors::almostWhite.withAlpha (0.85f));
-            g.setFont (scaleFont);
-
-            for (int labelIndex {0}; labelIndex < scaleLabels.size(); ++labelIndex)
-            {
-                const auto labelCentreY = scaleTopY + scaleSpan * static_cast<float> (labelIndex) / static_cast<float> (scaleLabels.size() - 1);
-                g.drawText (scaleLabels[labelIndex], scaleLabelsArea.withHeight (lightDiameter).withCentre ({scaleLabelsArea.getCentreX(), labelCentreY}), juce::Justification::centred);
             }
         }
     }
@@ -157,9 +129,6 @@ private:
     const int numberOfLights {6};
     const std::array<float, 6> lightThresholdsDb {-48.f, -24.f, -18.f, -12.f, -6.f, 0.f};
     float lightDiameter {0.f};
-
-    const ScalePlacement scalePlacement;
-    const juce::StringArray scaleLabels {"  0", " -9", "-20", "-48"};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GTLevelMeter)
 };

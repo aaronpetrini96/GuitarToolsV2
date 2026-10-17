@@ -6,9 +6,6 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
-#include "../GUI/PopupPanels/AAListOptionsPopup.h"
-#include "BinaryData.h"
-
 class AAResizeUI
 {
 public:
@@ -31,8 +28,6 @@ public:
     float getCurrentScale() const { return currentScale; }
     void setCurrentScale (const float newScale) { currentScale = newScale; }
 
-    void setSizeOptionsArray (const juce::Array<SizeOption>& newSizeOptions) { sizeOptionsArray = newSizeOptions; }
-
     juce::Rectangle<int> getEditorSize (const juce::Rectangle<int> editorScreenBounds, const float extraHeightRatio) const
     {
         const auto defaultEditorHeight = (float) defaultHeight * (1.0f + extraHeightRatio);
@@ -50,37 +45,9 @@ public:
         return {juce::roundToInt ((float) defaultWidth * effectiveScale), juce::roundToInt (defaultEditorHeight * effectiveScale)};
     }
 
-    juce::Array<AAListOptionsPopup::Item> getSizeOptions (std::function<void()> onSizeChanged)
-    {
-        juce::Array<AAListOptionsPopup::Item> sizeOptions;
+    const juce::Array<SizeOption>& getSizeOptions() const { return sizeOptionsArray; }
 
-        for (const auto& sizeOption : sizeOptionsArray)
-        {
-            const auto isCurrentSize = juce::approximatelyEqual (sizeOption.scale, currentScale);
-
-            sizeOptions.add ({sizeOption.name,
-                              [this, newScale = sizeOption.scale, onSizeChanged]
-                              {
-                                  if (juce::approximatelyEqual (newScale, currentScale))
-                                      return;
-
-                                  currentScale = newScale;
-
-                                  if (onSizeChanged != nullptr)
-                                      onSizeChanged();
-                              },
-                              true, isCurrentSize});
-        }
-
-        return sizeOptions;
-    }
-
-    AAListOptionsPopup::Item getMakeDefaultOption() const
-    {
-        const auto isAlreadyDefault = juce::approximatelyEqual (currentScale, getDefaultScale());
-        return {"Set UI Size As Default", [this] { makeCurrentSizeDefault(); }, ! isAlreadyDefault, false, false, {},
-                juce::Drawable::createFromImageData (BinaryData::resizeLines_svg, BinaryData::resizeLines_svgSize)};
-    }
+    bool isCurrentScaleDefault() const { return juce::approximatelyEqual (currentScale, getDefaultScale()); }
 
     void makeCurrentSizeDefault() const
     {

@@ -21,10 +21,11 @@ public:
     {
         const auto boundsF = getLocalBounds().toFloat();
         const auto boundsFHeight = boundsF.getHeight();
-        g.setColour(GTColors::almostBlack);
-        g.fillRect (boundsF);
+        g.fillAll(GTColors::almostBlack);
+        // g.setGradientFill (juce::ColourGradient::horizontal (GTColors::darkGradientStart, 0.f, GTColors::darkGradientEnd, boundsF.getWidth()));
+        // g.fillRect (boundsF);
         g.setColour (GTColors::sectionTitleText);
-        g.setFont (GTFonts::ibmPlexSansMedium (boundsFHeight * 0.65f).withExtraKerningFactor(0.04f));
+        g.setFont (GTFonts::montserratMedium (boundsFHeight * 0.65f));
         g.drawText (tooltipText, boundsF, juce::Justification::centred);
     }
 

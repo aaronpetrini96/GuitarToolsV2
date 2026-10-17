@@ -3,10 +3,10 @@
 #include "../../GTLook.h"
 #include <functional>
 
-class InfoPanel : public juce::Component
+class InfoPopupPanel : public juce::Component
 {
 public:
-    InfoPanel()
+    InfoPopupPanel()
     {
         jassert(apLogo.isValid() && gtLogo.isValid());
         setInterceptsMouseClicks (true, true);
@@ -81,5 +81,5 @@ private:
     juce::Image apLogo {juce::ImageCache::getFromMemory(BinaryData::logoAP_png, BinaryData::logoAP_pngSize)};
     juce::Image gtLogo {juce::ImageCache::getFromMemory(BinaryData::GTLogoV2Shadow_png, BinaryData::GTLogoV2Shadow_pngSize)};
     juce::Image back {juce::ImageCache::getFromMemory(BinaryData::infoBlueBack_png, BinaryData::infoBlueBack_pngSize)};
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (InfoPanel)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (InfoPopupPanel)
 };

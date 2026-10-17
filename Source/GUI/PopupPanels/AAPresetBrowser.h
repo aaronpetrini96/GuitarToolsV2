@@ -23,6 +23,7 @@ public:
         viewport.setViewedComponent (&rowsHolder, false);
         viewport.setScrollBarsShown (false, false);
         addAndMakeVisible (viewport);
+        rowsHolder.addMouseListener (this, true);
 
         defaultTabButton.setToggleState (true, juce::dontSendNotification);
         defaultTabButton.setConnectedEdges (juce::Button::ConnectedOnRight);
@@ -55,25 +56,31 @@ public:
         const auto isUserPresets = selectedPresetType == PresetManager::PresetType::user;
 
         rows.clear();
-        deleteButtons.clear();
 
         for (const auto& presetFile : presetFiles)
         {
             auto* row = rows.add (new juce::TextButton (presetFile.getFileNameWithoutExtension()));
             row->setToggleState (presetFile.getFileNameWithoutExtension() == currentPresetName, juce::dontSendNotification);
-            row->onClick = [this, presetFile]
+            row->onClick = [this, presetFile, isUserPresets]
             {
+                if (std::exchange (isRowRightClicked, false))
+                {
+                    if (isUserPresets)
+                    {
+                        juce::PopupMenu presetMenu;
+                        presetMenu.setLookAndFeel (&presetBrowserLAF);
+                        presetMenu.addItem ("Rename", [this, presetFile] { if (onRenameRequested != nullptr) onRenameRequested (presetFile); });
+                        presetMenu.addItem ("Delete", [this, presetFile] { if (onDeleteRequested != nullptr) onDeleteRequested (presetFile); });
+                        presetMenu.showMenuAsync (juce::PopupMenu::Options().withMousePosition());
+                    }
+
+                    return;
+                }
+
                 presetManager.loadPresetFile (presetFile);
                 setVisible (false);
             };
             rowsHolder.addAndMakeVisible (row);
-
-            if (! isUserPresets)
-                continue;
-
-            auto* deleteButton = deleteButtons.add (new juce::TextButton ("x"));
-            deleteButton->onClick = [this, presetFile] { if (onDeleteRequested != nullptr) onDeleteRequested (presetFile); };
-            rowsHolder.addAndMakeVisible (deleteButton);
         }
 
         resized();
@@ -87,18 +94,28 @@ public:
         setPresetType (PresetManager::PresetType::user);
     }
 
-    float getNumRows() const { return (float) rows.size() + tabHeightRowRatio + presetBrowserLAF.outlineThicknessPOH * 1.5f; }
+    float getNumRows() const { return (float) rows.size() + GTPopupTitleRowRatio; }
 
     void paint (juce::Graphics& g) override
     {
         presetBrowserLAF.drawMenuListBackground (g, getLocalBounds().toFloat(), getNumRows());
     }
 
+    void paintOverChildren (juce::Graphics& g) override
+    {
+        presetBrowserLAF.drawMenuListOutline (g, getLocalBounds().toFloat());
+    }
+
+    void mouseDown (const juce::MouseEvent& e) override
+    {
+        isRowRightClicked = e.mods.isPopupMenu();
+    }
+
     void resized() override
     {
         const auto boundsF = getLocalBounds().toFloat();
         const auto rowHeight = boundsF.getHeight() / getNumRows();
-        const auto tabHeight = rowHeight * tabHeightRowRatio;
+        const auto tabHeight = rowHeight * GTPopupTitleRowRatio;
         const auto tabWidth = boundsF.getWidth() * 0.5f;
 
         defaultTabButton.setBounds (boundsF.withSize (tabWidth, tabHeight).toNearestInt());
@@ -114,15 +131,12 @@ public:
         {
             const auto rowBounds = juce::Rectangle<float> (0.0f, rowHeight * (float) rowIndex, rowWidth, rowHeight);
             rows[rowIndex]->setBounds (rowBounds.toNearestInt());
-
-            if (rowIndex < deleteButtons.size())
-                deleteButtons[rowIndex]->setBounds (rowBounds.withWidth (rowHeight).withRightX (rowWidth).toNearestInt());
         }
     }
 
 
-    float tabHeightRowRatio {1.0f};
     std::function<void (const juce::File& presetFile)> onDeleteRequested;
+    std::function<void (const juce::File& presetFile)> onRenameRequested;
     std::function<void()> onRowsChanged;
 
 private:
@@ -141,8 +155,9 @@ private:
 
     juce::TextButton defaultTabButton {"Factory"}, userTabButton {"User Presets"};
     juce::Component rowsHolder;
-    juce::OwnedArray<juce::TextButton> rows, deleteButtons;
+    juce::OwnedArray<juce::TextButton> rows;
     juce::Viewport viewport;
+    bool isRowRightClicked {false};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AAPresetBrowser)
 };

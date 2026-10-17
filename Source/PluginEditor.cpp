@@ -16,8 +16,8 @@ GuitarToolsAudioProcessorEditor::GuitarToolsAudioProcessorEditor (GuitarToolsAud
 
     infoPanel.addComponentListener (this);
 
-    headerPanel.onBypassChanged = [this] { updateMainPanelAlpha(); };
-    updateMainPanelAlpha();
+    headerPanel.onBypassChanged = [this] { updateMainPanelDarkening(); };
+    updateMainPanelDarkening();
 
     addMouseListener (this, true);
 
@@ -29,18 +29,7 @@ GuitarToolsAudioProcessorEditor::GuitarToolsAudioProcessorEditor (GuitarToolsAud
     // headerPanel.onResizeClicked = [this] { showUISizeOptions(); };
 
     addAndMakeVisible(resizeButton);
-    resizeButton.setColour(juce::DrawableButton::ColourIds::backgroundOnColourId, GTColors::transparent);
-    resizeButton.setColour(juce::DrawableButton::ColourIds::backgroundColourId, GTColors::transparent);
-    if (const auto icon = juce::Drawable::createFromImageData (BinaryData::resizeLines_svg, BinaryData::resizeLines_svgSize))
-    {
-        const auto iconNormal = icon->createCopy();
-        const auto iconOver = icon->createCopy();
-        const auto iconActive = icon->createCopy();
-        iconNormal->replaceColour (GTColors::iconSVGColor, GTColors::iconOverColor);
-        iconOver->replaceColour (GTColors::iconSVGColor, GTColors::iconNormalColor.withAlpha(0.9f));
-        iconActive->replaceColour (GTColors::iconSVGColor, GTColors::activeNeonBlue);
-        resizeButton.setImages (iconNormal.get(), iconOver.get(), iconActive.get(), nullptr, iconActive.get());
-    }
+    AAUITools::setIconButtonImages (resizeButton, BinaryData::resizeLines_svg, BinaryData::resizeLines_svgSize, GTColors::iconSVGColor, GTColors::iconOverColor, GTColors::iconNormalColor.withAlpha (0.9f), GTColors::activeNeonBlue);
     resizeButton.setToggleable(true);
     resizeButton.setClickingTogglesState(false);
     resizeButton.onClick = [this] { showUISizeOptions(); };
@@ -49,12 +38,11 @@ GuitarToolsAudioProcessorEditor::GuitarToolsAudioProcessorEditor (GuitarToolsAud
     settingsOptionsPopup.addComponentListener (this);
     addChildComponent (resizeOptionsPopup);
     resizeOptionsPopup.addComponentListener (this);
+    resizeOptionsPopup.onSizeChanged = [this] { updateEditorSize(); };
     addChildComponent (presetBrowser);
     presetBrowser.addComponentListener (this);
-    addChildComponent (savePresetPopup);
-    addChildComponent (deletePresetPopup);
-    savePresetPopup.addComponentListener (this);
-    deletePresetPopup.addComponentListener (this);
+    addChildComponent (presetPopup);
+    presetPopup.addComponentListener (this);
     addChildComponent (modalBlocker);
 
     settingsOptionsPopup.onTooltipsToggled = [this]
@@ -67,7 +55,7 @@ GuitarToolsAudioProcessorEditor::GuitarToolsAudioProcessorEditor (GuitarToolsAud
 
     presetBrowser.onRowsChanged = [this] { resized(); };
 
-    presetBox.onNameClicked = [this]
+    headerPanel.presetBox.onNameClicked = [this]
     {
         if (presetBrowser.isVisible())
         {
@@ -81,42 +69,54 @@ GuitarToolsAudioProcessorEditor::GuitarToolsAudioProcessorEditor (GuitarToolsAud
 
     headerPanel.onSaveClicked = [this]
     {
-        showPopup (savePresetPopup);
-        savePresetPopup.prepare (presetManager.getCurrentPresetName());
+        showPopup (presetPopup);
+        presetPopup.prepare (AAPresetPopup::Action::save, presetManager.getCurrentPresetName());
     };
 
-    presetManager.onPresetNameChanged = [this] { presetBox.setPresetName (presetManager.getCurrentPresetName()); };
-    presetBox.setPresetName (presetManager.getCurrentPresetName());
+    presetManager.onPresetNameChanged = [this] { headerPanel.presetBox.setPresetName (presetManager.getCurrentPresetName()); };
+    headerPanel.presetBox.setPresetName (presetManager.getCurrentPresetName());
 
-    savePresetPopup.onConfirm = [this] (const juce::String& presetName)
+    presetPopup.onConfirm = [this] (const AAPresetPopup::Action action, const juce::String& presetName)
     {
-        presetManager.savePreset (presetName);
-        savePresetPopup.setVisible (false);
-        presetBrowser.showUserPresets();
+        presetPopup.setVisible (false);
+
+        if (action == AAPresetPopup::Action::save)
+        {
+            presetManager.savePreset (presetName);
+            presetBrowser.showUserPresets();
+            return;
+        }
+
+        if (action == AAPresetPopup::Action::rename)
+            presetManager.renamePreset (targetPresetFile, presetName);
+        else
+            presetManager.deletePreset (targetPresetFile);
+
+        presetBrowser.refresh();
     };
 
-    savePresetPopup.presetExists = [this] (const juce::String& presetName)
+    presetPopup.presetExists = [this] (const juce::String& presetName)
     {
         return presetManager.getUserPresetFile (presetName).existsAsFile();
     };
 
-    savePresetPopup.isNameReserved = [this] (const juce::String& presetName)
+    presetPopup.isNameReserved = [this] (const juce::String& presetName)
     {
         return presetManager.isFactoryPresetName (presetName);
     };
 
-    presetBrowser.onDeleteRequested = [this] (const juce::File& presetFile)
+    presetBrowser.onRenameRequested = [this] (const juce::File& presetFile)
     {
-        presetToDelete = presetFile;
-        deletePresetPopup.prepare (presetFile.getFileNameWithoutExtension());
-        showPopup (deletePresetPopup);
+        targetPresetFile = presetFile;
+        showPopup (presetPopup);
+        presetPopup.prepare (AAPresetPopup::Action::rename, presetFile.getFileNameWithoutExtension());
     };
 
-    deletePresetPopup.onConfirm = [this] (const juce::String&)
+    presetBrowser.onDeleteRequested = [this] (const juce::File& presetFile)
     {
-        presetManager.deletePreset (presetToDelete);
-        deletePresetPopup.setVisible (false);
-        presetBrowser.refresh();
+        targetPresetFile = presetFile;
+        showPopup (presetPopup);
+        presetPopup.prepare (AAPresetPopup::Action::remove, presetFile.getFileNameWithoutExtension());
     };
 
     setResizable (false, false);
@@ -131,7 +131,7 @@ void GuitarToolsAudioProcessorEditor::paint (juce::Graphics& g)
     g.fillAll(juce::Colours::black);
     g.setImageResamplingQuality(juce::Graphics::highResamplingQuality);
     g.drawImage(backgroundWithDividers, imageBounds, juce::RectanglePlacement::fillDestination);
-    g.fillAll(juce::Colours::black.withAlpha(0.1f));
+    g.fillAll(juce::Colours::black.withAlpha(0.12f));
 }
 
 void GuitarToolsAudioProcessorEditor::resized()
@@ -156,23 +156,22 @@ void GuitarToolsAudioProcessorEditor::resized()
                                                 .withCentre({mainPanelBounds.getWidth() - resizeBtnGap, mainPanelBounds.getBottom() - resizeBtnGap});
     resizeButton.setBounds (resizeBtnBounds.toNearestInt());
 
-    const auto rowH = headerH * 0.65f;
-    const auto popupsY = presetBox.getBounds().toFloat().getY();
+    const auto rowH = headerH * 0.6f;
+    const auto popupsY = headerH * 0.2f;
 
-    const auto sizeOptionsWidth = boundsFWidth * 0.175f;
+    const auto sizeOptionsWidth = boundsFWidth * 0.2f;
     const auto sizeOptionsHeight = rowH * resizeOptionsPopup.getNumRows();
     resizeOptionsPopup.setBounds (juce::Rectangle<float> (sizeOptionsWidth, sizeOptionsHeight).withRightX (static_cast<float> (headerPanel.settingsButton.getRight())).withBottomY (resizeBtnBounds.getCentreY()).toNearestInt());
     settingsOptionsPopup.setBounds (mainPanelBounds.withSize (boundsFWidth * 0.2925f, rowH * settingsOptionsPopup.getNumRows()).withY (popupsY).withRightX (static_cast<float> (headerPanel.settingsButton.getRight())).toNearestInt());
 
-    const auto presetBoxBounds = getLocalArea (&headerPanel, presetBox.getBounds().toFloat());
+    const auto presetBoxBounds = getLocalArea (&headerPanel, headerPanel.presetBox.getBounds().toFloat());
     const auto presetBrowserH = rowH * presetBrowser.getNumRows();
-    const auto presetBrowserBounds = presetBoxBounds.withSizeKeepingCentre(boundsFWidth * 0.33f, presetBrowserH).withY(popupsY);
+    const auto presetBrowserBounds = presetBoxBounds.withSizeKeepingCentre(boundsFWidth * 0.34f, presetBrowserH).withY(popupsY);
     presetBrowser.setBounds (presetBrowserBounds.toNearestInt());
 
 
-    const auto saveDeletePopupBounds = mainPanelBounds.withSizeKeepingCentre(presetBrowserBounds.getWidth(), rowH * savePresetPopup.numRows).withY(popupsY);
-    savePresetPopup.setBounds (saveDeletePopupBounds.toNearestInt());
-    deletePresetPopup.setBounds (saveDeletePopupBounds.toNearestInt());
+    const auto presetPopupBounds = mainPanelBounds.withSizeKeepingCentre(presetBrowserBounds.getWidth(), rowH * presetPopup.numRows).withY(popupsY);
+    presetPopup.setBounds (presetPopupBounds.toNearestInt());
 
     infoPanel.setBounds (mainPanelBounds.withSizeKeepingCentre (boundsFWidth * 0.5f, mainPanelBounds.getHeight() * 0.475f).toNearestInt());
     modalBlocker.setBounds (getLocalBounds());
@@ -182,8 +181,7 @@ void GuitarToolsAudioProcessorEditor::mouseDown (const juce::MouseEvent& event)
 {
     if (event.eventComponent == &modalBlocker)
     {
-        savePresetPopup.setVisible (false);
-        deletePresetPopup.setVisible (false);
+        presetPopup.setVisible (false);
         infoPanel.setVisible (false);
     }
 }
@@ -203,7 +201,7 @@ void GuitarToolsAudioProcessorEditor::mouseUp (const juce::MouseEvent& event)
 
     hidePopupUnlessClickedIn (settingsOptionsPopup, headerPanel.settingsButton);
     hidePopupUnlessClickedIn (resizeOptionsPopup, resizeButton);
-    hidePopupUnlessClickedIn (presetBrowser, presetBox, deletePresetPopup, modalBlocker);
+    hidePopupUnlessClickedIn (presetBrowser, headerPanel.presetBox, presetPopup, modalBlocker);
 }
 
 void GuitarToolsAudioProcessorEditor::mouseEnter (const juce::MouseEvent& event)
@@ -225,7 +223,7 @@ void GuitarToolsAudioProcessorEditor::mouseExit (const juce::MouseEvent&)
     tooltipsPanel.setTooltipText ({});
 }
 
-void GuitarToolsAudioProcessorEditor::updateMainPanelAlpha()
+void GuitarToolsAudioProcessorEditor::updateMainPanelDarkening()
 {
     mainPanel.shouldDim = headerPanel.isBypassed() || infoPanel.isVisible() || modalBlocker.isVisible() || settingsOptionsPopup.isVisible() || resizeOptionsPopup.isVisible() || presetBrowser.isVisible();
     mainPanel.repaint();
@@ -237,13 +235,13 @@ void GuitarToolsAudioProcessorEditor::componentVisibilityChanged (juce::Componen
         headerPanel.settingsButton.setToggleState (settingsOptionsPopup.isVisible(), juce::dontSendNotification);
     else if (&component == &resizeOptionsPopup)
         resizeButton.setToggleState (resizeOptionsPopup.isVisible(), juce::dontSendNotification);
-    else if (&component == &savePresetPopup || &component == &deletePresetPopup || &component == &infoPanel)
+    else if (&component == &presetPopup || &component == &infoPanel)
     {
-        modalBlocker.setVisible (savePresetPopup.isVisible() || deletePresetPopup.isVisible() || infoPanel.isVisible());
+        modalBlocker.setVisible (presetPopup.isVisible() || infoPanel.isVisible());
         modalBlocker.toBehind (&component);
     }
 
-    updateMainPanelAlpha();
+    updateMainPanelDarkening();
 }
 
 void GuitarToolsAudioProcessorEditor::updateEditorSize()
@@ -272,8 +270,7 @@ void GuitarToolsAudioProcessorEditor::showUISizeOptions()
         resizeOptionsPopup.setVisible (false);
         return;
     }
-
-    resizeOptionsPopup.setItems (uiResize.getSizeOptions ([this] { updateEditorSize(); }));
+    resizeOptionsPopup.updateItems();
     showPopup (resizeOptionsPopup);
 }
 

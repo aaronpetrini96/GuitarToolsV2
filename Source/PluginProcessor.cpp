@@ -19,6 +19,7 @@ GuitarToolsAudioProcessor::GuitarToolsAudioProcessor()
 #endif
 {
     linkParameters();
+    undoManager.trackParameters (*this);
     PresetManager::installFactoryPresets();
     loadDefaultPreset();
 }
@@ -283,6 +284,7 @@ void GuitarToolsAudioProcessor::setStateInformation (const void* data, int sizeI
 
         state.removeAllProperties (nullptr);
         treeState.replaceState(state);
+        undoManager.clearUndoHistory();
         stateRestoredBroadcaster.sendChangeMessage();
     }
 }
@@ -306,6 +308,7 @@ void GuitarToolsAudioProcessor::loadPreset(const juce::File& file)
         juce::ValueTree state = juce::ValueTree::fromXml(*xml);
         state.removeAllProperties (nullptr);
         treeState.replaceState(state);
+        undoManager.clearUndoHistory();
     }
 }
 

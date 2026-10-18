@@ -168,9 +168,21 @@ bool GuitarToolsAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
 #endif
 
 
-void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
+void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
+    const auto maximumBlockSize = getBlockSize();
+
+    if (maximumBlockSize > 0 && buffer.getNumSamples() > maximumBlockSize)
+    {
+        for (int subBlockStart {0}; subBlockStart < buffer.getNumSamples(); subBlockStart += maximumBlockSize)
+        {
+            const auto subBlockLength = juce::jmin (maximumBlockSize, buffer.getNumSamples() - subBlockStart);
+            juce::AudioBuffer<float> subBlock {buffer.getArrayOfWritePointers(), buffer.getNumChannels(), subBlockStart, subBlockLength};
+            processBlock (subBlock, midiMessages);
+        }
+        return;
+    }
     const auto totalNumInputChannels  = getTotalNumInputChannels();
     const auto totalNumOutputChannels = getTotalNumOutputChannels();
 

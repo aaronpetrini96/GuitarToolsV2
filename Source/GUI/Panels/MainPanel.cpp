@@ -74,9 +74,6 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
     addAndMakeVisible (outputLevelMeter);
     addAndMakeVisible (inputLevelTitle);
     addAndMakeVisible (outputLevelTitle);
-    addAndMakeVisible (leftLabel);
-    addAndMakeVisible (rightLabel);
-    addAndMakeVisible (dBLabel);
 
     levelMatchAttachment = std::make_unique<juce::ParameterAttachment> (*audioProcessor.treeState.getParameter (ParamIDs::getLoudnessMatchActiveName()),
                                                                         [this] (float newValue)
@@ -203,15 +200,6 @@ void MainPanel::resizeLevelsSectionCentred(const juce::Rectangle<float>& boundsF
     const auto meterGap = meterHeight * 0.27f;
     inputLevelMeter.setBounds (meterBounds.translated (-meterGap, 0.f).toNearestInt());
     outputLevelMeter.setBounds (meterBounds.translated (meterGap, 0.f).toNearestInt());
-
-    const auto meterLabelHeight = levelsAreaHeight * 0.09f;
-    const auto meterLabelGap = levelsAreaHeight * 0.23f;
-    const auto meterLabelBounds = levelsArea.withSize (levelsAreaHeight * 0.2f, meterLabelHeight).withCentre ({levelsArea.getCentreX(), buttonsArea.getHeight() * 0.99f});
-    for (auto* l : {&leftLabel, &rightLabel, &dBLabel})
-        l->setFont (GTFonts::ibmPlexSansMedium (meterLabelHeight).withExtraKerningFactor (0.03f));
-    leftLabel.setBounds (meterLabelBounds.translated (-meterLabelGap, 0.f).toNearestInt());
-    rightLabel.setBounds (meterLabelBounds.translated (meterLabelGap, 0.f).toNearestInt());
-    dBLabel.setBounds (meterLabelBounds.toNearestInt());
 
     const auto gainKnobGap = levelsArea.getCentreX() - (buttonsArea.getX() + meterBounds.getX() - meterGap) * 0.5f;
     const auto knobTitleLabelHeight = knobSizeReference * 0.1f;

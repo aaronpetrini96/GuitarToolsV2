@@ -45,7 +45,7 @@ namespace DefaultValues
 //    ========== TONE RANGE ===========
     inline constexpr float lowCutFreq {20.f};
     inline constexpr float lowCutRangeStart {20.f};
-    inline constexpr float lowCutRangeEnd {2500.f};
+    inline constexpr float lowCutRangeEnd {1000.f};
     inline constexpr float highCutFreq {20000.f};
     inline constexpr float highCutRangeStart {1000.f};
     inline constexpr float highCutRangeEnd {20000.f};

@@ -98,7 +98,7 @@ private:
     juce::AudioParameterChoice* depthModeParam {nullptr};
     juce::AudioParameterFloat* depthGainParam {nullptr};
 
-    //SMOOTHERS
+    //SMOOTHERS: follow a UI parameter directly
     juce::SmoothedValue<float>
     lowCutFreqParamSmoother,
     highCutFreqParamSmoother,
@@ -107,6 +107,7 @@ private:
     depthGainParamSmoother,
     compAmountParamSmoother;
 
+    //SMOOTHERS: internal values derived from the switches, not on the UI
     juce::SmoothedValue<float>
     resoGainDbSmoother,
     mudGainDbSmoother,

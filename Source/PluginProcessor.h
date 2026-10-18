@@ -18,6 +18,7 @@
 #include "DSP/GTMidBandCompressor.h"
 #include "DSP/GTFilters.h"
 #include "Utils/AAParamUtils.h"
+#include "Utils/AAUndoManager.h"
 
 //==============================================================================
 /**
@@ -69,8 +70,8 @@ public:
     juce::String getCurrentPresetName() const { const std::scoped_lock lock (currentPresetNameMutex); return currentPresetName; }
     //==============================================================================
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
-    juce::UndoManager undoManager { 100000, 100 };
-    juce::AudioProcessorValueTreeState treeState {*this, &undoManager, "Parameters", createParameterLayout()};
+    AAUndoManager undoManager { 100000, 100 };
+    juce::AudioProcessorValueTreeState treeState {*this, nullptr, "Parameters", createParameterLayout()};
 
     juce::String currentPresetName;
     mutable std::mutex currentPresetNameMutex;

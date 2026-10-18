@@ -23,6 +23,8 @@ public:
         nameEditor.setJustification (juce::Justification::centred);
         nameEditor.setIndents(0, 0);
         nameEditor.setInputRestrictions (GTPresetNameMaxLength);
+        nameEditor.setEscapeAndReturnKeysConsumed (false);
+        setWantsKeyboardFocus (true);
         nameEditor.onTextChange = [this]
         {
             confirmButton.setEnabled (juce::File::createLegalFileName (nameEditor.getText().trim()).isNotEmpty() && ! (isNameReserved != nullptr && isNameReserved (nameEditor.getText())));
@@ -85,6 +87,7 @@ public:
         {
             messageLabel.setText ("Delete \"" + presetName + "\"?", juce::dontSendNotification);
             confirmButton.setEnabled (true);
+            grabKeyboardFocus();
             return;
         }
 
@@ -125,6 +128,23 @@ public:
         const auto buttonsBounds = boundsF.withSizeKeepingCentre (buttonWidth, lineHeight).withY (boundsFHeight * 0.72f);
         confirmButton.setBounds (buttonsBounds.withCentre({ boundsFWidth * 0.3f, buttonsBounds.getCentreY()}).toNearestInt());
         cancelButton.setBounds (buttonsBounds.withCentre({boundsFWidth * 0.7f, buttonsBounds.getCentreY()}).toNearestInt());
+    }
+
+    bool keyPressed (const juce::KeyPress& key) override
+    {
+        if (key == juce::KeyPress::returnKey)
+        {
+            confirmButton.triggerClick();
+            return true;
+        }
+
+        if (key == juce::KeyPress::escapeKey)
+        {
+            cancelButton.triggerClick();
+            return true;
+        }
+
+        return false;
     }
 
     std::function<void (Action action, const juce::String& presetName)> onConfirm;

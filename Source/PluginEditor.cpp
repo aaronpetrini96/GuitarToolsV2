@@ -71,7 +71,7 @@ GuitarToolsAudioProcessorEditor::GuitarToolsAudioProcessorEditor (GuitarToolsAud
         presetPopup.prepare (AAPresetPopup::Action::save, presetManager.getCurrentPresetName());
     };
 
-    presetManager.onPresetNameChanged = [this] { headerPanel.presetBox.setPresetName (presetManager.getCurrentPresetName()); };
+    presetManager.addChangeListener (this);
     headerPanel.presetBox.setPresetName (presetManager.getCurrentPresetName());
 
     presetPopup.onConfirm = [this] (const AAPresetPopup::Action action, const juce::String& presetName)
@@ -121,7 +121,15 @@ GuitarToolsAudioProcessorEditor::GuitarToolsAudioProcessorEditor (GuitarToolsAud
     updateEditorSize();
 }
 
-GuitarToolsAudioProcessorEditor::~GuitarToolsAudioProcessorEditor() = default;
+GuitarToolsAudioProcessorEditor::~GuitarToolsAudioProcessorEditor()
+{
+    presetManager.removeChangeListener (this);
+}
+
+void GuitarToolsAudioProcessorEditor::changeListenerCallback (juce::ChangeBroadcaster*)
+{
+    headerPanel.presetBox.setPresetName (presetManager.getCurrentPresetName());
+}
 
 //==============================================================================
 void GuitarToolsAudioProcessorEditor::paint (juce::Graphics& g)

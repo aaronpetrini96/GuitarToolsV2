@@ -3,20 +3,9 @@
 
 static const juce::StringArray rootPresetFileNames {"Default.xml"};
 
-PresetManager::PresetManager(GuitarToolsAudioProcessor& processor) : audioProcessor(processor)
+PresetManager::PresetManager (juce::AudioProcessorValueTreeState& treeStateToUse, juce::UndoManager& undoManagerToUse)
+    : treeState (treeStateToUse), undoManager (undoManagerToUse)
 {
-    audioProcessor.stateRestoredBroadcaster.addChangeListener (this);
-}
-
-PresetManager::~PresetManager()
-{
-    audioProcessor.stateRestoredBroadcaster.removeChangeListener (this);
-}
-
-void PresetManager::changeListenerCallback (juce::ChangeBroadcaster*)
-{
-    if (onPresetNameChanged != nullptr)
-        onPresetNameChanged();
 }
 
 void PresetManager::savePreset(const juce::String& presetName)
@@ -28,12 +17,13 @@ void PresetManager::savePreset(const juce::String& presetName)
         return;
 
     presetFile.getParentDirectory().createDirectory();
-    audioProcessor.savePreset (presetFile);
+    if (auto xml = treeState.copyState().createXml())
+    {
+        xml->setAttribute ("PluginVersion", JucePlugin_VersionString);
+        xml->writeTo (presetFile);
+    }
 
-    audioProcessor.setCurrentPresetName (legalPresetName);
-
-    if (onPresetNameChanged != nullptr)
-        onPresetNameChanged();
+    setCurrentPresetName (legalPresetName);
 }
 
 bool PresetManager::deletePreset(const juce::File& presetFile)
@@ -41,11 +31,8 @@ bool PresetManager::deletePreset(const juce::File& presetFile)
     if (! presetFile.existsAsFile() || ! presetFile.deleteFile())
         return false;
 
-    if (audioProcessor.getCurrentPresetName() == presetFile.getFileNameWithoutExtension())
-        audioProcessor.setCurrentPresetName ({});
-
-    if (onPresetNameChanged != nullptr)
-        onPresetNameChanged();
+    if (getCurrentPresetName() == presetFile.getFileNameWithoutExtension())
+        setCurrentPresetName ({});
 
     return true;
 }
@@ -58,25 +45,30 @@ bool PresetManager::renamePreset(const juce::File& presetFile, const juce::Strin
     if (legalPresetName.isEmpty() || ! presetFile.existsAsFile() || ! presetFile.moveFileTo (renamedPresetFile))
         return false;
 
-    if (audioProcessor.getCurrentPresetName() == presetFile.getFileNameWithoutExtension())
-        audioProcessor.setCurrentPresetName (legalPresetName);
-
-    if (onPresetNameChanged != nullptr)
-        onPresetNameChanged();
+    if (getCurrentPresetName() == presetFile.getFileNameWithoutExtension())
+        setCurrentPresetName (legalPresetName);
 
     return true;
 }
 
 void PresetManager::loadPresetFile(const juce::File& presetFile)
 {
-    if (! presetFile.existsAsFile())
+    const auto xml = juce::XmlDocument::parse (presetFile);
+    if (xml == nullptr || ! xml->hasTagName (treeState.state.getType()))
         return;
 
-    audioProcessor.loadPreset (presetFile);
-    audioProcessor.setCurrentPresetName (presetFile.getFileNameWithoutExtension());
+    auto presetState = juce::ValueTree::fromXml (*xml);
+    presetState.removeAllProperties (nullptr);
 
-    if (onPresetNameChanged != nullptr)
-        onPresetNameChanged();
+    undoManager.beginNewTransaction();
+    undoManager.perform (new PresetChangeAction (*this, treeState.copyState(), getCurrentPresetName(),
+                                                 presetState, presetFile.getFileNameWithoutExtension()));
+}
+
+void PresetManager::loadDefaultPreset()
+{
+    loadPresetFile (getPresetFolder().getChildFile ("Default.xml"));
+    undoManager.clearUndoHistory();
 }
 
 void PresetManager::loadAdjacentPreset(const int indexOffset)
@@ -89,12 +81,12 @@ void PresetManager::loadAdjacentPreset(const int indexOffset)
     if (numPresets == 0)
         return;
 
-    const auto currentPresetName = getCurrentPresetName();
+    const auto loadedPresetName = getCurrentPresetName();
     auto currentIndex = -1;
 
     for (int fileIndex = 0; fileIndex < numPresets; ++fileIndex)
     {
-        if (presetFiles[fileIndex].getFileNameWithoutExtension() == currentPresetName)
+        if (presetFiles[fileIndex].getFileNameWithoutExtension() == loadedPresetName)
         {
             currentIndex = fileIndex;
             break;
@@ -147,7 +139,21 @@ bool PresetManager::isFactoryPresetName(const juce::String& presetName) const
 
 juce::String PresetManager::getCurrentPresetName() const
 {
-    return audioProcessor.getCurrentPresetName();
+    const std::scoped_lock lock (currentPresetNameMutex);
+    return currentPresetName;
+}
+
+void PresetManager::setCurrentPresetName (const juce::String& presetName)
+{
+    const std::scoped_lock lock (currentPresetNameMutex);
+    currentPresetName = presetName;
+    sendChangeMessage();
+}
+
+void PresetManager::applyPreset (const juce::ValueTree& presetState, const juce::String& presetName)
+{
+    treeState.replaceState (presetState.createCopy());
+    setCurrentPresetName (presetName);
 }
 
 juce::File PresetManager::getPresetFolder()

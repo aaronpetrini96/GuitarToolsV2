@@ -19,6 +19,7 @@
 #include "DSP/GTFilters.h"
 #include "Utils/AAParamUtils.h"
 #include "Utils/AAUndoManager.h"
+#include "Utils/PresetManager.h"
 
 //==============================================================================
 /**
@@ -63,19 +64,12 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
-    void savePreset(const juce::File& file);
-    void loadPreset(const juce::File& file);
-    void loadDefaultPreset();
-    void setCurrentPresetName(const juce::String& name) { const std::scoped_lock lock (currentPresetNameMutex); currentPresetName = name; }
-    juce::String getCurrentPresetName() const { const std::scoped_lock lock (currentPresetNameMutex); return currentPresetName; }
     //==============================================================================
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     AAUndoManager undoManager { 100000, 100 };
     juce::AudioProcessorValueTreeState treeState {*this, nullptr, "Parameters", createParameterLayout()};
+    PresetManager presetManager {treeState, undoManager};
 
-    juce::String currentPresetName;
-    mutable std::mutex currentPresetNameMutex;
-    juce::ChangeBroadcaster stateRestoredBroadcaster;
     float uiScale {0.0f};
     bool showTooltips {false};
 

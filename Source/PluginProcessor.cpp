@@ -21,7 +21,7 @@ GuitarToolsAudioProcessor::GuitarToolsAudioProcessor()
     linkParameters();
     undoManager.trackParameters (*this);
     PresetManager::installFactoryPresets();
-    loadDefaultPreset();
+    presetManager.loadDefaultPreset();
 }
 
 GuitarToolsAudioProcessor::~GuitarToolsAudioProcessor()
@@ -261,7 +261,7 @@ juce::AudioProcessorEditor* GuitarToolsAudioProcessor::createEditor()
 void GuitarToolsAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     auto state = treeState.copyState();
-    state.setProperty("CurrentPresetName", getCurrentPresetName(), nullptr);
+    state.setProperty("CurrentPresetName", presetManager.getCurrentPresetName(), nullptr);
     state.setProperty("UIScale", uiScale, nullptr);
     state.setProperty("ShowTooltips", showTooltips, nullptr);
 
@@ -276,36 +276,12 @@ void GuitarToolsAudioProcessor::setStateInformation (const void* data, int sizeI
     {
         juce::ValueTree state = juce::ValueTree::fromXml(*xml);
         if (auto* presetNameProp = state.getPropertyPointer("CurrentPresetName"))
-            setCurrentPresetName (presetNameProp->toString()); // restore preset name
+            presetManager.setCurrentPresetName (presetNameProp->toString()); // restore preset name
         if (auto* uiScaleProp = state.getPropertyPointer("UIScale"))
             uiScale = static_cast<float>(*uiScaleProp);
         if (auto* showTooltipsProp = state.getPropertyPointer("ShowTooltips"))
             showTooltips = static_cast<bool>(*showTooltipsProp);
 
-        state.removeAllProperties (nullptr);
-        treeState.replaceState(state);
-        undoManager.clearUndoHistory();
-        stateRestoredBroadcaster.sendChangeMessage();
-    }
-}
-
-void GuitarToolsAudioProcessor::savePreset(const juce::File& file)
-{
-    const auto state = treeState.copyState();
-    auto xml = state.createXml();
-    if (xml)
-    {
-        xml->setAttribute ("PluginVersion", JucePlugin_VersionString);
-        xml->writeTo(file);
-    }
-}
-
-void GuitarToolsAudioProcessor::loadPreset(const juce::File& file)
-{
-    std::unique_ptr<juce::XmlElement> xml (juce::XmlDocument::parse(file));
-    if (xml && xml->hasTagName(treeState.state.getType()))
-    {
-        juce::ValueTree state = juce::ValueTree::fromXml(*xml);
         state.removeAllProperties (nullptr);
         treeState.replaceState(state);
         undoManager.clearUndoHistory();
@@ -422,15 +398,6 @@ ChainSettings GuitarToolsAudioProcessor::getChainSettings() const
     settings.depthResonance = depthResonanceSmoother.getCurrentValue();
 
     return settings;
-}
-
-void GuitarToolsAudioProcessor::loadDefaultPreset()
-{
-    const auto defaultPresetFile = PresetManager::getPresetFolder().getChildFile ("Default.xml");
-    if (! defaultPresetFile.existsAsFile())
-        return;
-    loadPreset (defaultPresetFile);
-    currentPresetName = "Default";
 }
 
 //==============================================================================

@@ -20,7 +20,8 @@
 /**
 */
 class GuitarToolsAudioProcessorEditor  : public juce::AudioProcessorEditor,
-                                         private juce::ComponentListener
+                                         private juce::ComponentListener,
+                                         private juce::ChangeListener
 
 {
 public:
@@ -43,13 +44,14 @@ private:
     void showPopup (juce::Component& popup);
     void updateMainPanelDarkening();
     void updateEditorSize();
+    void changeListenerCallback (juce::ChangeBroadcaster*) override;
 
     const float headerHeightRatio = 0.0575f;
     float tooltipsHeightRatio = 0.625f;
     AAResizeUI uiResize {audioProcessor.uiScale, 780, 720};
     juce::Rectangle<float> imageBounds{};
 
-    PresetManager presetManager {audioProcessor};
+    PresetManager& presetManager {audioProcessor.presetManager};
     AAPresetBrowser presetBrowser {presetManager};
     AAPresetPopup presetPopup;
     juce::Component modalBlocker;

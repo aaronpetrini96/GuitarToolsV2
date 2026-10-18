@@ -13,7 +13,7 @@ class AALightStrokeKnob : public juce::Slider
 {
 public:
     AALightStrokeKnob (juce::RangedAudioParameter& parameterToUse, const juce::String& nameTextToUse, const bool shouldDrawFromMiddle = false, const bool shouldFillFromEnd = false)
-        : nameText (nameTextToUse, GTColors::almostWhite), valueText (juce::String(), GTColors::almostWhite),
+        : nameText (nameTextToUse, GTColors::almostWhiteText), valueText (juce::String(), GTColors::almostWhiteText),
           parameter (parameterToUse), drawFromMiddle (shouldDrawFromMiddle), fillFromEnd (shouldFillFromEnd)
     {
         jassert (knobImage.isValid());

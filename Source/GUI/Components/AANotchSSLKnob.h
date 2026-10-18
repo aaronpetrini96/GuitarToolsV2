@@ -81,7 +81,7 @@ public:
         const auto knobSize = boundsF.getWidth();
         const auto labelBounds = boundsF.withTop (knobSize * 0.92f);
 
-        valueLabel.setFont (GTFonts::ibmPlexSansMedium (labelBounds.getHeight() * 0.85f).withExtraKerningFactor (0.03f));
+        valueLabel.setFont (GTFonts::ibmPlexSansMedium (labelBounds.getHeight() * 0.92f).withExtraKerningFactor (0.03f));
         valueLabel.setBounds (labelBounds.toNearestInt());
     }
 
@@ -107,14 +107,14 @@ private:
             scalePath.lineTo (centre + tickDirection * (scaleRadius + tickLength));
         }
 
-        g.setColour (GTColors::almostWhite.withAlpha (0.9f));
+        g.setColour (GTColors::almostWhiteText.withAlpha (0.9f));
         g.strokePath (scalePath, juce::PathStrokeType (scaleThickness, juce::PathStrokeType::curved, juce::PathStrokeType::butt));
     }
 
     void updateValueLabelText()
     {
         const auto roundedValue = juce::roundToInt (getValue() * 10.0) / 10.0;
-        valueLabel.setText (isEnabled() ? (roundedValue > 0.0 ? "+" : "") + juce::String (roundedValue, 1) + "dB" : "Auto");
+        valueLabel.setText (isEnabled() ? (roundedValue > 0.0 ? "+" : "") + juce::String (roundedValue, 1) + " dB" : "Auto");
     }
 
     juce::Image knobImage = juce::ImageCache::getFromMemory (BinaryData::knotchKnobShadow2_png, BinaryData::knotchKnobShadow2_pngSize);
@@ -122,7 +122,7 @@ private:
     const float endAngle { 2.75f * juce::MathConstants<float>::pi };
 
     juce::RangedAudioParameter& parameter;
-    AAUITools::PrintedText valueLabel {juce::String(), GTColors::almostWhite, juce::Justification::centredTop};
+    AAUITools::PrintedText valueLabel {juce::String(), GTColors::almostWhiteText, juce::Justification::centredTop};
     std::unique_ptr<juce::SliderParameterAttachment> attachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AANotchSSLKnob)

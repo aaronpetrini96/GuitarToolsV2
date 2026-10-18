@@ -20,13 +20,9 @@ public:
         setAlwaysOnTop (true);
         setLookAndFeel (&presetPopupLAF);
 
-        titleLabel.setJustificationType (juce::Justification::centred);
-        titleLabel.setColour (juce::Label::textColourId, GTColors::sectionTitleText);
-        titleLabel.setInterceptsMouseClicks (false, false);
-        addAndMakeVisible (titleLabel);
-
         nameEditor.setJustification (juce::Justification::centred);
-        nameEditor.setInputRestrictions (24);
+        nameEditor.setIndents(0, 0);
+        nameEditor.setInputRestrictions (GTPresetNameMaxLength);
         nameEditor.onTextChange = [this]
         {
             confirmButton.setEnabled (juce::File::createLegalFileName (nameEditor.getText().trim()).isNotEmpty() && ! (isNameReserved != nullptr && isNameReserved (nameEditor.getText())));
@@ -36,9 +32,14 @@ public:
         addChildComponent (nameEditor);
 
         messageLabel.setJustificationType (juce::Justification::centred);
-        messageLabel.setColour (juce::Label::textColourId, GTColors::almostWhite);
+        messageLabel.setColour (juce::Label::textColourId, GTPopupTextColor);
         messageLabel.setInterceptsMouseClicks (false, false);
         addChildComponent (messageLabel);
+
+        nameLabel.setJustificationType (juce::Justification::centred);
+        nameLabel.setColour (juce::Label::textColourId, GTColors::almostWhiteText);
+        nameLabel.setInterceptsMouseClicks (false, false);
+        addChildComponent (nameLabel);
 
         confirmButton.onClick = [this]
         {
@@ -74,9 +75,11 @@ public:
         confirmButton.setButtonText (getConfirmText());
 
         const auto isRemove = action == Action::remove;
-        titleLabel.setText (isRemove ? "DELETE PRESET" : action == Action::save ? "SAVE PRESET" : "RENAME PRESET", juce::dontSendNotification);
+        title = isRemove ? "DELETE PRESET" : action == Action::save ? "SAVE PRESET" : "RENAME PRESET";
+        repaint();
         nameEditor.setVisible (! isRemove);
         messageLabel.setVisible (isRemove);
+        nameLabel.setVisible (! isRemove);
 
         if (isRemove)
         {
@@ -94,6 +97,7 @@ public:
     void paint (juce::Graphics& g) override
     {
         presetPopupLAF.drawPopupBackground (g, getLocalBounds().toFloat(), numRows);
+        presetPopupLAF.drawPopupTitle (g, titleBounds, title);
     }
 
     void resized() override
@@ -101,27 +105,32 @@ public:
         const auto boundsF = getLocalBounds().toFloat();
         const auto boundsFWidth = boundsF.getWidth();
         const auto boundsFHeight = boundsF.getHeight();
-        const auto lineHeight = boundsFHeight * 0.2f;
+        const auto lineHeight = boundsFHeight * 0.18f;
         const auto fontHeight = lineHeight * GTFontHeightPOH;
+        titleBounds = boundsF.withHeight (boundsFHeight / numRows * GTPopupTitleRowRatio);
 
-        titleLabel.setFont (GTFonts::montserratMedium (fontHeight));
-        titleLabel.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.1f).toNearestInt());
-
+        const auto nameEditorWidth = boundsFWidth * 0.85f;
+        const auto nameEditorHeight = boundsFHeight * 0.2f;
+        const auto nameEditorBounds = boundsF.withSizeKeepingCentre (nameEditorWidth, nameEditorHeight);
         nameEditor.applyFontToAllText (GTFonts::montserratMedium (fontHeight));
-        nameEditor.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.4f).toNearestInt());
+        nameEditor.setBounds (nameEditorBounds.toNearestInt());
+
+        nameLabel.setFont (GTFonts::montserratMedium (fontHeight));
+        nameLabel.setBounds (nameEditorBounds.withBottomY (nameEditorBounds.getY()).toNearestInt());
 
         messageLabel.setFont (GTFonts::montserratMedium (fontHeight));
-        messageLabel.setBounds (boundsF.withSizeKeepingCentre (boundsFWidth * 0.9f, lineHeight).withY (boundsFHeight * 0.4f).toNearestInt());
+        messageLabel.setBounds (nameEditorBounds.toNearestInt());
 
-        const auto buttonsBounds = boundsF.withSizeKeepingCentre (boundsFWidth * 0.8f, lineHeight).withY (boundsFHeight * 0.7f);
-        confirmButton.setBounds (buttonsBounds.withWidth (buttonsBounds.getWidth() * 0.45f).toNearestInt());
-        cancelButton.setBounds (confirmButton.getBounds().toFloat().withRightX (buttonsBounds.getRight()).toNearestInt());
+        const auto buttonWidth = boundsFWidth * 0.35f;
+        const auto buttonsBounds = boundsF.withSizeKeepingCentre (buttonWidth, lineHeight).withY (boundsFHeight * 0.72f);
+        confirmButton.setBounds (buttonsBounds.withCentre({ boundsFWidth * 0.3f, buttonsBounds.getCentreY()}).toNearestInt());
+        cancelButton.setBounds (buttonsBounds.withCentre({boundsFWidth * 0.7f, buttonsBounds.getCentreY()}).toNearestInt());
     }
 
     std::function<void (Action action, const juce::String& presetName)> onConfirm;
     std::function<bool (const juce::String& presetName)> presetExists;
     std::function<bool (const juce::String& presetName)> isNameReserved;
-    float numRows {5.f};
+    float numRows {6.f};
 
 private:
     juce::String getConfirmText() const
@@ -131,8 +140,10 @@ private:
 
     Action action {Action::save};
     PresetPopupLAF presetPopupLAF;
-    juce::Label titleLabel {"titleLabel", ""};
+    juce::String title;
+    juce::Rectangle<float> titleBounds;
     juce::Label messageLabel {"messageLabel", ""};
+    juce::Label nameLabel {"nameLabel", "New preset name"};
     juce::TextEditor nameEditor;
     juce::TextButton confirmButton, cancelButton {"Cancel"};
     juce::String preparedPresetName;

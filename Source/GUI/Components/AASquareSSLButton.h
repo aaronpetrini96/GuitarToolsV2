@@ -40,7 +40,7 @@ public:
     {
         const auto boundsF = getLocalBounds().toFloat();
         const auto textBounds = boundsF.withSizeKeepingCentre (boundsF.getWidth() * 0.65f, boundsF.getHeight() * 0.7f);
-        labelFontHeight = textBounds.getHeight() * 0.29f;
+        labelFontHeight = textBounds.getHeight() * 0.295f;
         printedName.setBounds (textBounds.toNearestInt());
         updateLabelFont();
     }

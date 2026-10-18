@@ -74,6 +74,9 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
     addAndMakeVisible (outputLevelMeter);
     addAndMakeVisible (inputLevelTitle);
     addAndMakeVisible (outputLevelTitle);
+    addAndMakeVisible (leftLabel);
+    addAndMakeVisible (rightLabel);
+    addAndMakeVisible (dBLabel);
 
     levelMatchAttachment = std::make_unique<juce::ParameterAttachment> (*audioProcessor.treeState.getParameter (ParamIDs::getLoudnessMatchActiveName()),
                                                                         [this] (float newValue)
@@ -100,7 +103,7 @@ void MainPanel::paint(juce::Graphics& g)
     {
         const auto labelCentreY = levelScaleTopY + levelScaleSpan * static_cast<float> (labelIndex) / static_cast<float> (levelScaleLabels.size() - 1);
         const auto labelBounds = meterBounds.withHeight (meterHeight * 0.1f).withCentre ({levelScaleCentreX, labelCentreY});
-        g.setColour (GTColors::almostWhite);
+        g.setColour (GTColors::almostWhiteText);
         g.drawText (levelScaleLabels[labelIndex], labelBounds, juce::Justification::centred);
         g.setFillType (grainFill);
         g.drawText (levelScaleLabels[labelIndex], labelBounds, juce::Justification::centred);
@@ -168,7 +171,7 @@ void MainPanel::resizeKnobs(const juce::Rectangle<float>& boundsF)
 }
 void MainPanel::resizeMagicButtons()
 {
-    const auto magicButtonSize = knobSizeReference * 0.32f;
+    const auto magicButtonSize = knobSizeReference * 0.31f;
     const auto magicButtonsGap = knobSizeReference * 0.34125f;
     const auto magicButtonBounds = buttonsArea.withSizeKeepingCentre (magicButtonSize, magicButtonSize).withY(sectionTitleH * 1.25f);
     mudActiveButton.setBounds (magicButtonBounds.toNearestInt());
@@ -176,13 +179,13 @@ void MainPanel::resizeMagicButtons()
     compActiveButton.setBounds (magicButtonBounds.translated(magicButtonsGap, 0.f).toNearestInt());
 
     //PLATE BOUNDS
-    plateBounds = buttonsArea.withSize(buttonsArea.getWidth() * 0.9f, buttonsArea.getHeight() * 0.5f).withCentre({buttonsArea.getCentreX(), magicButtonBounds.getBottom() + buttonsArea.getHeight() * 0.25f});
+    plateBounds = buttonsArea.withSize(buttonsArea.getWidth() * 0.9f, buttonsArea.getHeight() * 0.49f).withCentre({buttonsArea.getCentreX(), magicButtonBounds.getBottom() + buttonsArea.getHeight() * 0.248f});
     fadersPlatePanel.setFaderSpacing(magicButtonsGap);
     fadersPlatePanel.setBounds (plateBounds.toNearestInt());
 
     const auto modeSwitchWidth = magicButtonSize * 0.8f;
-    const auto modeSwitchHeight = modeSwitchWidth * 683.0f / 1206.0f;
-    const auto switchBounds = plateBounds.withSizeKeepingCentre (modeSwitchWidth, modeSwitchHeight).withY (buttonsArea.getHeight() * 0.705f);
+    const auto modeSwitchHeight = modeSwitchWidth * 683.0f / 1206.0f / 0.7f;
+    const auto switchBounds = plateBounds.withSizeKeepingCentre (modeSwitchWidth, modeSwitchHeight).withY (buttonsArea.getHeight() * 0.6925f);
     mudModeSwitch.setBounds (switchBounds.toNearestInt());
     resoModeSwitch.setBounds (switchBounds.translated (-magicButtonsGap, 0.0f).toNearestInt());
     compModeSwitch.setBounds (switchBounds.translated (magicButtonsGap, 0.0f).toNearestInt());
@@ -195,17 +198,26 @@ void MainPanel::resizeLevelsSectionCentred(const juce::Rectangle<float>& boundsF
     const auto gainKnobSize = levelsAreaHeight * 0.5f;
     const auto meterHeight = levelsAreaHeight * 0.85f;
     const auto meterWidth = meterHeight * 0.25f;
-    const auto meterCY = buttonsArea.getHeight() * 0.905f;
+    const auto meterCY = buttonsArea.getHeight() * 0.9f;
     const auto meterBounds = levelsArea.withSize (meterWidth, meterHeight).withCentre({levelsArea.getCentreX(), meterCY});
     const auto meterGap = meterHeight * 0.27f;
     inputLevelMeter.setBounds (meterBounds.translated (-meterGap, 0.f).toNearestInt());
     outputLevelMeter.setBounds (meterBounds.translated (meterGap, 0.f).toNearestInt());
 
+    const auto meterLabelHeight = levelsAreaHeight * 0.09f;
+    const auto meterLabelGap = levelsAreaHeight * 0.23f;
+    const auto meterLabelBounds = levelsArea.withSize (levelsAreaHeight * 0.2f, meterLabelHeight).withCentre ({levelsArea.getCentreX(), buttonsArea.getHeight() * 0.99f});
+    for (auto* l : {&leftLabel, &rightLabel, &dBLabel})
+        l->setFont (GTFonts::ibmPlexSansMedium (meterLabelHeight).withExtraKerningFactor (0.03f));
+    leftLabel.setBounds (meterLabelBounds.translated (-meterLabelGap, 0.f).toNearestInt());
+    rightLabel.setBounds (meterLabelBounds.translated (meterLabelGap, 0.f).toNearestInt());
+    dBLabel.setBounds (meterLabelBounds.toNearestInt());
+
     const auto gainKnobGap = levelsArea.getCentreX() - (buttonsArea.getX() + meterBounds.getX() - meterGap) * 0.5f;
     const auto knobTitleLabelHeight = knobSizeReference * 0.1f;
     const auto knobTitleLabelBounds = levelsArea.withSize (gainKnobGap, knobTitleLabelHeight).withCentre ({levelsArea.getCentreX(), meterBounds.getY() + knobTitleLabelHeight * 0.95f});
     for (auto* l : {&inputLevelTitle, &outputLevelTitle})
-        l->setFont (GTFonts::ibmPlexSansMedium (knobTitleLabelHeight * 0.85f).withExtraKerningFactor (0.03f));
+        l->setFont (GTFonts::ibmPlexSansMedium (knobTitleLabelHeight * 0.78f).withExtraKerningFactor (0.03f));
     inputLevelTitle.setBounds (knobTitleLabelBounds.translated (-gainKnobGap, 0.f).toNearestInt());
     outputLevelTitle.setBounds (knobTitleLabelBounds.translated (gainKnobGap, 0.f).toNearestInt());
 

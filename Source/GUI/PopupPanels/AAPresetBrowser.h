@@ -114,14 +114,15 @@ public:
     void resized() override
     {
         const auto boundsF = getLocalBounds().toFloat();
-        const auto rowHeight = boundsF.getHeight() / getNumRows();
+        const auto outlineThickness = boundsF.getHeight() / getNumRows() * GTOutlineThicknessPOH;
+        const auto rowHeight = (boundsF.getHeight() - outlineThickness) / getNumRows();
         const auto tabHeight = rowHeight * GTPopupTitleRowRatio;
         const auto tabWidth = boundsF.getWidth() * 0.5f;
 
         defaultTabButton.setBounds (boundsF.withSize (tabWidth, tabHeight).toNearestInt());
         userTabButton.setBounds (boundsF.withHeight (tabHeight).withLeft (tabWidth).toNearestInt());
 
-        const auto listBounds = boundsF.withTop (tabHeight);
+        const auto listBounds = boundsF.withTop (tabHeight).withTrimmedBottom (outlineThickness);
         viewport.setBounds (listBounds.toNearestInt());
 
         const auto rowWidth = boundsF.getWidth();

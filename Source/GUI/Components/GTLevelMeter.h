@@ -51,7 +51,7 @@ private:
         for (size_t thresholdIndex {0}; thresholdIndex + 1 < lightThresholdsDb.size(); ++thresholdIndex)
             barPosition += juce::jlimit (0.f, 1.f, juce::jmap (levelDb, lightThresholdsDb[thresholdIndex], lightThresholdsDb[thresholdIndex + 1], 0.f, 1.f));
         const auto litAmount = index == numberOfLights - 1 ? (isClipped ? 1.f : 0.f) : juce::jlimit (0.f, 1.f, barPosition - static_cast<float> (index));
-        const auto ledColour = index == numberOfLights - 1 ? GTColors::meterRed : index >= 3 ? GTColors::meterYellow : GTColors::meterGreen;
+        const auto ledColour = index == numberOfLights - 1 ? meterRed : index >= 3 ? meterYellow : meterGreen;
         const auto ledBounds = juce::Rectangle<float> (ledDiameter, ledDiameter).withCentre (ledCentre);
 
         if (isGlowPass)
@@ -65,7 +65,7 @@ private:
             return;
         }
 
-        g.setColour (GTColors::superDarkBackground);
+        g.setColour (GTColors::almostBlack);
         g.fillEllipse (ledBounds.withSizeKeepingCentre (lightDiameter, lightDiameter));
 
         const auto centreColour = ledColour.withMultipliedBrightness (0.4f).interpolatedWith (ledColour.interpolatedWith (juce::Colours::white, 0.5f), litAmount);
@@ -129,6 +129,10 @@ private:
     const int numberOfLights {6};
     const std::array<float, 6> lightThresholdsDb {-48.f, -24.f, -18.f, -12.f, -6.f, 0.f};
     float lightDiameter {0.f};
+
+    const juce::Colour meterGreen {60, 200, 80};
+    const juce::Colour meterYellow {235, 200, 40};
+    const juce::Colour meterRed {235, 50, 40};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GTLevelMeter)
 };

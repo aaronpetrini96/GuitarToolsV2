@@ -52,8 +52,8 @@ private:
     AANeveRadioButtons lowCutSlopeButtons {*audioProcessor.treeState.getParameter (ParamIDs::getLowCutSlopeName()), {"12", "24", "36", "48"}};
     AANeveRadioButtons highCutSlopeButtons {*audioProcessor.treeState.getParameter (ParamIDs::getHighCutSlopeName()), {"12", "24", "36", "48"}};
 
-    AAUITools::PrintedText lowCutSlopeLabel  {"SLOPE", GTColors::almostWhite}, highCutSlopeLabel {"SLOPE", GTColors::almostWhite};
-    AAUITools::PrintedText presenceModeLabel {"MODE", GTColors::almostWhite}, depthModeLabel {"MODE", GTColors::almostWhite};
+    AAUITools::PrintedText lowCutSlopeLabel  {"SLOPE", GTColors::almostWhiteText}, highCutSlopeLabel {"SLOPE", GTColors::almostWhiteText};
+    AAUITools::PrintedText presenceModeLabel {"MODE", GTColors::almostWhiteText}, depthModeLabel {"MODE", GTColors::almostWhiteText};
 
     AASquareSSLButton resoActiveButton {*audioProcessor.treeState.getParameter (ParamIDs::getResoActiveName()), "KILL\nRESO"};
     AASquareSSLButton mudActiveButton {*audioProcessor.treeState.getParameter (ParamIDs::getMudActiveName()), "CLEAR\nMUD"};
@@ -63,8 +63,11 @@ private:
     AARectSSLButton mudModeSwitch {*audioProcessor.treeState.getParameter (ParamIDs::getMudExtremeActiveName()), "MAX"};
     FadersPlatePanel fadersPlatePanel {audioProcessor};
 
-    AAUITools::PrintedText inputLevelTitle {"INPUT", GTColors::almostWhite};
-    AAUITools::PrintedText outputLevelTitle {"OUTPUT", GTColors::almostWhite};
+    AAUITools::PrintedText inputLevelTitle {"INPUT", GTColors::almostWhiteText};
+    AAUITools::PrintedText outputLevelTitle {"OUTPUT", GTColors::almostWhiteText};
+    AAUITools::PrintedText leftLabel {"L", GTColors::almostWhiteText};
+    AAUITools::PrintedText rightLabel {"R", GTColors::almostWhiteText};
+    AAUITools::PrintedText dBLabel {"dB", GTColors::almostWhiteText};
 
     AANotchSSLKnob inputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getInputGainName())};
     AANotchSSLKnob outputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getOutputGainName())};

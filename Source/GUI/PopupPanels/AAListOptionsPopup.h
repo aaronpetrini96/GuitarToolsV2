@@ -61,7 +61,8 @@ public:
     void resized() override
     {
         const auto boundsF = getLocalBounds().toFloat();
-        const auto rowHeight = boundsF.getHeight() / getNumRows();
+        const auto outlineThickness = boundsF.getHeight() / getNumRows() * GTOutlineThicknessPOH;
+        const auto rowHeight = (boundsF.getHeight() - outlineThickness) / getNumRows();
         titleBounds = boundsF.withHeight (rowHeight * GTPopupTitleRowRatio);
 
         for (int rowIndex = 0; rowIndex < rows.size(); ++rowIndex)

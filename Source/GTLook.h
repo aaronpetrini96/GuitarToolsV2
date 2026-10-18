@@ -8,36 +8,40 @@
 #include "BinaryData.h"
 #include "Utils/AAUITools.h"
 
-constexpr float GTOutlineThicknessPOH {0.07f};
-constexpr float GTCornerPOH {0.025f};
-constexpr float GTFontHeightPOH {0.62f};
-constexpr float GTPopupTitleRowRatio {1.025f};
+constexpr float GTOutlineThicknessPOH {0.06f};
+constexpr float GTCornerPOH {0.0f};
+constexpr float GTFontHeightPOH {0.625f};
+constexpr float GTPopupTitleRowRatio {1.1f};
+constexpr int GTPresetNameMaxLength {24};
 
-namespace  GTColors //project specific
+namespace  GTColors
 {
     inline const juce::Colour transparent { juce::Colours::transparentBlack };
     inline const juce::Colour superDarkBackground {15, 15, 15};
-    inline const juce::Colour almostWhite {190, 190, 190};
-    inline const juce::Colour sectionTitleText {215, 215, 215};
     inline const juce::Colour activeNeonBlue { 64, 196, 255 };
     inline const juce::Colour almostBlack {5, 5, 5};
+
+    inline const juce::Colour sectionTitleText {215, 215, 215};
+    inline const juce::Colour almostWhiteText {190, 190, 190};
+    inline const juce::Colour infoPanelSecondaryText {140, 152, 185};
+
     inline const juce::Colour popupBackground {5, 7, 14};
-    // inline const juce::Colour blueGradientStart {9, 12, 25};
-    // inline const juce::Colour blueGradientEnd {22, 28, 60};
     inline const juce::Colour popupDarkBackground {20, 28, 50};
-    // inline const juce::Colour popupBlueHighlight {30, 50, 80};
+    inline const juce::Colour popupOutlineColor {40, 50, 70};
+
     inline const juce::Colour iconSVGColor {100, 100, 100};
     inline const juce::Colour iconNormalColor {200, 200, 200};
     inline const juce::Colour iconOverColor {120, 120, 120};
+
     inline const juce::Colour presetBoxBackground {35, 42, 60};
     inline const juce::Colour presetBoxOutlineColor {70, 85, 115};
-    inline const juce::Colour popupOutlineColor {40, 50, 70};
 
-    inline const juce::Colour infoPanelSecondaryText {140, 152, 185};
     inline const juce::Colour infoPanelDivider {juce::Colour (190, 200, 225).withAlpha (0.27f)};
-    inline const juce::Colour meterGreen {60, 200, 80};
-    inline const juce::Colour meterYellow {235, 200, 40};
-    inline const juce::Colour meterRed {235, 50, 40};
+
+    //Left overs
+    // inline const juce::Colour blueGradientStart {9, 12, 25};
+    // inline const juce::Colour blueGradientEnd {22, 28, 60};
+    // inline const juce::Colour popupBlueHighlight {30, 50, 80};
 }
 
 inline const juce::Colour GTPopupBackgroundColor {GTColors::popupBackground};
@@ -79,6 +83,13 @@ namespace GTFonts
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::Inter_18ptBold_ttf, BinaryData::Inter_18ptBold_ttfSize);
+        return AAUITools::makeFont (typeface, fontHeight);
+    }
+
+    inline juce::Font montserratLight (const float fontHeight)
+    {
+        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
+            BinaryData::MontserratLight_ttf, BinaryData::MontserratLight_ttfSize);
         return AAUITools::makeFont (typeface, fontHeight);
     }
 

@@ -18,7 +18,7 @@ public:
         setSliderStyle (LinearVertical);
         setTextBoxStyle (NoTextBox, false, 0, 0);
         setSliderSnapsToMousePosition (false);
-        setMouseDragSensitivity(300);
+        setMouseDragSensitivity(250);
         setTextValueSuffix (suffix);
         setComponentID(parameter.getParameterID());
         attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, nullptr);
@@ -51,10 +51,16 @@ public:
     {
         juce::Slider::resized();
         const auto boundsF = getLocalBounds().toFloat();
-        const auto thumbHeight = boundsF.getHeight() * 0.225f;
+        const auto thumbHeight = boundsF.getHeight() * 0.22f;
         const auto thumbWidth = thumbHeight / ((float) thumbOFF.getHeight() / (float) thumbOFF.getWidth());
         thumbBounds = boundsF.withSizeKeepingCentre (thumbWidth, thumbHeight);
-        thumbTravel = { boundsF.getY() + thumbHeight * 0.5f, boundsF.getBottom() - thumbHeight * 0.5f };
+        const auto gap = thumbHeight * 0.525f;
+        thumbTravel = { boundsF.getY() + gap, boundsF.getBottom() - gap};
+    }
+
+    bool hitTest (int x, int) override
+    {
+        return thumbBounds.getHorizontalRange().contains (static_cast<float> (x));
     }
 
 
@@ -63,7 +69,7 @@ private:
     void mouseDown (const juce::MouseEvent& event) override
     {
         const auto thumbValueCY = thumbTravel.getEnd() - static_cast<float>(valueToProportionOfLength(getValue())) * thumbTravel.getLength();
-        const auto positionedThumbBounds = thumbBounds.withCentre ({ thumbBounds.getCentreX(), thumbValueCY });
+        const auto positionedThumbBounds = thumbBounds.withCentre ({ thumbBounds.getCentreX(), thumbValueCY }).reduced (0.0f, thumbBounds.getHeight() * 0.07f);
 
         if (event.mods.isLeftButtonDown() && ! positionedThumbBounds.contains (event.position))
         {

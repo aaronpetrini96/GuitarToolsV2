@@ -40,12 +40,7 @@ public:
         for (auto index = 0; index < juce::jmin (buttons.size(), nameText.size()); ++index)
             addAndMakeVisible (printedNames.add (new AAUITools::PrintedText (nameText[index], juce::Colours::black)));
 
-        createAttachment (nullptr);
-    }
-
-    void setUndoManager (juce::UndoManager& undoManager)
-    {
-        createAttachment (&undoManager);
+        createAttachment();
     }
 
     void setTooltip (const juce::String& newTooltip)
@@ -91,7 +86,7 @@ private:
     float capsToWidthRatio {0.9095f}, capsToHeightRatio {0.6401f};
     juce::Rectangle<float> housingBounds;
 
-    void createAttachment (juce::UndoManager* undoManager)
+    void createAttachment()
     {
         attachment = std::make_unique<juce::ParameterAttachment> (
             parameter,
@@ -102,7 +97,7 @@ private:
 
                 updateNames();
             },
-            undoManager);
+            nullptr);
 
         attachment->sendInitialUpdate();
     }

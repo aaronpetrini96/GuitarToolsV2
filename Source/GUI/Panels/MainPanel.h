@@ -65,9 +65,6 @@ private:
 
     AAUITools::PrintedText inputLevelTitle {"INPUT", GTColors::almostWhiteText};
     AAUITools::PrintedText outputLevelTitle {"OUTPUT", GTColors::almostWhiteText};
-    AAUITools::PrintedText leftLabel {"L", GTColors::almostWhiteText};
-    AAUITools::PrintedText rightLabel {"R", GTColors::almostWhiteText};
-    AAUITools::PrintedText dBLabel {"dB", GTColors::almostWhiteText};
 
     AANotchSSLKnob inputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getInputGainName())};
     AANotchSSLKnob outputGainKnob {*audioProcessor.treeState.getParameter (ParamIDs::getOutputGainName())};

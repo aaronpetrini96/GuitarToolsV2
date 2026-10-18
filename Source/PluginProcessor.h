@@ -82,10 +82,8 @@ public:
     std::atomic<float> outputLevelLeft {0.f}, outputLevelRight {0.f};
 
 private:
-    //==============================================================================
-//    EQ PART
-    //==============================================================================
-    
+
+    //========== EQ PART ==========//
     GTFilters filters;
     ChainSettings getChainSettings() const;
 
@@ -126,22 +124,14 @@ private:
     depthResonanceSmoother;
 
     std::vector<std::pair<juce::AudioParameterFloat*, juce::SmoothedValue<float>*>> smootherBindings;
-
-
-
-    //==============================================================================
-//    COMPRESSOR PART
-    //==============================================================================
-    
+    //========== COMPRESSOR PART ==========//
     GTMidBandCompressor midBandCompressor;
     juce::AudioParameterFloat* compAmountParam {nullptr};
     juce::AudioParameterBool* compActiveParam {nullptr};
     juce::AudioParameterBool* compExtremeActiveParam {nullptr};
     juce::AudioParameterBool* lowTuningActiveParam {nullptr};
 
-    //==============================================================================
-//    LEVELS PART
-    //==============================================================================
+    //========== LEVELS PART ==========//
 
     juce::dsp::Gain<float> inputGain, outputGain;
     juce::AudioParameterFloat* inputGainParam {nullptr};

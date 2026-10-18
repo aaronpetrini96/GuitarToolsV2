@@ -71,7 +71,7 @@ public:
                         presetMenu.setLookAndFeel (&presetBrowserLAF);
                         presetMenu.addItem ("Rename", [this, presetFile] { if (onRenameRequested != nullptr) onRenameRequested (presetFile); });
                         presetMenu.addItem ("Delete", [this, presetFile] { if (onDeleteRequested != nullptr) onDeleteRequested (presetFile); });
-                        presetMenu.showMenuAsync (juce::PopupMenu::Options().withMousePosition());
+                        presetMenu.showMenuAsync (juce::PopupMenu::Options().withMousePosition().withDeletionCheck(*this));
                     }
 
                     return;

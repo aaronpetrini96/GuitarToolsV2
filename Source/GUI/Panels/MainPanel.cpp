@@ -18,14 +18,12 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
     {
         addAndMakeVisible(knob);
         knob->setTooltip (ParamHelpers::getTooltipForParam (knob->getComponentID()));
-        knob->setUndoManager (audioProcessor.undoManager);
     }
 
     for (auto* btn : {&lowCutSlopeButtons, &highCutSlopeButtons, &presenceFreqButtons, &depthFreqButtons})
     {
         addAndMakeVisible(btn);
         btn->setTooltip (ParamHelpers::getTooltipForParam (btn->getComponentID()));
-        btn->setUndoManager (audioProcessor.undoManager);
     }
 
     for (auto* l : {&lowCutSlopeLabel, &highCutSlopeLabel, &presenceModeLabel, &depthModeLabel})
@@ -38,7 +36,6 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
     for (auto* button : {&resoActiveButton, &mudActiveButton, &compActiveButton})
     {
         button->setTooltip (ParamHelpers::getTooltipForParam (button->getComponentID()));
-        button->setUndoManager (audioProcessor.undoManager);
     }
 
     resoActiveButton.onClick = [this] { fadersPlatePanel.resoFreqFader.setThumbActive (resoActiveButton.getToggleState()); };
@@ -55,7 +52,6 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
     {
         addAndMakeVisible (modeSwitch);
         modeSwitch->setTooltip (ParamHelpers::getTooltipForParam (modeSwitch->getComponentID()));
-        modeSwitch->setUndoManager (audioProcessor.undoManager);
     }
 
     //================  LEVEL KNOBS  ================//
@@ -65,7 +61,6 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
     for (auto* knob : {&inputGainKnob, &outputGainKnob})
     {
         knob->setTooltip (ParamHelpers::getTooltipForParam (knob->getComponentID()));
-        knob->setUndoManager (audioProcessor.undoManager);
     }
 
     addAndMakeVisible (inputGainKnob);

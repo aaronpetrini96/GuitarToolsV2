@@ -43,12 +43,6 @@ public:
         updateLabel();
     }
 
-    void setUndoManager (juce::UndoManager& undoManager)
-    {
-        buttonAttachment = std::make_unique<juce::ButtonParameterAttachment> (parameter, *this, &undoManager);
-        buttonAttachment->sendInitialUpdate();
-    }
-
 private:
     void paintLight (juce::Graphics& g)
     {

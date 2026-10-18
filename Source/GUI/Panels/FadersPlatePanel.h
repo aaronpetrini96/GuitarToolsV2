@@ -22,7 +22,6 @@ public:
         {
             addAndMakeVisible (*fader);
             fader->setTooltip (ParamHelpers::getTooltipForParam (fader->getComponentID()));
-            fader->setUndoManager (&processor.undoManager);
         }
     }
 

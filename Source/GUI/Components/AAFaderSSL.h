@@ -24,12 +24,6 @@ public:
         attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, nullptr);
     }
 
-    void setUndoManager (juce::UndoManager* undoManager)
-    {
-        parameterUndoManager = undoManager;
-        attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, undoManager);
-    }
-
     void setThumbActive (const bool shouldBeActive)
     {
         if (shouldBeActive != thumbActive)
@@ -74,8 +68,6 @@ private:
         if (event.mods.isLeftButtonDown() && ! positionedThumbBounds.contains (event.position))
         {
             const auto proportion = juce::jlimit (0.0f, 1.0f, (thumbTravel.getEnd() - event.position.y) / thumbTravel.getLength());
-            if (parameterUndoManager != nullptr)
-                parameterUndoManager->beginNewTransaction();
             parameter.beginChangeGesture();
             parameter.setValueNotifyingHost(parameter.convertTo0to1(static_cast<float>(proportionOfLengthToValue(proportion))));
             parameter.endChangeGesture();
@@ -92,7 +84,6 @@ private:
     juce::Image thumbON = juce::ImageCache::getFromMemory (BinaryData::thumbBlue2_png, BinaryData::thumbBlue2_pngSize);
 
     juce::RangedAudioParameter& parameter;
-    juce::UndoManager* parameterUndoManager{nullptr};
     std::unique_ptr<juce::SliderParameterAttachment> attachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AAVerticalSSLFader)

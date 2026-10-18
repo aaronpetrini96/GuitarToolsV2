@@ -30,11 +30,6 @@ public:
         updateValueLabelText();
     }
 
-    void setUndoManager (juce::UndoManager& undoManager)
-    {
-        attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, &undoManager);
-    }
-
     void resized() override
     {
         const auto boundsF = getLocalBounds().toFloat();

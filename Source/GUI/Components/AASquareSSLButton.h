@@ -50,12 +50,6 @@ public:
         updateLabelFont();
     }
 
-    void setUndoManager (juce::UndoManager& undoManager)
-    {
-        attachment = std::make_unique<juce::ButtonParameterAttachment> (parameter, *this, &undoManager);
-        attachment->sendInitialUpdate();
-    }
-
     float imgReducePOH {0.04f};
 
 private:

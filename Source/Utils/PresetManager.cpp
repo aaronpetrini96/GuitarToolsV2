@@ -1,5 +1,8 @@
 #include "PresetManager.h"
 #include "BinaryData.h"
+#include "AAParamUtils.h"
+
+static const juce::StringArray nonPresetParameterIDs {ParamIDs::getPluginBypassActiveName(), ParamIDs::getLoudnessMatchActiveName(), ParamIDs::getLowTuningActiveName()};
 
 static const juce::StringArray rootPresetFileNames {"Default.xml"};
 
@@ -17,7 +20,10 @@ void PresetManager::savePreset(const juce::String& presetName)
         return;
 
     presetFile.getParentDirectory().createDirectory();
-    if (auto xml = treeState.copyState().createXml())
+    auto presetState = treeState.copyState();
+    for (const auto& nonPresetParameterID : nonPresetParameterIDs)
+        presetState.removeChild (presetState.getChildWithProperty ("id", nonPresetParameterID), nullptr);
+    if (auto xml = presetState.createXml())
     {
         xml->setAttribute ("PluginVersion", JucePlugin_VersionString);
         xml->writeTo (presetFile);
@@ -59,9 +65,15 @@ void PresetManager::loadPresetFile(const juce::File& presetFile)
 
     auto presetState = juce::ValueTree::fromXml (*xml);
     presetState.removeAllProperties (nullptr);
+    const auto currentState = treeState.copyState();
+    for (const auto& nonPresetParameterID : nonPresetParameterIDs)
+    {
+        presetState.removeChild (presetState.getChildWithProperty ("id", nonPresetParameterID), nullptr);
+        presetState.appendChild (currentState.getChildWithProperty ("id", nonPresetParameterID).createCopy(), nullptr);
+    }
 
     undoManager.beginNewTransaction();
-    undoManager.perform (new PresetChangeAction (*this, treeState.copyState(), getCurrentPresetName(),
+    undoManager.perform (new PresetChangeAction (*this, currentState, getCurrentPresetName(),
                                                  presetState, presetFile.getFileNameWithoutExtension()));
 }
 

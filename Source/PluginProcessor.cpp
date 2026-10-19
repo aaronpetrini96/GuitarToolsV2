@@ -214,11 +214,14 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 
 //========================    LEVELS part    ========================
         applyGain(chunk, inputGain);
-        inputLevelLeft.store(juce::jmax(inputLevelLeft.load(), chunk.getMagnitude(0, 0, chunkLength)));
-        if (chunk.getNumChannels() > 1)
-            inputLevelRight.store(juce::jmax(inputLevelRight.load(), chunk.getMagnitude(1, 0, chunkLength)));
-        else
-            inputLevelRight.store(inputLevelLeft.load());
+        if (! bypassActive)
+        {
+            inputLevelLeft.store(juce::jmax(inputLevelLeft.load(), chunk.getMagnitude(0, 0, chunkLength)));
+            if (chunk.getNumChannels() > 1)
+                inputLevelRight.store(juce::jmax(inputLevelRight.load(), chunk.getMagnitude(1, 0, chunkLength)));
+            else
+                inputLevelRight.store(inputLevelLeft.load());
+        }
 //========================    EQ part    ========================
         filters.process(chunk);
 
@@ -242,11 +245,14 @@ void GuitarToolsAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     }
     smoothedBypassValue.skip(buffer.getNumSamples());
 
-    outputLevelLeft.store(juce::jmax(outputLevelLeft.load(), buffer.getMagnitude(0, 0, numSamples)));
-    if (buffer.getNumChannels() > 1)
-        outputLevelRight.store(juce::jmax(outputLevelRight.load(), buffer.getMagnitude(1, 0, numSamples)));
-    else
-        outputLevelRight.store(outputLevelLeft.load());
+    if (! bypassActive)
+    {
+        outputLevelLeft.store(juce::jmax(outputLevelLeft.load(), buffer.getMagnitude(0, 0, numSamples)));
+        if (buffer.getNumChannels() > 1)
+            outputLevelRight.store(juce::jmax(outputLevelRight.load(), buffer.getMagnitude(1, 0, numSamples)));
+        else
+            outputLevelRight.store(outputLevelLeft.load());
+    }
 }
 
 //==============================================================================

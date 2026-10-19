@@ -37,11 +37,6 @@ namespace  GTColors
     inline const juce::Colour presetBoxOutlineColor {70, 85, 115};
 
     inline const juce::Colour infoPanelDivider {juce::Colour (190, 200, 225).withAlpha (0.27f)};
-
-    //Left overs
-    // inline const juce::Colour blueGradientStart {9, 12, 25};
-    // inline const juce::Colour blueGradientEnd {22, 28, 60};
-    // inline const juce::Colour popupBlueHighlight {30, 50, 80};
 }
 
 inline const juce::Colour GTPopupBackgroundColor {GTColors::popupBackground};

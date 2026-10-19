@@ -8,6 +8,20 @@
 #include <memory>
 #include "../../GTLook.h"
 
+class ValuePopupLAF : public juce::LookAndFeel_V4
+{
+public:
+    void drawLabel (juce::Graphics& g, juce::Label& label) override
+    {
+        const auto boundsF = label.getLocalBounds().toFloat();
+        const auto boundsFHeight = boundsF.getHeight();
+        AAUITools::drawOutlinedRoundedRectangle (g, boundsF, boundsFHeight * GTCornerPOH, boundsFHeight * GTOutlineThicknessPOH, GTPopupBackgroundColor, GTPopupOutlineColor);
+        g.setColour (GTPopupTextColor);
+        g.setFont (GTFonts::montserratSemiBold (boundsFHeight * GTFontHeightPOH));
+        g.drawText (label.getText(), boundsF, juce::Justification::centred, false);
+    }
+};
+
 class AAVerticalSSLFader : public juce::Slider
 {
 public:
@@ -22,15 +36,6 @@ public:
         setTextValueSuffix (suffix);
         setComponentID(parameter.getParameterID());
         attachment = std::make_unique<juce::SliderParameterAttachment> (parameter, *this, nullptr);
-    }
-
-    void setThumbActive (const bool shouldBeActive)
-    {
-        if (shouldBeActive != thumbActive)
-        {
-            thumbActive = shouldBeActive;
-            repaint();
-        }
     }
 
     void paint (juce::Graphics& g) override
@@ -52,14 +57,6 @@ public:
         thumbTravel = { boundsF.getY() + gap, boundsF.getBottom() - gap};
     }
 
-    bool hitTest (int x, int) override
-    {
-        return thumbBounds.getHorizontalRange().contains (static_cast<float> (x));
-    }
-
-
-private:
-
     void mouseDown (const juce::MouseEvent& event) override
     {
         const auto thumbValueCY = thumbTravel.getEnd() - static_cast<float>(valueToProportionOfLength(getValue())) * thumbTravel.getLength();
@@ -76,6 +73,22 @@ private:
         juce::Slider::mouseDown (event);
     }
 
+    void setThumbActive (const bool shouldBeActive)
+    {
+        if (shouldBeActive != thumbActive)
+        {
+            thumbActive = shouldBeActive;
+            repaint();
+        }
+    }
+
+    bool hitTest (int x, int) override
+    {
+        return thumbBounds.getHorizontalRange().contains (static_cast<float> (x));
+    }
+
+
+private:
     juce::Rectangle<float> thumbBounds;
     juce::Range<float> thumbTravel;
     bool thumbActive {true};

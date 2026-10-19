@@ -14,15 +14,27 @@ class FadersPlatePanel : public juce::Component
 {
 public:
     explicit FadersPlatePanel (GuitarToolsAudioProcessor& processor)
-        : resoFreqFader (*processor.treeState.getParameter (ParamIDs::getResoFreqName()), "Hz"),
-          mudAmountFader (*processor.treeState.getParameter (ParamIDs::getMudAmountName()), "%"),
-          compAmountFader (*processor.treeState.getParameter (ParamIDs::getCompAmountName()), "%")
+        : resoFreqFader (*processor.treeState.getParameter (ParamIDs::getResoFreqName()), " Hz"),
+          mudAmountFader (*processor.treeState.getParameter (ParamIDs::getMudAmountName()), " %"),
+          compAmountFader (*processor.treeState.getParameter (ParamIDs::getCompAmountName()), " %")
     {
-        for (auto* fader : {&resoFreqFader, &mudAmountFader, &compAmountFader})
+        for (auto [fader, valueLabel] : { std::pair {&resoFreqFader, &resoValueLabel}, std::pair {&mudAmountFader, &mudValueLabel}, std::pair {&compAmountFader, &compValueLabel} })
         {
             addAndMakeVisible (*fader);
             fader->setTooltip (ParamHelpers::getTooltipForParam (fader->getComponentID()));
+            valueLabel->setLookAndFeel (&valuePopupLAF);
+            valueLabel->setInterceptsMouseClicks (false, false);
+            addChildComponent (*valueLabel);
+            fader->onValueChange = [fader = fader, valueLabel = valueLabel] { valueLabel->setText (fader->getTextFromValue (fader->getValue()), juce::dontSendNotification); };
+            fader->onDragStart = [fader = fader, valueLabel = valueLabel] { fader->onValueChange(); valueLabel->setVisible (true); };
+            fader->onDragEnd = [valueLabel = valueLabel] { valueLabel->setVisible (false); };
         }
+    }
+
+    ~FadersPlatePanel() override
+    {
+        for (auto* valueLabel : {&resoValueLabel, &mudValueLabel, &compValueLabel})
+            valueLabel->setLookAndFeel (nullptr);
     }
 
     void paint(juce::Graphics& g) override
@@ -65,6 +77,11 @@ public:
         resoTrackBounds = trackBounds.translated(-faderSpacing, 0.f);
         compTrackBounds = trackBounds.translated(faderSpacing, 0.f);
         screwSize = trackWidth * 2.5f;
+
+        const auto valueLabelBounds = juce::Rectangle<float> (faderBounds.getWidth() * 0.81f, boundsFHeight * 0.072f).withCentre ({ faderBounds.getCentreX(), trackBounds.getY() * 0.5f });
+        mudValueLabel.setBounds (valueLabelBounds.toNearestInt());
+        resoValueLabel.setBounds (valueLabelBounds.translated (-faderSpacing, 0.f).toNearestInt());
+        compValueLabel.setBounds (valueLabelBounds.translated (faderSpacing, 0.f).toNearestInt());
     }
 
     void setFaderSpacing (const float newFaderSpacing)
@@ -85,5 +102,7 @@ private:
     juce::Image screw {juce::ImageCache::getFromMemory(BinaryData::screwDirty_png, BinaryData::screwDirty_pngSize)};
     juce::Image trackImage = juce::ImageCache::getFromMemory (BinaryData::faderTrack_png, BinaryData::faderTrack_pngSize);
     juce::Rectangle<float> resoTrackBounds, mudTrackBounds, compTrackBounds;
+    ValuePopupLAF valuePopupLAF;
+    juce::Label resoValueLabel, mudValueLabel, compValueLabel;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FadersPlatePanel)
 };

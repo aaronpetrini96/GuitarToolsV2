@@ -51,7 +51,7 @@ private:
         for (size_t thresholdIndex {0}; thresholdIndex + 1 < lightThresholdsDb.size(); ++thresholdIndex)
             barPosition += juce::jlimit (0.f, 1.f, juce::jmap (levelDb, lightThresholdsDb[thresholdIndex], lightThresholdsDb[thresholdIndex + 1], 0.f, 1.f));
         const auto litAmount = index == numberOfLights - 1 ? (isClipped ? 1.f : 0.f) : juce::jlimit (0.f, 1.f, barPosition - static_cast<float> (index));
-        const auto ledColour = index == numberOfLights - 1 ? meterRed : index >= 3 ? meterYellow : meterGreen;
+        const auto ledColour = index == numberOfLights - 1 ? meterRed : index == 4 ? meterOrange : index >= 2 ? meterYellow : meterGreen;
         const auto ledBounds = juce::Rectangle<float> (ledDiameter, ledDiameter).withCentre (ledCentre);
 
         if (isGlowPass)
@@ -125,6 +125,7 @@ private:
 
     const juce::Colour meterGreen {60, 200, 80};
     const juce::Colour meterYellow {235, 200, 40};
+    const juce::Colour meterOrange {250, 95, 25};
     const juce::Colour meterRed {235, 50, 40};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GTLevelMeter)

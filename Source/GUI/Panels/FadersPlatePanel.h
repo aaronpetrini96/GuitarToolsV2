@@ -9,6 +9,7 @@
 #include "PluginProcessor.h"
 
 #include "GUI/Components/AAFaderSSL.h"
+#include "GUI/LAF/ValuePopupLAF.h"
 
 class FadersPlatePanel : public juce::Component
 {

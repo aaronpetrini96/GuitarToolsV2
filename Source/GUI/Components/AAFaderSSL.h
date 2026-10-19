@@ -8,20 +8,6 @@
 #include <memory>
 #include "../../GTLook.h"
 
-class ValuePopupLAF : public juce::LookAndFeel_V4
-{
-public:
-    void drawLabel (juce::Graphics& g, juce::Label& label) override
-    {
-        const auto boundsF = label.getLocalBounds().toFloat();
-        const auto boundsFHeight = boundsF.getHeight();
-        AAUITools::drawOutlinedRoundedRectangle (g, boundsF, boundsFHeight * GTCornerPOH, boundsFHeight * GTOutlineThicknessPOH, GTPopupBackgroundColor, GTPopupOutlineColor);
-        g.setColour (GTPopupTextColor);
-        g.setFont (GTFonts::montserratSemiBold (boundsFHeight * GTFontHeightPOH));
-        g.drawText (label.getText(), boundsF, juce::Justification::centred, false);
-    }
-};
-
 class AAVerticalSSLFader : public juce::Slider
 {
 public:
@@ -73,6 +59,11 @@ public:
         juce::Slider::mouseDown (event);
     }
 
+    bool hitTest (int x, int) override
+    {
+        return thumbBounds.getHorizontalRange().contains (static_cast<float> (x));
+    }
+
     void setThumbActive (const bool shouldBeActive)
     {
         if (shouldBeActive != thumbActive)
@@ -81,12 +72,6 @@ public:
             repaint();
         }
     }
-
-    bool hitTest (int x, int) override
-    {
-        return thumbBounds.getHorizontalRange().contains (static_cast<float> (x));
-    }
-
 
 private:
     juce::Rectangle<float> thumbBounds;

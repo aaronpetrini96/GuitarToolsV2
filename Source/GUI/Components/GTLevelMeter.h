@@ -95,6 +95,8 @@ private:
 
             const auto previousLevelDb = levelDb;
             levelDb = juce::jmax (targetDb, levelDb + (targetDb - levelDb) * smoothingCoefficient);
+            if (levelDb < clipResetDb)
+                isClipped = false;
             needsRepaint = needsRepaint || std::abs (levelDb - previousLevelDb) > repaintThresholdDb;
         };
 
@@ -108,6 +110,7 @@ private:
     const int refreshRateHz {30};
     const float minimumDb {-48.f};
     const float fallRateDbPerSecond {24.f};
+    const float clipResetDb {-12.f};
     const float repaintThresholdDb {0.01f};
 
     const float smoothingTimeSeconds {0.04f};

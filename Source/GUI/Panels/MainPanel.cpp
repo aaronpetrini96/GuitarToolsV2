@@ -5,14 +5,7 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
 
 {
 
-    //================  CUT FILTERS ================//
-
-    addAndMakeVisible (lowCutSlopeButtons);
-    addAndMakeVisible (highCutSlopeButtons);
-    //================  SHELF FILTERS  ================//
-
-    addAndMakeVisible (presenceFreqButtons);
-    addAndMakeVisible (depthFreqButtons);
+    //================  FILTERS ================//
 
     for (auto* knob : {&lowCutFreqKnob, &highCutFreqKnob, &lowShelfGainKnob, &highShelfGainKnob})
     {

@@ -24,10 +24,6 @@ GuitarToolsAudioProcessor::GuitarToolsAudioProcessor()
     presetManager.loadDefaultPreset();
 }
 
-GuitarToolsAudioProcessor::~GuitarToolsAudioProcessor()
-{
-}
-
 //==============================================================================
 
 //==============================================================================
@@ -96,7 +92,6 @@ void GuitarToolsAudioProcessor::changeProgramName (int index, const juce::String
 void GuitarToolsAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     juce::dsp::ProcessSpec spec{};
-    const auto numSamples = samplesPerBlock;
     spec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
     spec.sampleRate = sampleRate;
     spec.numChannels = static_cast<juce::uint32>(getTotalNumOutputChannels());
@@ -121,7 +116,7 @@ void GuitarToolsAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     outputGain.prepare(spec);
     outputGain.setRampDurationSeconds(DefaultValues::parameterSmoothingTime);
 
-    dryBuffer.setSize(static_cast<int>(spec.numChannels), numSamples);
+    dryBuffer.setSize(static_cast<int>(spec.numChannels), samplesPerBlock);
 
 //==============================================================================
 //    EQ Section
@@ -141,8 +136,6 @@ void GuitarToolsAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 
 void GuitarToolsAudioProcessor::releaseResources()
 {
-    // When playback stops, you can use this as an opportunity to free up any
-    // spare memory, etc.
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations

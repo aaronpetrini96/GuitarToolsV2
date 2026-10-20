@@ -23,11 +23,9 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
         addAndMakeVisible(l);
 
     //================  MAGIC BUTTONS  ================//
-    addAndMakeVisible (resoActiveButton);
-    addAndMakeVisible (mudActiveButton);
-    addAndMakeVisible (compActiveButton);
     for (auto* button : {&resoActiveButton, &mudActiveButton, &compActiveButton})
     {
+        addAndMakeVisible (button);
         button->setTooltip (ParamHelpers::getTooltipForParam (button->getComponentID()));
     }
 
@@ -48,8 +46,6 @@ MainPanel::MainPanel (GuitarToolsAudioProcessor& processor)
     }
 
     //================  LEVEL KNOBS  ================//
-
-
 
     for (auto* knob : {&inputGainKnob, &outputGainKnob})
     {
@@ -183,7 +179,7 @@ void MainPanel::resizeLevelsSectionCentred(const juce::Rectangle<float>& boundsF
     const auto gainKnobSize = levelsAreaHeight * 0.5f;
     const auto meterHeight = levelsAreaHeight * 0.85f;
     const auto meterWidth = meterHeight * 0.25f;
-    const auto meterCY = buttonsArea.getHeight() * 0.9f;
+    const auto meterCY = buttonsArea.getHeight() * 0.905f;
     const auto meterBounds = levelsArea.withSize (meterWidth, meterHeight).withCentre({levelsArea.getCentreX(), meterCY});
     const auto meterGap = meterHeight * 0.27f;
     inputLevelMeter.setBounds (meterBounds.translated (-meterGap, 0.f).toNearestInt());

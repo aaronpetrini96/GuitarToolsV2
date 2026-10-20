@@ -19,6 +19,4 @@
   <PARAM id="Comp Mode Active" value="0"/>
   <PARAM id="Input Gain" value="0"/>
   <PARAM id="Output Gain" value="0"/>
-  <PARAM id="Loudness Match Active" value="1"/>
-  <PARAM id="Plugin Bypass Active" value="0"/>
 </Parameters>

@@ -42,8 +42,8 @@ void GTMidBandCompressor::setActive(bool shouldBeActive)
     const auto wasFullyInactive = juce::approximatelyEqual(activeAmount.getTargetValue(), 0.f) && !activeAmount.isSmoothing();
     if (shouldBeActive && wasFullyInactive)
     {
-        for (auto* filer : {&LP1, &HP1, &AP2, &LP2, &HP2})
-            filer->reset();
+        for (auto* filter : {&LP1, &HP1, &AP2, &LP2, &HP2})
+            filter->reset();
         smoothedGainReductionDb = 0.f;
     }
     activeAmount.setTargetValue(shouldBeActive ? 1.f : 0.f);

@@ -29,7 +29,6 @@ class GuitarToolsAudioProcessor  : public juce::AudioProcessor
 public:
     //==============================================================================
     GuitarToolsAudioProcessor();
-    ~GuitarToolsAudioProcessor() override;
 
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;

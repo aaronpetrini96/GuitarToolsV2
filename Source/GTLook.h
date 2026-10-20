@@ -17,16 +17,13 @@ constexpr int GTPresetNameMaxLength {24};
 namespace  GTColors
 {
     inline const juce::Colour transparent { juce::Colours::transparentBlack };
-    inline const juce::Colour superDarkBackground {15, 15, 15};
     inline const juce::Colour activeNeonBlue { 64, 196, 255 };
     inline const juce::Colour almostBlack {5, 5, 5};
 
     inline const juce::Colour sectionTitleText {215, 215, 215};
     inline const juce::Colour almostWhiteText {190, 190, 190};
-    inline const juce::Colour infoPanelSecondaryText {140, 152, 185};
 
     inline const juce::Colour popupBackground {5, 7, 14};
-    inline const juce::Colour popupDarkBackground {20, 28, 50};
     inline const juce::Colour popupOutlineColor {40, 50, 70};
 
     inline const juce::Colour iconSVGColor {100, 100, 100};
@@ -35,8 +32,6 @@ namespace  GTColors
 
     inline const juce::Colour presetBoxBackground {35, 42, 60};
     inline const juce::Colour presetBoxOutlineColor {70, 85, 115};
-
-    inline const juce::Colour infoPanelDivider {juce::Colour (190, 200, 225).withAlpha (0.27f)};
 }
 
 inline const juce::Colour GTPopupBackgroundColor {GTColors::popupBackground};
@@ -46,25 +41,11 @@ inline const juce::Colour GTPopupSelectedTextColor {GTColors::activeNeonBlue};
 
 namespace GTFonts
 {
-    inline juce::Font ibmPlexSansCondensedSemiBold (const float fontHeight)
-    {
-        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
-            BinaryData::IBMPlexSansCondensedSemiBold_ttf, BinaryData::IBMPlexSansCondensedSemiBold_ttfSize);
-        return AAUITools::makeFont (typeface, fontHeight, 0.08f);
-    }
-
     inline juce::Font ibmPlexSansMedium (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::IBMPlexSansMedium_ttf, BinaryData::IBMPlexSansMedium_ttfSize);
         return AAUITools::makeFont (typeface, fontHeight, 0.04f);
-    }
-
-    inline juce::Font interMedium (const float fontHeight)
-    {
-        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
-            BinaryData::Inter_18ptMedium_ttf, BinaryData::Inter_18ptMedium_ttfSize);
-        return AAUITools::makeFont (typeface, fontHeight);
     }
 
     inline juce::Font interSemiBold (const float fontHeight)
@@ -81,13 +62,6 @@ namespace GTFonts
         return AAUITools::makeFont (typeface, fontHeight);
     }
 
-    inline juce::Font montserratLight (const float fontHeight)
-    {
-        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
-            BinaryData::MontserratLight_ttf, BinaryData::MontserratLight_ttfSize);
-        return AAUITools::makeFont (typeface, fontHeight);
-    }
-
     inline juce::Font montserratMedium (const float fontHeight)
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
@@ -99,13 +73,6 @@ namespace GTFonts
     {
         static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
             BinaryData::MontserratSemiBold_ttf, BinaryData::MontserratSemiBold_ttfSize);
-        return AAUITools::makeFont (typeface, fontHeight);
-    }
-
-    inline juce::Font montserratBold (const float fontHeight)
-    {
-        static const juce::Typeface::Ptr typeface = juce::Typeface::createSystemTypefaceFor (
-            BinaryData::MontserratBold_ttf, BinaryData::MontserratBold_ttfSize);
         return AAUITools::makeFont (typeface, fontHeight);
     }
 

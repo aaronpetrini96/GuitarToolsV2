@@ -21,14 +21,14 @@ public:
     void updateItems()
     {
         juce::Array<AAListOptionsPopup::Item> settingsOptions;
-        settingsOptions.add ({"Show Tooltips", [this] { toggleTooltips(); }, true, showTooltips, true});
+        settingsOptions.add ({"Show Tooltips", [this] { toggleTooltips(); }, true, showTooltips, true, ParamTooltips::getShowTooltipsTooltip()});
         settingsOptions.add ({"Match Loudness", [this] { toggleBoolParameter (autoGainParam); }, true, autoGainParam.getValue() >= 0.5f, true, ParamHelpers::getTooltipForParam (ParamIDs::getLoudnessMatchActiveName())});
         settingsOptions.add ({"Low Tuning Mode", [this] { toggleBoolParameter (lowTuningParam); }, true, lowTuningParam.getValue() >= 0.5f, true, ParamHelpers::getTooltipForParam (ParamIDs::getLowTuningActiveName())});
-        settingsOptions.add ({"Set UI Size As Default", [this] { resizeUI.makeCurrentSizeDefault(); }, ! resizeUI.isCurrentScaleDefault(), false, false, {},
+        settingsOptions.add ({"Set UI Size As Default", [this] { resizeUI.makeCurrentSizeDefault(); }, ! resizeUI.isCurrentScaleDefault(), false, false, ParamTooltips::getDefaultUISizeTooltip(),
                               juce::Drawable::createFromImageData (BinaryData::resizeLines_svg, BinaryData::resizeLines_svgSize)});
-        settingsOptions.add ({"Info", [this] { if (onAboutClicked != nullptr) onAboutClicked(); }, true, false, false, {},
+        settingsOptions.add ({"Info", [this] { if (onAboutClicked != nullptr) onAboutClicked(); }, true, false, false, ParamTooltips::getInfoTooltip(),
                               juce::Drawable::createFromImageData (BinaryData::infoLetterIcon_svg, BinaryData::infoLetterIcon_svgSize)});
-        settingsOptions.add ({"Get In Touch", [] { sendMail ({}); }, true, false, false, {},
+        settingsOptions.add ({"Get In Touch", [] { sendMail ({}); }, true, false, false, ParamTooltips::getContactTooltip(),
                               juce::Drawable::createFromImageData (BinaryData::atIcon_svg, BinaryData::atIcon_svgSize)});
         // settingsOptions.add ({"Get the Manual", [] { juce::URL ("https://MANUAL_URL").launchInDefaultBrowser(); }, true, false, false, {},
         //                       juce::Drawable::createFromImageData (BinaryData::questionMarkIcon_svg, BinaryData::questionMarkIcon_svgSize)});

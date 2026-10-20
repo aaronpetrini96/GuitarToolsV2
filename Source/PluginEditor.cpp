@@ -31,6 +31,7 @@ GuitarToolsAudioProcessorEditor::GuitarToolsAudioProcessorEditor (GuitarToolsAud
     resizeButton.setToggleable(true);
     resizeButton.setClickingTogglesState(false);
     resizeButton.onClick = [this] { showUISizeOptions(); };
+    resizeButton.setTooltip (ParamTooltips::getResizeUITooltip());
 
     addChildComponent (settingsOptionsPopup);
     settingsOptionsPopup.addComponentListener (this);

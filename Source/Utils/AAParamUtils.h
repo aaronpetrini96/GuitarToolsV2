@@ -5,6 +5,7 @@
 #pragma once
 #include <juce_core/juce_core.h>
 #include <array>
+#include <map>
 
 namespace ParamIDs
 {
@@ -101,37 +102,46 @@ namespace ParamTooltips
 {
 //    ========== HEADER ===========
     inline juce::String getPresetBoxTooltip() { return "Browse and load your presets"; }
-    inline juce::String getSavePresetTooltip() { return "Save the current settings as a preset"; }
-    inline juce::String getSettingsTooltip() { return "Open the plugin settings"; }
-    inline juce::String getInfoTooltip() { return "View plugin information and contact details"; }
+    inline juce::String getSavePresetTooltip() { return "Save your current sound as a preset"; }
+    inline juce::String getSettingsTooltip() { return "Open settings panel"; }
+    inline juce::String getPreviousPresetTooltip() { return "Load previous preset"; }
+    inline juce::String getNextPresetTooltip() { return "Load next preset"; }
+    inline juce::String getUndoTooltip() { return "Undo last change"; }
+    inline juce::String getRedoTooltip() { return "Redo last change"; }
+
+//    ========== SETTINGS MENU ===========
+    inline juce::String getShowTooltipsTooltip() { return "Show control descriptions at the bottom"; }
+    inline juce::String getDefaultUISizeTooltip() { return "Save current UI size as the new default for the plugin"; }
+    inline juce::String getInfoTooltip() { return "View plugin information"; }
+    inline juce::String getContactTooltip() { return "Send an email for feedback or support"; }
 
 //    ========== GUI ===========
-    inline juce::String getResizeUITooltip() { return "Change the plugin window size"; }
+    inline juce::String getResizeUITooltip() { return "Change the window size"; }
 
     inline const std::map<juce::String, juce::String> parameterTooltips
     {
-        {ParamIDs::getLowCutFreqName(),             "Low cut: Adjust how much low end you want to remove"},
-        {ParamIDs::getHighCutFreqName(),            "High cut: Adjust how much high end you want to remove"},
-        {ParamIDs::getLowCutSlopeName(),            "Low cut slope: Choose how sharply the low end is removed"},
-        {ParamIDs::getHighCutSlopeName(),           "High cut slope: Choose how sharply the high end is removed"},
-        {ParamIDs::getDepthGainName(),              "Depth: Adjust how much low-end body your tone needs"},
-        {ParamIDs::getDepthModeName(),              "Depth mode: Choose where the low-end body is focused"},
-        {ParamIDs::getPresenceGainName(),           "Presence: Adjust the amount of presence and bite"},
-        {ParamIDs::getPresenceModeName(),           "Presence mode: Choose where the presence adjustment is focused"},
-        {ParamIDs::getResoActiveName(),             "Kill reso: Tame harsh resonances"},
-        {ParamIDs::getResoFreqName(),               "Reso frequency: Find the harsh resonance you want to tame"},
-        {ParamIDs::getMudActiveName(),              "Clear mud: Reduce muddy buildup"},
-        {ParamIDs::getMudAmountName(),              "Mud amount: Adjust how much mud is removed"},
-        {ParamIDs::getCompActiveName(),             "Tame lows: Tighten the dynamics of your low end"},
-        {ParamIDs::getCompAmountName(), "Tame lows amount: Adjust how much the low end is tightened"},
-        {ParamIDs::getResoExtremeActiveName(), "Kill reso max: Tame harsh resonances even harder"},
-        {ParamIDs::getMudExtremeActiveName(), "Clear mud max: Clear a wider range of mud"},
-        {ParamIDs::getCompExtremeActiveName(), "Tame lows max: Tighten your low end even harder"},
-        {ParamIDs::getLowTuningActiveName(), "Low tuning: Adapt the plugin for lower tunings"},
-        {ParamIDs::getInputGainName(), "Input: Adjust the level going into the plugin"},
-        {ParamIDs::getOutputGainName(), "Output: Adjust the level leaving the plugin"},
-        {ParamIDs::getLoudnessMatchActiveName(), "Match level: Match the output loudness to the input"},
-        {ParamIDs::getPluginBypassActiveName(), "Bypass: Bypass all plugin processing"},
+        {ParamIDs::getLowCutFreqName(),             "Set how much low end is removed"},
+        {ParamIDs::getHighCutFreqName(),            "Set how much high end is removed"},
+        {ParamIDs::getLowCutSlopeName(),            "Select how fast the level drops past the cutoff"},
+        {ParamIDs::getHighCutSlopeName(),           "Select how fast the level drops past the cutoff"},
+        {ParamIDs::getDepthGainName(),              "Boost or reduce bass in your tone"},
+        {ParamIDs::getDepthModeName(),              "Select depth mode"},
+        {ParamIDs::getPresenceGainName(),           "Boost or reduce bite in your tone"},
+        {ParamIDs::getPresenceModeName(),           "Select presence mode"},
+        {ParamIDs::getResoActiveName(),             "Reduce high-mid harshness, use the fader to find it"},
+        {ParamIDs::getResoFreqName(),               "Reduce high-mid harshness, use the fader to find it"},
+        {ParamIDs::getMudActiveName(),              "Reduce boomy low-mid buildup, use the fader to set the amount"},
+        {ParamIDs::getMudAmountName(),              "Reduce boomy low-mid buildup, use the fader to set the amount"},
+        {ParamIDs::getCompActiveName(),             "Make your low end tight and even, use the fader to set the amount"},
+        {ParamIDs::getCompAmountName(),             "Make your low end tight and even, use the fader to set the amount"},
+        {ParamIDs::getResoExtremeActiveName(),      "Increase resonance reduction"},
+        {ParamIDs::getMudExtremeActiveName(),       "Widen reduction range"},
+        {ParamIDs::getCompExtremeActiveName(),      "Increase tightening strength"},
+        {ParamIDs::getLowTuningActiveName(),        "Adapt processing for low tunings"},
+        {ParamIDs::getInputGainName(),              "Set the level going into the plugin"},
+        {ParamIDs::getOutputGainName(),             "Set the level coming out of the plugin"},
+        {ParamIDs::getLoudnessMatchActiveName(),    "Keep the output level equal to the input"},
+        {ParamIDs::getPluginBypassActiveName(),     "Turn GuitarTools ON/OFF"},
     };
 }
 

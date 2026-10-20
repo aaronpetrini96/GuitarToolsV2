@@ -66,11 +66,6 @@ void PresetManager::loadPresetFile(const juce::File& presetFile)
     auto presetState = juce::ValueTree::fromXml (*xml);
     presetState.removeAllProperties (nullptr);
     const auto currentState = treeState.copyState();
-    for (const auto& nonPresetParameterID : nonPresetParameterIDs)
-    {
-        presetState.removeChild (presetState.getChildWithProperty ("id", nonPresetParameterID), nullptr);
-        presetState.appendChild (currentState.getChildWithProperty ("id", nonPresetParameterID).createCopy(), nullptr);
-    }
 
     undoManager.beginNewTransaction();
     undoManager.perform (new PresetChangeAction (*this, currentState, getCurrentPresetName(),
@@ -164,7 +159,14 @@ void PresetManager::setCurrentPresetName (const juce::String& presetName)
 
 void PresetManager::applyPreset (const juce::ValueTree& presetState, const juce::String& presetName)
 {
-    treeState.replaceState (presetState.createCopy());
+    auto newState = presetState.createCopy();
+    const auto currentState = treeState.copyState();
+    for (const auto& nonPresetParameterID : nonPresetParameterIDs)
+    {
+        newState.removeChild (newState.getChildWithProperty ("id", nonPresetParameterID), nullptr);
+        newState.appendChild (currentState.getChildWithProperty ("id", nonPresetParameterID).createCopy(), nullptr);
+    }
+    treeState.replaceState (newState);
     setCurrentPresetName (presetName);
 }
 

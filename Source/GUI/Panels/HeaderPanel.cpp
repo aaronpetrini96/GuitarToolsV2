@@ -15,13 +15,15 @@ HeaderPanel::HeaderPanel (GuitarToolsAudioProcessor& processor, PresetManager& p
 
     setupIconButton(settingsButton, BinaryData::settingsLines_svg, BinaryData::settingsLines_svgSize);
     settingsButton.setClickingTogglesState (true);
-    settingsButton.setTooltip ("Settings: Show settings panel");
+    settingsButton.setTooltip (ParamTooltips::getSettingsTooltip());
     settingsButton.onClick = [this] { if (onSettingsClicked != nullptr) onSettingsClicked(); };
 
     setupIconButton (undoButton, BinaryData::undoIcon_svg, BinaryData::undoIcon_svgSize);
     setupIconButton (redoButton, BinaryData::redoIcon_svg, BinaryData::redoIcon_svgSize);
     undoButton.onClick = [this] { undoManager.undo(); };
     redoButton.onClick = [this] { undoManager.redo(); };
+    undoButton.setTooltip (ParamTooltips::getUndoTooltip());
+    redoButton.setTooltip (ParamTooltips::getRedoTooltip());
 
     undoManager.addChangeListener (this);
     changeListenerCallback (&undoManager);
@@ -29,7 +31,7 @@ HeaderPanel::HeaderPanel (GuitarToolsAudioProcessor& processor, PresetManager& p
     addAndMakeVisible (presetBox);
 
     setupIconButton (savePresetButton, BinaryData::saveIcon2_svg, BinaryData::saveIcon2_svgSize);
-    savePresetButton.setTooltip ("Save: Save the current settings as a preset");
+    savePresetButton.setTooltip (ParamTooltips::getSavePresetTooltip());
     savePresetButton.onClick = [this] { if (onSaveClicked != nullptr) onSaveClicked(); };
 }
 
@@ -66,7 +68,7 @@ void HeaderPanel::resized()
     const auto logoW = logoH * (float) guitarToolsLogo.getWidth() / (float) guitarToolsLogo.getHeight();
     logoBounds = boundsF.withSize (logoW, logoH).withCentre ({boundsFWidth * logoCentreXPOW, boundsF.getCentreY()});
 
-    const auto presetBoxHeight = boundsFHeight * 0.6;
+    const auto presetBoxHeight = boundsFHeight * 0.6f;
     const auto presetBoxWidth = boundsFWidth * 0.45f;
     presetBoxBounds = boundsF.withSizeKeepingCentre (presetBoxWidth, presetBoxHeight);
     presetBox.setBounds (presetBoxBounds.toNearestInt());

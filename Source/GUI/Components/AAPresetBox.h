@@ -11,6 +11,7 @@
 #include "BinaryData.h"
 #include "../../GTLook.h"
 #include "../../Utils/PresetManager.h"
+#include "../../Utils/AAParamUtils.h"
 #include "../LAF/PresetBoxLAF.h"
 
 class AAPresetBox : public juce::Component
@@ -22,12 +23,15 @@ public:
         nameButton.setColour(juce::TextButton::ColourIds::buttonColourId, GTColors::transparent);
         nameButton.setColour(juce::TextButton::ColourIds::buttonOnColourId, GTColors::transparent);
         nameButton.onClick = [this] { if (onNameClicked != nullptr) onNameClicked(); };
+        nameButton.setTooltip (ParamTooltips::getPresetBoxTooltip());
         addAndMakeVisible (nameButton);
 
         AAUITools::setIconButtonImages (leftArrowButton, BinaryData::leftChevronArrow_svg, BinaryData::leftChevronArrow_svgSize, GTColors::iconSVGColor, GTColors::iconNormalColor, GTColors::iconOverColor, GTColors::activeNeonBlue);
         AAUITools::setIconButtonImages (rightArrowButton, BinaryData::rightChevronArrow_svg, BinaryData::rightChevronArrow_svgSize, GTColors::iconSVGColor, GTColors::iconNormalColor, GTColors::iconOverColor, GTColors::activeNeonBlue);
         leftArrowButton.onClick = [this] { presetManager.loadAdjacentPreset (-1); };
         rightArrowButton.onClick = [this] { presetManager.loadAdjacentPreset (1); };
+        leftArrowButton.setTooltip (ParamTooltips::getPreviousPresetTooltip());
+        rightArrowButton.setTooltip (ParamTooltips::getNextPresetTooltip());
         addAndMakeVisible (leftArrowButton);
         addAndMakeVisible (rightArrowButton);
     }

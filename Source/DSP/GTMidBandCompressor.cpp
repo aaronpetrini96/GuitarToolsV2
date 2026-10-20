@@ -18,6 +18,7 @@ void GTMidBandCompressor::prepare(const juce::dsp::ProcessSpec& spec)
 
     samplesPerMs = static_cast<float>(spec.sampleRate) / 1000.f;
     attackCoefficient = std::exp(-1.f / (attackTimeConstantMs * samplesPerMs));
+    releaseCoefficient = std::exp(-1.f / (releaseTimeConstantMs * samplesPerMs));
     updateSettings();
     smoothedGainReductionDb = 0.f;
 
@@ -149,5 +150,4 @@ void GTMidBandCompressor::updateSettings()
     AP2.setCutoffFrequency(highCrossoverFreq);
     LP2.setCutoffFrequency(highCrossoverFreq);
     HP2.setCutoffFrequency(highCrossoverFreq);
-    releaseCoefficient = std::exp(-1.f / ((lowTuning ? lowTuningReleaseTimeConstantMs : releaseTimeConstantMs) * samplesPerMs));
 }

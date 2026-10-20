@@ -22,7 +22,6 @@ private:
     static constexpr float releaseTimeConstantMs {50.f};
     static constexpr float lowTuningCrossoverLowFreq {45.f};
     static constexpr float lowTuningCrossoverHighFreq {200.f};
-    static constexpr float lowTuningReleaseTimeConstantMs {75.f};
     static constexpr float referenceLevelDb {-18.f};
     static constexpr float softKneeWidthDb {6.f};
     static constexpr float minRatio {2.f};

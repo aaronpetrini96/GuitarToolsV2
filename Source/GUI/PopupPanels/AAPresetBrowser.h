@@ -154,7 +154,7 @@ private:
     PresetManager::PresetType selectedPresetType {PresetManager::PresetType::factory};
     juce::Array<juce::File> presetFiles;
 
-    juce::TextButton defaultTabButton {"Factory"}, userTabButton {"User Presets"};
+    juce::TextButton defaultTabButton {"Factory"}, userTabButton {"User"};
     juce::Component rowsHolder;
     juce::OwnedArray<juce::TextButton> rows;
     juce::Viewport viewport;

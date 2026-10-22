@@ -76,7 +76,7 @@ public:
         const auto knobSize = boundsF.getWidth();
         const auto labelBounds = boundsF.withTop (knobSize * 0.92f);
 
-        valueLabel.setFont (GTFonts::ibmPlexSansMedium (labelBounds.getHeight() * 0.92f).withExtraKerningFactor (0.03f));
+        valueLabel.setFont (GTFonts::ibmPlexSansMedium (labelBounds.getHeight() * 0.85f));
         valueLabel.setBounds (labelBounds.toNearestInt());
     }
 

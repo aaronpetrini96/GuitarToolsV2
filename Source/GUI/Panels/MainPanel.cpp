@@ -189,7 +189,7 @@ void MainPanel::resizeLevelsSectionCentred(const juce::Rectangle<float>& boundsF
     const auto knobTitleLabelHeight = knobSizeReference * 0.1f;
     const auto knobTitleLabelBounds = levelsArea.withSize (gainKnobGap, knobTitleLabelHeight).withCentre ({levelsArea.getCentreX(), meterBounds.getY() + knobTitleLabelHeight * 0.95f});
     for (auto* l : {&inputLevelTitle, &outputLevelTitle})
-        l->setFont (GTFonts::ibmPlexSansMedium (knobTitleLabelHeight * 0.78f).withExtraKerningFactor (0.03f));
+        l->setFont (GTFonts::ibmPlexSansMedium (knobTitleLabelHeight * 0.85f).withExtraKerningFactor (0.03f));
     inputLevelTitle.setBounds (knobTitleLabelBounds.translated (-gainKnobGap, 0.f).toNearestInt());
     outputLevelTitle.setBounds (knobTitleLabelBounds.translated (gainKnobGap, 0.f).toNearestInt());
 

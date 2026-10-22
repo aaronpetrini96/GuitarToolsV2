@@ -19,7 +19,7 @@ public:
         jassert (knobImage.isValid());
         setSliderStyle (RotaryVerticalDrag);
         setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
-        setMouseDragSensitivity (400);
+        setMouseDragSensitivity (300);
         setRotaryParameters (startAngle, endAngle, true);
         setComponentID (parameter.getParameterID());
 

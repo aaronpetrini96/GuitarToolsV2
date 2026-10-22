@@ -17,6 +17,4 @@
   <PARAM id="Comp Amount" value="50"/>
   <PARAM id="Comp Active" value="0"/>
   <PARAM id="Comp Mode Active" value="0"/>
-  <PARAM id="Input Gain" value="0"/>
-  <PARAM id="Output Gain" value="0"/>
 </Parameters>

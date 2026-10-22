@@ -2,7 +2,7 @@
 #include "BinaryData.h"
 #include "AAParamUtils.h"
 
-static const juce::StringArray nonPresetParameterIDs {ParamIDs::getPluginBypassActiveName(), ParamIDs::getLoudnessMatchActiveName(), ParamIDs::getLowTuningActiveName()};
+static const juce::StringArray nonPresetParameterIDs {ParamIDs::getPluginBypassActiveName(), ParamIDs::getLoudnessMatchActiveName(), ParamIDs::getLowTuningActiveName(), ParamIDs::getInputGainName(), ParamIDs::getOutputGainName()};
 
 static const juce::StringArray rootPresetFileNames {"Default.xml"};
 

@@ -22,8 +22,8 @@ public:
         const auto boundsF = getLocalBounds().toFloat();
         const auto boundsFHeight = boundsF.getHeight();
         g.fillAll(GTColors::almostBlack);
-        g.setColour (GTColors::almostWhiteText);
-        g.setFont (GTFonts::ibmPlexSansMedium (boundsFHeight * GTFontHeightPOH).withExtraKerningFactor (0.03f));
+        g.setColour (GTColors::sectionTitleText);
+        g.setFont (GTFonts::ibmPlexSansMedium (boundsFHeight * 0.65f).withExtraKerningFactor (0.03f));
         g.drawText (tooltipText, boundsF, juce::Justification::centred);
     }
 

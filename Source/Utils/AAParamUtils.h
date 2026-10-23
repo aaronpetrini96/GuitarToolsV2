@@ -44,24 +44,24 @@ namespace DefaultValues
     inline constexpr float gainRangeEnd {12.f};
 
 //    ========== TONE RANGE ===========
-    inline constexpr float lowCutFreq {20.f};
+    inline constexpr float lowCutFreq {60.f};
     inline constexpr float lowCutRangeStart {20.f};
     inline constexpr float lowCutRangeEnd {1000.f};
-    inline constexpr float highCutFreq {20000.f};
+    inline constexpr float highCutFreq {10500.f};
     inline constexpr float highCutRangeStart {1000.f};
     inline constexpr float highCutRangeEnd {20000.f};
     inline constexpr int lowCutSlope {0};
     inline constexpr int highCutSlope {0};
 
 //    ========== CLEAN-UP ===========
-    inline constexpr float resoFreq {3850.f};
-    inline constexpr float resoRangeStart {2000.f};
-    inline constexpr float resoRangeEnd {9000.f};
-    inline constexpr bool resoActive {false};
+    inline constexpr float resoFreq {4000.f};
+    inline constexpr float resoRangeStart {1000.f};
+    inline constexpr float resoRangeEnd {12000.f};
+    inline constexpr bool resoActive {true};
     inline constexpr bool resoExtremeActive {false};
-    inline constexpr float resoQ {7.f};
+    inline constexpr float resoQ {8.f};
     inline constexpr float resoGainDb {-6.f};
-    inline constexpr float resoExtremeQ {10.f};
+    inline constexpr float resoExtremeQ {7.f};
     inline constexpr float resoExtremeGainDb {-12.f};
 
     inline constexpr float mudFreq {250.f};
@@ -80,8 +80,8 @@ namespace DefaultValues
     inline constexpr bool lowTuningActive {false};
 
 //    ========== COLOR ===========
-    inline constexpr int presenceMode {1};
-    inline constexpr float presenceGain {0.f};
+    inline constexpr int presenceMode {0};
+    inline constexpr float presenceGain {1.5f};
     inline constexpr std::array<float, 4> presenceFreqByMode {4500.f, 6250.f, 8000.f, 12000.f};
     inline constexpr std::array<float, 4> presenceResonanceByMode {0.5f, 0.4f, 0.25f, 0.1f};
 
@@ -95,7 +95,6 @@ namespace DefaultValues
     inline constexpr float outputGainValue {0.f};
 
     inline constexpr bool loudnessMatchActive {false};
-
 }
 
 namespace ParamTooltips
@@ -141,7 +140,7 @@ namespace ParamTooltips
         {ParamIDs::getInputGainName(),              "Set the level going into the plugin"},
         {ParamIDs::getOutputGainName(),             "Set the level coming out of the plugin"},
         {ParamIDs::getLoudnessMatchActiveName(),    "Keep the output level equal to the input"},
-        {ParamIDs::getPluginBypassActiveName(),     "Turn GuitarTools ON/OFF"},
+        {ParamIDs::getPluginBypassActiveName(),     "Turn plugin ON/OFF"},
     };
 }
 

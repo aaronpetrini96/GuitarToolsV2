@@ -99,8 +99,23 @@ public:
 
     void paint (juce::Graphics& g) override
     {
-        presetPopupLAF.drawPopupBackground (g, getLocalBounds().toFloat(), numRows);
-        presetPopupLAF.drawPopupTitle (g, titleBounds, title);
+        const auto boundsF = getLocalBounds().toFloat();
+        const auto cornerSize = boundsF.getHeight() * GTCornerPOH;
+        const auto outlineThickness = boundsF.getHeight() / numRows * GTOutlineThicknessPOH;
+        AAUITools::drawOutlinedRoundedRectangle (g, boundsF, cornerSize, outlineThickness, GTPopupBackgroundColor, GTPopupOutlineColor);
+
+        juce::Path titleShape;
+        titleShape.addRoundedRectangle (titleBounds.getX(), titleBounds.getY(), titleBounds.getWidth(), titleBounds.getHeight(), cornerSize, cornerSize,
+                                        true, true, false, false);
+        g.setColour (GTColors::presetBoxBackground);
+        g.fillPath (titleShape);
+
+        g.setColour (GTPopupOutlineColor);
+        g.fillRect (titleBounds.withTop (titleBounds.getBottom() - outlineThickness * 0.5f));
+
+        g.setColour (GTPopupTextColor.withBrightness (2.f));
+        g.setFont (GTFonts::montserratSemiBold (titleBounds.getHeight() * GTFontHeightPOH));
+        g.drawText (title, titleBounds, juce::Justification::centred, true);
     }
 
     void resized() override

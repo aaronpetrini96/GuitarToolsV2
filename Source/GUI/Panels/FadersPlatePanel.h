@@ -107,10 +107,10 @@ public:
     }
 
     AAVerticalSSLFader resoFreqFader, mudAmountFader, compAmountFader;
-    float faderSpacing {0.f};
+
 private:
     const juce::RectanglePlacement imgPlacement {juce::RectanglePlacement::fillDestination};
-
+    float faderSpacing {0.f};
     float screwSize{0.f};
     juce::Rectangle<float> faderBounds;
     juce::Image screw {juce::ImageCache::getFromMemory(BinaryData::screwDirty_png, BinaryData::screwDirty_pngSize)};

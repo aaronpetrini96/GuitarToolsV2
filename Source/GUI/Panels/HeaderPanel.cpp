@@ -68,10 +68,10 @@ void HeaderPanel::resized()
 
     const auto logoH = boundsFHeight * 0.7f;
     const auto logoW = logoH * (float) guitarToolsLogo.getWidth() / (float) guitarToolsLogo.getHeight();
-    logoBounds = boundsF.withSize (logoW, logoH).withCentre ({boundsFWidth * logoCentreXPOW, boundsF.getCentreY()});
+    logoBounds = boundsF.withSize (logoW, logoH).withCentre ({boundsFWidth * GTSideSectionPOW * 0.5f, boundsF.getCentreY()});
 
     const auto presetBoxWidth = boundsFWidth * 0.335f;
-    presetBoxBounds = boundsF.withSizeKeepingCentre (presetBoxWidth, iconSize);
+    const auto presetBoxBounds = boundsF.withSizeKeepingCentre (presetBoxWidth, iconSize);
     presetBox.setBounds (presetBoxBounds.toNearestInt());
 
     const auto iconButtonBounds = boundsF.withSizeKeepingCentre (iconSize, iconSize);

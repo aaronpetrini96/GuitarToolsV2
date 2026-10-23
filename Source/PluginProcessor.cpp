@@ -345,10 +345,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout GuitarToolsAudioProcessor::c
     name = ParamIDs::getMudExtremeActiveName();
     layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::mudExtremeActive));
 
-//   ========== BYPASS ===========
-    name = ParamIDs::getPluginBypassActiveName();
-    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::pluginBypassActive));
-
 //  ========== COMP ===========
     name = ParamIDs::getCompAmountName();
     layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint),name, amountRange, DefaultValues::compAmount, juce::AudioParameterFloatAttributes().withLabel ("%").withStringFromValueFunction (ParamHelpers::getStringFromValue (0))));
@@ -366,6 +362,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout GuitarToolsAudioProcessor::c
     layout.add(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID(name, versionHint), name, gainRange, DefaultValues::outputGainValue, juce::AudioParameterFloatAttributes().withLabel ("dB").withStringFromValueFunction (ParamHelpers::getStringFromValue (1))));
     name = ParamIDs::getLoudnessMatchActiveName();
     layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::loudnessMatchActive));
+
+//   ========== BYPASS ===========
+    name = ParamIDs::getPluginBypassActiveName();
+    layout.add(std::make_unique<juce::AudioParameterBool>(juce::ParameterID(name, versionHint), name, DefaultValues::pluginBypassActive));
 
 //    ========== RETURN LAYOUT ===========
     return layout;

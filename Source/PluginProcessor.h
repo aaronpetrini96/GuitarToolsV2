@@ -141,7 +141,7 @@ private:
         auto ctx = juce::dsp::ProcessContextReplacing<float>(block);
         gain.process(ctx);
     }
-    
+
     /// PARAM FUNCTIONS
     void linkParameters();
     template<typename ParamType, typename Params, typename Funcs>

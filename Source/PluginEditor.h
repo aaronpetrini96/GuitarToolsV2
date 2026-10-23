@@ -47,7 +47,7 @@ private:
     void changeListenerCallback (juce::ChangeBroadcaster*) override;
 
     const float headerHeightRatio = 0.0575f;
-    float tooltipsHeightRatio = 0.625f;
+    const float tooltipsHeightRatio = 0.625f;
     AAResizeUI uiResize {audioProcessor.uiScale, 780, 720};
     juce::Rectangle<float> imageBounds{};
 

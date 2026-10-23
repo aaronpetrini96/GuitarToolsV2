@@ -44,16 +44,15 @@ public:
     {
         const auto boundsF = getLocalBounds().toFloat();
         //========   KNOB IMAGE  ========//
-        const auto imageBounds = boundsF.reduced (boundsF.getWidth() * knobReducePOW);
         g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
         g.setOpacity(0.9f);
-        g.drawImage (knobImage, imageBounds, juce::RectanglePlacement::centred);
+        g.drawImage (knobImage, boundsF, juce::RectanglePlacement::centred);
         const auto activeColor = GTColors::activeNeonBlue.withAlpha (0.9f);
         const auto offColor = GTColors::almostBlack.withAlpha (0.9f);
 
         //========   POINTS DRAWING  ========//
-        const auto radiusReference = imageBounds.getWidth() * 0.255f;
-        const auto centre = imageBounds.getCentre();
+        const auto radiusReference = boundsF.getWidth() * 0.255f;
+        const auto centre = boundsF.getCentre();
         const juce::PathStrokeType stroke (radiusReference * 0.075f, juce::PathStrokeType::mitered, juce::PathStrokeType::butt);
         const auto angle = startAngle + static_cast<float> (valueToProportionOfLength (getValue())) * (endAngle - startAngle);
         const auto midAngle = (startAngle + endAngle) * 0.5f;
@@ -126,7 +125,6 @@ private:
     const float startAngle { 1.25f * juce::MathConstants<float>::pi };
     const float endAngle { 2.75f * juce::MathConstants<float>::pi };
     const int numberOfDots { 15 };
-    const float knobReducePOW { 0.f };
 
     std::unique_ptr<juce::SliderParameterAttachment> attachment;
 

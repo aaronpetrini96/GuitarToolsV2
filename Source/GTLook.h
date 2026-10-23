@@ -11,6 +11,7 @@
 constexpr float GTOutlineThicknessPOH {0.06f};
 constexpr float GTCornerPOH {0.0f};
 constexpr float GTFontHeightPOH {0.625f};
+constexpr float GTSideSectionPOW {0.32f};
 constexpr float GTPopupTitleRowRatio {1.1f};
 constexpr int GTPresetNameMaxLength {24};
 

@@ -146,13 +146,12 @@ void GuitarToolsAudioProcessorEditor::resized()
     const auto contentHeight = boundsFWidth * (float) uiResize.defaultHeight / (float) uiResize.defaultWidth;
     const float headerH = contentHeight * headerHeightRatio;
     const auto tooltipsPanelH = tooltipsPanel.isVisible() ? headerH * tooltipsHeightRatio : 0.0f;
-    headerPanel.logoCentreXPOW = mainPanel.sideSectionPOW * 0.5f;
+    headerPanel.logoCentreXPOW = GTSideSectionPOW * 0.5f;
     headerPanel.setBounds (boundsF.withHeight (headerH).toNearestInt());
     tooltipsPanel.setBounds (boundsF.withHeight (tooltipsPanelH).withY (contentHeight).toNearestInt());
     imageBounds = boundsF.withHeight (contentHeight - headerH).withY (headerH);
 
     const auto mainPanelBounds = imageBounds.withSizeKeepingCentre(imageBounds.getWidth(), imageBounds.getHeight() * 0.977f);
-    mainPanel.sectionTitleH = mainPanelBounds.getHeight() * 0.07f;
     mainPanel.setBounds (mainPanelBounds.toNearestInt());
 
     const auto resizeButtonSize = contentHeight * 0.0375f;

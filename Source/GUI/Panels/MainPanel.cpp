@@ -104,7 +104,7 @@ void MainPanel::resized()
     const auto boundsF = getLocalBounds().toFloat();
     const auto boundsFWidth = boundsF.getWidth();
     const auto boundsFHeight = boundsF.getHeight();
-    const auto sideSectionWidth = boundsFWidth * sideSectionPOW;
+    const auto sideSectionWidth = boundsFWidth * GTSideSectionPOW;
     knobSizeReference = boundsFHeight * 0.33f;
 
     cutFiltersArea = boundsF.withSize (sideSectionWidth, boundsFHeight);
@@ -154,7 +154,7 @@ void MainPanel::resizeMagicButtons()
 {
     const auto magicButtonSize = knobSizeReference * 0.31f;
     const auto magicButtonsGap = knobSizeReference * 0.34125f;
-    const auto magicButtonBounds = buttonsArea.withSizeKeepingCentre (magicButtonSize, magicButtonSize).withY(sectionTitleH * 1.25f);
+    const auto magicButtonBounds = buttonsArea.withSizeKeepingCentre (magicButtonSize, magicButtonSize).withY (buttonsArea.getHeight() * 0.0875f);
     mudActiveButton.setBounds (magicButtonBounds.toNearestInt());
     resoActiveButton.setBounds (magicButtonBounds.translated(-magicButtonsGap, 0.f).toNearestInt());
     compActiveButton.setBounds (magicButtonBounds.translated(magicButtonsGap, 0.f).toNearestInt());
@@ -164,9 +164,8 @@ void MainPanel::resizeMagicButtons()
     fadersPlatePanel.setFaderSpacing(magicButtonsGap);
     fadersPlatePanel.setBounds (plateBounds.toNearestInt());
 
-    const auto modeSwitchWidth = magicButtonSize * 0.8f;
-    const auto modeSwitchHeight = modeSwitchWidth * 683.0f / 1206.0f / 0.7f;
-    const auto switchBounds = plateBounds.withSizeKeepingCentre (modeSwitchWidth, modeSwitchHeight).withY (buttonsArea.getHeight() * 0.6925f);
+    const auto modeSwitchSize = buttonsArea.getWidth() * 0.17f;
+    const auto switchBounds = plateBounds.withSizeKeepingCentre (modeSwitchSize, modeSwitchSize).withY (buttonsArea.getHeight() * 0.6925f);
     mudModeSwitch.setBounds (switchBounds.toNearestInt());
     resoModeSwitch.setBounds (switchBounds.translated (-magicButtonsGap, 0.0f).toNearestInt());
     compModeSwitch.setBounds (switchBounds.translated (magicButtonsGap, 0.0f).toNearestInt());

@@ -39,13 +39,10 @@ private:
     float thresholdDb {referenceLevelDb};
     float attackCoefficient {0.f};
     float releaseCoefficient {0.f};
-    float samplesPerMs {0.f};
     bool lowTuning {false};
     float smoothedGainReductionDb {0.f};
 
-    float amountProportion {0.f};
     juce::LinearSmoothedValue<float> activeAmount {0.f};
-    bool extremeMode {false};
     float compressionSlope {0.5f};
     float extremeCompressionSlope {0.875f};
     juce::LinearSmoothedValue<float> extremeAmount {0.f};

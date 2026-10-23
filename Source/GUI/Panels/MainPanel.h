@@ -26,8 +26,6 @@ public:
     void resized() override;
 
     bool shouldDim {false};
-    float sectionTitleH {0.f};
-    float sideSectionPOW {0.32f};
 
 private:
     void resizeLevelsSectionCentred(const juce::Rectangle<float>&);

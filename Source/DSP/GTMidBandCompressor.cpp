@@ -16,7 +16,7 @@ void GTMidBandCompressor::prepare(const juce::dsp::ProcessSpec& spec)
     for (auto& bandBuffer : bandBuffers)
         bandBuffer.setSize(static_cast<int>(spec.numChannels), static_cast<int>(spec.maximumBlockSize));
 
-    samplesPerMs = static_cast<float>(spec.sampleRate) / 1000.f;
+    const auto samplesPerMs = static_cast<float>(spec.sampleRate) / 1000.f;
     attackCoefficient = std::exp(-1.f / (attackTimeConstantMs * samplesPerMs));
     releaseCoefficient = std::exp(-1.f / (releaseTimeConstantMs * samplesPerMs));
     updateSettings();
@@ -28,7 +28,7 @@ void GTMidBandCompressor::prepare(const juce::dsp::ProcessSpec& spec)
 
 void GTMidBandCompressor::setAmount(float newAmountProportion)
 {
-    amountProportion = juce::jlimit(0.f, 1.f, newAmountProportion);
+    const auto amountProportion = juce::jlimit(0.f, 1.f, newAmountProportion);
 
     const auto thresholdOffsetDb = amountProportion * maxThresholdOffsetDb;
     const auto ratioSweepProportion = juce::jmax(0.f, (amountProportion - ratioSweepStart) / (1.f - ratioSweepStart));
@@ -52,11 +52,7 @@ void GTMidBandCompressor::setActive(bool shouldBeActive)
 
 void GTMidBandCompressor::setExtremeMode(bool shouldBeExtreme)
 {
-    if (extremeMode == shouldBeExtreme)
-        return;
-
-    extremeMode = shouldBeExtreme;
-    extremeAmount.setTargetValue(extremeMode ? 1.f : 0.f);
+    extremeAmount.setTargetValue(shouldBeExtreme ? 1.f : 0.f);
 }
 
 void GTMidBandCompressor::process(juce::AudioBuffer<float>& buffer)

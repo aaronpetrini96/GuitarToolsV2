@@ -14,27 +14,30 @@ public:
 
     void paint (juce::Graphics& g) override
     {
+        for (const auto isGlowPass : { true, false })
+        {
+            for (size_t index {0}; index < numberOfLights; ++index)
+            {
+                const auto centreY = lightsCentreY + lightRowCentreDistance * (static_cast<float> (numberOfLights - 1) * 0.5f - static_cast<float> (index));
+                paintLight (g, {leftLightsCentreX, centreY}, index, leftLevelDb, leftClipped, isGlowPass);
+                paintLight (g, {rightLightsCentreX, centreY}, index, rightLevelDb, rightClipped, isGlowPass);
+            }
+        }
+    }
+
+    void resized() override
+    {
         const auto boundsF = getLocalBounds().toFloat();
         const auto lightGap = boundsF.getHeight() * 0.012f;
         const auto lightRowGap = lightGap * 3.f;
         lightDiameter = boundsF.getHeight() * 0.1f;
         const auto lightCentreDistance = lightDiameter + lightGap;
+        lightRowCentreDistance = lightDiameter + lightRowGap;
 
-        const auto lightRowCentreDistance = lightDiameter + lightRowGap;
         const auto lightsWidth = lightCentreDistance + lightDiameter;
-        const auto lightsX = boundsF.getCentreX() - lightsWidth * 0.5f;
-        const auto leftCentreX = lightsX + lightDiameter * 0.5f;
-        const auto rightCentreX = leftCentreX + lightCentreDistance;
-
-        for (const auto isGlowPass : { true, false })
-        {
-            for (size_t index {0}; index < numberOfLights; ++index)
-            {
-                const auto centreY = boundsF.getCentreY() + lightRowCentreDistance * (static_cast<float> (numberOfLights - 1) * 0.5f - static_cast<float> (index));
-                paintLight (g, {leftCentreX, centreY}, index, leftLevelDb, leftClipped, isGlowPass);
-                paintLight (g, {rightCentreX, centreY}, index, rightLevelDb, rightClipped, isGlowPass);
-            }
-        }
+        leftLightsCentreX = boundsF.getCentreX() - lightsWidth * 0.5f + lightDiameter * 0.5f;
+        rightLightsCentreX = leftLightsCentreX + lightCentreDistance;
+        lightsCentreY = boundsF.getCentreY();
     }
 
     void mouseDown (const juce::MouseEvent&) override
@@ -125,6 +128,7 @@ private:
     const int numberOfLights {6};
     const std::array<float, 6> lightThresholdsDb {-48.f, -24.f, -18.f, -12.f, -6.f, 0.f};
     float lightDiameter {0.f};
+    float leftLightsCentreX {0.f}, rightLightsCentreX {0.f}, lightsCentreY {0.f}, lightRowCentreDistance {0.f};
 
     const juce::Colour meterGreen {60, 200, 80};
     const juce::Colour meterYellow {235, 200, 40};

@@ -76,11 +76,6 @@ public:
     std::atomic<float> outputLevelLeft {0.f}, outputLevelRight {0.f};
 
 private:
-
-    //========== EQ PART ==========//
-    GTFilters filters;
-    ChainSettings getChainSettings() const;
-
 // PARAMETER POINTERS
     juce::AudioParameterFloat* lowCutFreqParam {nullptr};
     juce::AudioParameterChoice* lowCutSlopeParam {nullptr};
@@ -92,10 +87,18 @@ private:
     juce::AudioParameterFloat* mudAmountParam {nullptr};
     juce::AudioParameterBool* mudActiveParam {nullptr};
     juce::AudioParameterBool* mudExtremeActiveParam {nullptr};
+    juce::AudioParameterFloat* compAmountParam {nullptr};
+    juce::AudioParameterBool* compActiveParam {nullptr};
+    juce::AudioParameterBool* compExtremeActiveParam {nullptr};
+    juce::AudioParameterBool* lowTuningActiveParam {nullptr};
     juce::AudioParameterChoice* presenceModeParam {nullptr};
     juce::AudioParameterFloat* presenceGainParam {nullptr};
     juce::AudioParameterChoice* depthModeParam {nullptr};
     juce::AudioParameterFloat* depthGainParam {nullptr};
+    juce::AudioParameterFloat* inputGainParam {nullptr};
+    juce::AudioParameterFloat* outputGainParam {nullptr};
+    juce::AudioParameterBool* loudnessMatchActiveParam {nullptr};
+    juce::AudioParameterBool* pluginBypassActiveParam {nullptr};
 
     //SMOOTHERS: follow a UI parameter directly
     juce::SmoothedValue<float>
@@ -119,24 +122,15 @@ private:
     depthResonanceSmoother;
 
     std::vector<std::pair<juce::AudioParameterFloat*, juce::SmoothedValue<float>*>> smootherBindings;
-    //========== COMPRESSOR PART ==========//
-    GTMidBandCompressor midBandCompressor;
-    juce::AudioParameterFloat* compAmountParam {nullptr};
-    juce::AudioParameterBool* compActiveParam {nullptr};
-    juce::AudioParameterBool* compExtremeActiveParam {nullptr};
-    juce::AudioParameterBool* lowTuningActiveParam {nullptr};
 
-    //========== LEVELS PART ==========//
+    GTFilters filters;
+    ChainSettings getChainSettings() const;
+    GTMidBandCompressor midBandCompressor;
 
     juce::dsp::Gain<float> inputGain, outputGain;
-    juce::AudioParameterFloat* inputGainParam {nullptr};
-    juce::AudioParameterFloat* outputGainParam {nullptr};
-    juce::AudioParameterBool* loudnessMatchActiveParam {nullptr};
-    juce::AudioParameterBool* pluginBypassActiveParam {nullptr};
     juce::LinearSmoothedValue<float> smoothedBypassValue {1.f};
     AALevelMatch levelMatch;
     juce::AudioBuffer<float> dryBuffer {};
-
     void updateGainState();
 
 
@@ -147,8 +141,7 @@ private:
         auto ctx = juce::dsp::ProcessContextReplacing<float>(block);
         gain.process(ctx);
     }
-
-
+    
     /// PARAM FUNCTIONS
     void linkParameters();
     template<typename ParamType, typename Params, typename Funcs>

@@ -69,34 +69,6 @@ public:
         setLookAndFeel (nullptr);
     }
 
-    void prepare (const Action newAction, const juce::String& presetName)
-    {
-        action = newAction;
-        preparedPresetName = presetName;
-        isConfirmingOverwrite = false;
-        confirmButton.setButtonText (getConfirmText());
-
-        const auto isRemove = action == Action::remove;
-        title = isRemove ? "DELETE PRESET" : action == Action::save ? "SAVE PRESET" : "RENAME PRESET";
-        repaint();
-        nameEditor.setVisible (! isRemove);
-        messageLabel.setVisible (isRemove);
-        nameLabel.setVisible (! isRemove);
-
-        if (isRemove)
-        {
-            messageLabel.setText ("Delete \"" + presetName + "\"?", juce::dontSendNotification);
-            confirmButton.setEnabled (true);
-            grabKeyboardFocus();
-            return;
-        }
-
-        nameEditor.setText (presetName, juce::dontSendNotification);
-        confirmButton.setEnabled (juce::File::createLegalFileName (presetName.trim()).isNotEmpty() && ! (isNameReserved != nullptr && isNameReserved (presetName)));
-        nameEditor.grabKeyboardFocus();
-        nameEditor.selectAll();
-    }
-
     void paint (juce::Graphics& g) override
     {
         const auto boundsF = getLocalBounds().toFloat();
@@ -160,6 +132,34 @@ public:
         }
 
         return false;
+    }
+
+    void prepare (const Action newAction, const juce::String& presetName)
+    {
+        action = newAction;
+        preparedPresetName = presetName;
+        isConfirmingOverwrite = false;
+        confirmButton.setButtonText (getConfirmText());
+
+        const auto isRemove = action == Action::remove;
+        title = isRemove ? "DELETE PRESET" : action == Action::save ? "SAVE PRESET" : "RENAME PRESET";
+        repaint();
+        nameEditor.setVisible (! isRemove);
+        messageLabel.setVisible (isRemove);
+        nameLabel.setVisible (! isRemove);
+
+        if (isRemove)
+        {
+            messageLabel.setText ("Delete \"" + presetName + "\"?", juce::dontSendNotification);
+            confirmButton.setEnabled (true);
+            grabKeyboardFocus();
+            return;
+        }
+
+        nameEditor.setText (presetName, juce::dontSendNotification);
+        confirmButton.setEnabled (juce::File::createLegalFileName (presetName.trim()).isNotEmpty() && ! (isNameReserved != nullptr && isNameReserved (presetName)));
+        nameEditor.grabKeyboardFocus();
+        nameEditor.selectAll();
     }
 
     std::function<void (Action action, const juce::String& presetName)> onConfirm;

@@ -30,16 +30,6 @@ public:
         updateValueLabelText();
     }
 
-    void resized() override
-    {
-        const auto boundsF = getLocalBounds().toFloat();
-        const auto fontBounds = boundsF.withHeight (boundsF.getHeight() * 0.14f);
-        nameText.setFont (GTFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.8f).withExtraKerningFactor(0.03f));
-        nameText.setBounds (fontBounds.toNearestInt());
-        valueText.setFont (GTFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.7f).withExtraKerningFactor (0.03f));
-        valueText.setBounds (fontBounds.withBottomY (boundsF.getHeight()).toNearestInt());
-    }
-
     void paint (juce::Graphics& g) override
     {
         const auto boundsF = getLocalBounds().toFloat();
@@ -83,6 +73,16 @@ public:
         tick.startNewSubPath (centre + tickDirection * (radiusReference * 0.4f));
         tick.lineTo (centre + tickDirection * (radiusReference * 0.65f));
         g.strokePath (tick, stroke);
+    }
+
+    void resized() override
+    {
+        const auto boundsF = getLocalBounds().toFloat();
+        const auto fontBounds = boundsF.withHeight (boundsF.getHeight() * 0.14f);
+        nameText.setFont (GTFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.8f).withExtraKerningFactor(0.03f));
+        nameText.setBounds (fontBounds.toNearestInt());
+        valueText.setFont (GTFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.7f).withExtraKerningFactor (0.03f));
+        valueText.setBounds (fontBounds.withBottomY (boundsF.getHeight()).toNearestInt());
     }
 
 private:

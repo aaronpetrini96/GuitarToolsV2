@@ -29,25 +29,6 @@ public:
         updateValueLabelText();
     }
 
-    void valueChanged () override
-    {
-        updateValueLabelText();
-    }
-
-    void enablementChanged() override
-    {
-        valueLabel.setAlpha(isEnabled() ? 1.0f : 0.4f);
-        updateValueLabelText();
-        juce::Slider::enablementChanged();
-    }
-
-    void mouseDown(const juce::MouseEvent& event) override
-    {
-        if (!isEnabled() && onDisabledClicked != nullptr)
-            onDisabledClicked();
-        juce::Slider::mouseDown(event);
-    }
-
     void paint (juce::Graphics& g) override
     {
         const auto knobArea = getLocalBounds().toFloat().withHeight (getLocalBounds().toFloat().getWidth());
@@ -78,6 +59,25 @@ public:
 
         valueLabel.setFont (GTFonts::ibmPlexSansMedium (labelBounds.getHeight() * 0.85f));
         valueLabel.setBounds (labelBounds.toNearestInt());
+    }
+
+    void valueChanged () override
+    {
+        updateValueLabelText();
+    }
+
+    void enablementChanged() override
+    {
+        valueLabel.setAlpha(isEnabled() ? 1.0f : 0.4f);
+        updateValueLabelText();
+        juce::Slider::enablementChanged();
+    }
+
+    void mouseDown(const juce::MouseEvent& event) override
+    {
+        if (!isEnabled() && onDisabledClicked != nullptr)
+            onDisabledClicked();
+        juce::Slider::mouseDown(event);
     }
 
     int numberOfTicks {11};

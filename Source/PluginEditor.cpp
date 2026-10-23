@@ -127,11 +127,6 @@ GuitarToolsAudioProcessorEditor::~GuitarToolsAudioProcessorEditor()
     presetManager.removeChangeListener (this);
 }
 
-void GuitarToolsAudioProcessorEditor::changeListenerCallback (juce::ChangeBroadcaster*)
-{
-    headerPanel.presetBox.setPresetName (presetManager.getCurrentPresetName());
-}
-
 //==============================================================================
 void GuitarToolsAudioProcessorEditor::paint (juce::Graphics& g)
 {
@@ -226,12 +221,6 @@ void GuitarToolsAudioProcessorEditor::mouseExit (const juce::MouseEvent&)
     tooltipsPanel.setTooltipText ({});
 }
 
-void GuitarToolsAudioProcessorEditor::updateMainPanelDarkening()
-{
-    mainPanel.shouldDim = headerPanel.isBypassed() || infoPanel.isVisible() || modalBlocker.isVisible() || settingsOptionsPopup.isVisible() || resizeOptionsPopup.isVisible() || presetBrowser.isVisible();
-    mainPanel.repaint();
-}
-
 void GuitarToolsAudioProcessorEditor::componentVisibilityChanged (juce::Component& component)
 {
     if (&component == &settingsOptionsPopup)
@@ -245,6 +234,17 @@ void GuitarToolsAudioProcessorEditor::componentVisibilityChanged (juce::Componen
     }
 
     updateMainPanelDarkening();
+}
+
+void GuitarToolsAudioProcessorEditor::changeListenerCallback (juce::ChangeBroadcaster*)
+{
+    headerPanel.presetBox.setPresetName (presetManager.getCurrentPresetName());
+}
+
+void GuitarToolsAudioProcessorEditor::updateMainPanelDarkening()
+{
+    mainPanel.shouldDim = headerPanel.isBypassed() || infoPanel.isVisible() || modalBlocker.isVisible() || settingsOptionsPopup.isVisible() || resizeOptionsPopup.isVisible() || presetBrowser.isVisible();
+    mainPanel.repaint();
 }
 
 void GuitarToolsAudioProcessorEditor::updateEditorSize()

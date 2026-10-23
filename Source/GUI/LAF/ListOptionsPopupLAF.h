@@ -10,48 +10,6 @@ class ListOptionsPopupLAF : public juce::LookAndFeel_V4
 public:
     ListOptionsPopupLAF () = default;
 
-    void drawListOptionsBackground (juce::Graphics& g, juce::Rectangle<float> bounds, const float numRows, const bool drawRowDividers)
-    {
-        const auto rowHeight = bounds.getHeight() / numRows;
-        listCornerSize = bounds.getHeight() * GTCornerPOH;
-        outlineThickness = rowHeight * GTOutlineThicknessPOH;
-
-        g.setColour (GTPopupBackgroundColor);
-        g.fillRoundedRectangle (bounds, listCornerSize);
-
-        if (drawRowDividers)
-        {
-            const auto dividerBounds = bounds.withSizeKeepingCentre (bounds.getWidth() * 0.9f, rowHeight * 0.06f);
-            g.setColour (GTPopupOutlineColor);
-
-            for (int rowIndex = 1; rowIndex < (int) numRows; ++rowIndex)
-                g.fillRoundedRectangle (dividerBounds.withCentre ({ bounds.getCentreX(), bounds.getBottom() - rowHeight * (float) rowIndex }), dividerBounds.getHeight() * 0.5f);
-        }
-    }
-
-    void drawListOptionsOutline (juce::Graphics& g, juce::Rectangle<float> bounds)
-    {
-        g.setColour (GTPopupOutlineColor);
-        g.drawRoundedRectangle (bounds.reduced (outlineThickness * 0.5f), listCornerSize, outlineThickness);
-    }
-
-    void drawListOptionsTitle (juce::Graphics& g, juce::Rectangle<float> titleBounds, const juce::String& title)
-    {
-        const auto titleDividerThickness = outlineThickness * 0.5f;
-        juce::Path titleShape;
-        titleShape.addRoundedRectangle (titleBounds.getX(), titleBounds.getY(), titleBounds.getWidth(), titleBounds.getHeight(), listCornerSize, listCornerSize,
-                                        true, true, false, false);
-        g.setColour (GTColors::presetBoxBackground);
-        g.fillPath (titleShape);
-
-        g.setColour (GTPopupOutlineColor);
-        g.fillRect (titleBounds.withTop (titleBounds.getBottom() - titleDividerThickness));
-
-        g.setColour (GTPopupTextColor.withBrightness (2.f));
-        g.setFont (GTFonts::montserratSemiBold (titleBounds.getHeight() * GTFontHeightPOH));
-        g.drawText (title, titleBounds, juce::Justification::centred, true);
-    }
-
     void drawButtonBackground (juce::Graphics&, juce::Button&, const juce::Colour&, bool, bool) override {}
 
     void drawButtonText (juce::Graphics& g, juce::TextButton& button, const bool shouldDrawButtonAsHighlighted, bool) override
@@ -63,7 +21,7 @@ public:
         if (shouldDrawButtonAsHighlighted)
         {
             g.setColour (GTColors::presetBoxBackground);
-            g.fillRoundedRectangle (boundsF.reduced (outlineThickness, 0.f), cornerSize);
+            g.fillRoundedRectangle (boundsF.reduced (boundsF.getHeight() * GTOutlineThicknessPOH, 0.f), cornerSize);
         }
 
         g.setColour (textColour);
@@ -108,7 +66,5 @@ public:
 
     bool leftAlignText {false};
 private:
-    float outlineThickness {0.f};
-    float listCornerSize {0.f};
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ListOptionsPopupLAF)
 };

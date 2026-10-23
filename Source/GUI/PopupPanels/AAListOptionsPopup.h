@@ -32,12 +32,38 @@ public:
         setLookAndFeel (nullptr);
     }
 
-    float getNumRows() const { return (float) rows.size() + GTPopupTitleRowRatio; }
-
     void paint (juce::Graphics& g) override
     {
-        listOptionsLAF.drawListOptionsBackground (g, getLocalBounds().toFloat(), getNumRows(), drawRowDividers);
-        listOptionsLAF.drawListOptionsTitle (g, titleBounds, title);
+        const auto boundsF = getLocalBounds().toFloat();
+        const auto boundsFHeight = boundsF.getHeight();
+        const auto cornerSize = boundsFHeight * GTCornerPOH;
+        g.setColour (GTPopupBackgroundColor);
+        g.fillRoundedRectangle (boundsF, cornerSize);
+
+        juce::Path titleShape;
+        titleShape.addRoundedRectangle (titleBounds.getX(), titleBounds.getY(), titleBounds.getWidth(), titleBounds.getHeight(), cornerSize, cornerSize,
+                                        true, true, false, false);
+        g.setColour (GTColors::presetBoxBackground);
+        g.fillPath (titleShape);
+
+        const auto titleDividerThickness = boundsFHeight / getNumRows() * GTOutlineThicknessPOH * 0.5f;
+        g.setColour (GTPopupOutlineColor);
+        g.fillRect (titleBounds.withTop (titleBounds.getBottom() - titleDividerThickness));
+
+        g.setColour (GTPopupTextColor.withBrightness (2.f));
+        g.setFont (GTFonts::montserratSemiBold (titleBounds.getHeight() * GTFontHeightPOH));
+        g.drawText (title, titleBounds, juce::Justification::centred, true);
+    }
+
+    void resized() override
+    {
+        const auto boundsF = getLocalBounds().toFloat();
+        const auto outlineThickness = boundsF.getHeight() / getNumRows() * GTOutlineThicknessPOH;
+        const auto rowHeight = (boundsF.getHeight() - outlineThickness) / getNumRows();
+        titleBounds = boundsF.withHeight (rowHeight * GTPopupTitleRowRatio);
+
+        for (int rowIndex = 0; rowIndex < rows.size(); ++rowIndex)
+            rows[rowIndex]->setBounds (boundsF.withHeight (rowHeight).withY (titleBounds.getBottom() + rowHeight * (float) rowIndex).toNearestInt());
     }
 
     void paintOverChildren (juce::Graphics& g) override
@@ -55,21 +81,14 @@ public:
             }
         }
 
-        listOptionsLAF.drawListOptionsOutline (g, getLocalBounds().toFloat());
-    }
-
-    void resized() override
-    {
         const auto boundsF = getLocalBounds().toFloat();
-        const auto outlineThickness = boundsF.getHeight() / getNumRows() * GTOutlineThicknessPOH;
-        const auto rowHeight = (boundsF.getHeight() - outlineThickness) / getNumRows();
-        titleBounds = boundsF.withHeight (rowHeight * GTPopupTitleRowRatio);
-
-        for (int rowIndex = 0; rowIndex < rows.size(); ++rowIndex)
-            rows[rowIndex]->setBounds (boundsF.withHeight (rowHeight).withY (titleBounds.getBottom() + rowHeight * (float) rowIndex).toNearestInt());
+        const auto boundsFHeight = boundsF.getHeight();
+        const auto outlineThickness = boundsFHeight / getNumRows() * GTOutlineThicknessPOH;
+        g.setColour (GTPopupOutlineColor);
+        g.drawRoundedRectangle (boundsF.reduced (outlineThickness * 0.5f), boundsFHeight * GTCornerPOH, outlineThickness);
     }
 
-    bool drawRowDividers {false};
+    float getNumRows() const { return (float) rows.size() + GTPopupTitleRowRatio; }
 
 protected:
     ListOptionsPopupLAF listOptionsLAF;

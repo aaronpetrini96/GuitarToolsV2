@@ -15,23 +15,6 @@ public:
         setColour (juce::PopupMenu::highlightedTextColourId, GTPopupTextColor);
     }
 
-    void drawMenuListBackground (juce::Graphics& g, juce::Rectangle<float> bounds, const float numRows)
-    {
-        //bounds
-        const auto rowHeight = bounds.getHeight() / numRows;
-        menuCornerSize = bounds.getHeight() * GTCornerPOH;
-        outlineThickness = rowHeight * GTOutlineThicknessPOH;
-
-        g.setColour (GTPopupBackgroundColor);
-        g.fillRoundedRectangle (bounds, menuCornerSize);
-    }
-
-    void drawMenuListOutline (juce::Graphics& g, juce::Rectangle<float> bounds)
-    {
-        g.setColour (GTPopupOutlineColor);
-        g.drawRoundedRectangle (bounds.reduced (outlineThickness * 0.5f), menuCornerSize, outlineThickness);
-    }
-
     void drawPopupMenuBackground (juce::Graphics& g, int width, int height) override
     {
         g.fillAll (GTPopupBackgroundColor);
@@ -44,6 +27,7 @@ public:
         //bounds
         const auto boundsF = button.getLocalBounds().toFloat();
         const auto cornerSize = boundsF.getHeight() * GTCornerPOH;
+        const auto outlineThickness = boundsF.getHeight() * GTOutlineThicknessPOH;
 
         //bool checkers
         const auto isTabButton = button.getConnectedEdgeFlags() != 0;
@@ -51,9 +35,9 @@ public:
 
         if (isTabButton)
         {
-            const auto tabLineThickness = outlineThickness * 0.5f;
+            const auto tabLineThickness = boundsF.getHeight() / GTPopupTitleRowRatio * GTOutlineThicknessPOH * 0.5f;
             juce::Path tabShape;
-            tabShape.addRoundedRectangle (boundsF.getX(), boundsF.getY(), boundsF.getWidth(), boundsF.getHeight(), menuCornerSize, menuCornerSize,
+            tabShape.addRoundedRectangle (boundsF.getX(), boundsF.getY(), boundsF.getWidth(), boundsF.getHeight(), cornerSize, cornerSize,
                                           button.isConnectedOnRight(), button.isConnectedOnLeft(), false, false);
 
             g.setColour (isSelected ? GTColors::presetBoxBackground : GTPopupBackgroundColor);
@@ -95,7 +79,5 @@ public:
     }
 
 private:
-    float outlineThickness {0.0f};
-    float menuCornerSize {0.0f};
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PresetBrowserLAF)
 };

@@ -125,7 +125,7 @@ private:
     float leftLevelDb {minimumDb}, rightLevelDb {minimumDb};
     bool leftClipped {false}, rightClipped {false};
 
-    const int numberOfLights {6};
+    const size_t numberOfLights {6};
     const std::array<float, 6> lightThresholdsDb {-48.f, -24.f, -18.f, -12.f, -6.f, 0.f};
     float lightDiameter {0.f};
     float leftLightsCentreX {0.f}, rightLightsCentreX {0.f}, lightsCentreY {0.f}, lightRowCentreDistance {0.f};

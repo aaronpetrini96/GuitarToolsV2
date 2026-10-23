@@ -91,14 +91,6 @@ void MainPanel::paint(juce::Graphics& g)
     }
 }
 
-void MainPanel::paintOverChildren(juce::Graphics& g)
-{
-    if (shouldDim)
-    {
-        g.fillAll(GTColors::almostBlack.withAlpha (0.3f));
-    }
-}
-
 void MainPanel::resized()
 {
     const auto boundsF = getLocalBounds().toFloat();
@@ -114,6 +106,14 @@ void MainPanel::resized()
     resizeKnobs(boundsF);
     resizeMagicButtons();
     resizeLevelsSectionCentred(boundsF);
+}
+
+void MainPanel::paintOverChildren(juce::Graphics& g)
+{
+    if (shouldDim)
+    {
+        g.fillAll(GTColors::almostBlack.withAlpha (0.3f));
+    }
 }
 
 void MainPanel::resizeKnobs(const juce::Rectangle<float>& boundsF)

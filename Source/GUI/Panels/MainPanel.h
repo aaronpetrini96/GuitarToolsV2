@@ -22,8 +22,8 @@ public:
     explicit MainPanel (GuitarToolsAudioProcessor& processor);
 
     void paint (juce::Graphics& g) override;
-    void paintOverChildren(juce::Graphics& g) override;
     void resized() override;
+    void paintOverChildren(juce::Graphics& g) override;
 
     bool shouldDim {false};
 

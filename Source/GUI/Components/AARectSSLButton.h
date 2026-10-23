@@ -21,6 +21,15 @@ public:
         buttonAttachment->sendInitialUpdate();
     }
 
+    void paintButton (juce::Graphics& g, bool, bool) override
+    {
+        const auto shadowAlpha = getToggleState() ? 0.4f : 0.6f;
+        juce::DropShadow (GTColors::almostBlack.withAlpha (shadowAlpha), juce::roundToInt (imageBounds.getHeight() * 0.1f), {}).drawForPath (g, plateShadowPath);
+        const auto& image = getToggleState() ? imgON : imgOFF;
+        image->drawWithin (g, imageBounds, juce::RectanglePlacement::centred, 1.0f);
+        paintLight (g);
+    }
+
     void resized() override
     {
         auto boundsF = getLocalBounds().toFloat();
@@ -32,15 +41,6 @@ public:
         plateShadowPath.clear();
         plateShadowPath.addRoundedRectangle (imageBounds.translated (0.0f, imageBoundsHeight * 0.05f), imageBoundsHeight * 0.095f);
         updateLabel();
-    }
-
-    void paintButton (juce::Graphics& g, bool, bool) override
-    {
-        const auto shadowAlpha = getToggleState() ? 0.4f : 0.6f;
-        juce::DropShadow (GTColors::almostBlack.withAlpha (shadowAlpha), juce::roundToInt (imageBounds.getHeight() * 0.1f), {}).drawForPath (g, plateShadowPath);
-        const auto& image = getToggleState() ? imgON : imgOFF;
-        image->drawWithin (g, imageBounds, juce::RectanglePlacement::centred, 1.0f);
-        paintLight (g);
     }
 
     void buttonStateChanged() override

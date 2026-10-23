@@ -43,12 +43,6 @@ public:
         createAttachment();
     }
 
-    void setTooltip (const juce::String& newTooltip)
-    {
-        for (auto* button : buttons)
-            button->setTooltip (newTooltip);
-    }
-
     void paint (juce::Graphics& g) override
     {
         housing->drawWithin (g, housingBounds, juce::RectanglePlacement::centred, 1.f);
@@ -66,6 +60,12 @@ public:
             buttons[index]->setBounds (capsArea.withWidth (cellWidth).withX (capsArea.getX() + cellWidth * (float) index).toNearestIntEdges());
 
         updateNames();
+    }
+
+    void setTooltip (const juce::String& newTooltip)
+    {
+        for (auto* button : buttons)
+            button->setTooltip (newTooltip);
     }
 
 private:

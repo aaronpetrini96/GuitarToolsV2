@@ -40,17 +40,6 @@ HeaderPanel::~HeaderPanel()
     undoManager.removeChangeListener (this);
 }
 
-bool HeaderPanel::isBypassed() const
-{
-    return bypassButton.getToggleState();
-}
-
-void HeaderPanel::changeListenerCallback (juce::ChangeBroadcaster*)
-{
-    undoButton.setEnabled (undoManager.canUndo());
-    redoButton.setEnabled (undoManager.canRedo());
-}
-
 void HeaderPanel::paint (juce::Graphics& g)
 {
     g.fillAll(GTColors::almostBlack);
@@ -92,6 +81,17 @@ void HeaderPanel::mouseUp (const juce::MouseEvent& event)
 {
     if (logoBounds.contains (event.position) && onInfoClicked != nullptr)
         onInfoClicked();
+}
+
+void HeaderPanel::changeListenerCallback (juce::ChangeBroadcaster*)
+{
+    undoButton.setEnabled (undoManager.canUndo());
+    redoButton.setEnabled (undoManager.canRedo());
+}
+
+bool HeaderPanel::isBypassed() const
+{
+    return bypassButton.getToggleState();
 }
 
 void HeaderPanel::setupIconButton (juce::DrawableButton& iconButton, const void* iconData, const int iconDataSize)

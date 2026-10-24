@@ -28,7 +28,7 @@ public:
                               juce::Drawable::createFromImageData (BinaryData::resizeLines_svg, BinaryData::resizeLines_svgSize)});
         settingsOptions.add ({"Info", [this] { if (onAboutClicked != nullptr) onAboutClicked(); }, true, false, false, ParamTooltips::getInfoTooltip(),
                               juce::Drawable::createFromImageData (BinaryData::infoLetterIcon_svg, BinaryData::infoLetterIcon_svgSize)});
-        settingsOptions.add ({"Get In Touch", [] { sendMail ({}); }, true, false, false, ParamTooltips::getContactTooltip(),
+        settingsOptions.add ({"Report an Issue", [] { juce::URL ("https://github.com/aaronpetrini96/GuitarToolsV2/issues").launchInDefaultBrowser(); }, true, false, false, ParamTooltips::getContactTooltip(),
                               juce::Drawable::createFromImageData (BinaryData::atIcon_svg, BinaryData::atIcon_svgSize)});
         // settingsOptions.add ({"Get the Manual", [] { juce::URL ("https://MANUAL_URL").launchInDefaultBrowser(); }, true, false, false, {},
         //                       juce::Drawable::createFromImageData (BinaryData::questionMarkIcon_svg, BinaryData::questionMarkIcon_svgSize)});
@@ -52,11 +52,6 @@ private:
 
         if (onTooltipsToggled != nullptr)
             onTooltipsToggled();
-    }
-
-    static void sendMail (const juce::String& mailQuery)
-    {
-        juce::URL ("mailto:aaron.petrini96@gmail.com" + mailQuery).launchInDefaultBrowser();
     }
 
     AAResizeUI& resizeUI;

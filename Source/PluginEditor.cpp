@@ -73,7 +73,7 @@ GuitarToolsAudioProcessorEditor::GuitarToolsAudioProcessorEditor (GuitarToolsAud
     };
 
     presetManager.addChangeListener (this);
-    headerPanel.presetBox.setPresetName (presetManager.getCurrentPresetName());
+    changeListenerCallback (&presetManager);
 
     presetPopup.onConfirm = [this] (const AAPresetPopup::Action action, const juce::String& presetName)
     {
@@ -238,7 +238,8 @@ void GuitarToolsAudioProcessorEditor::componentVisibilityChanged (juce::Componen
 
 void GuitarToolsAudioProcessorEditor::changeListenerCallback (juce::ChangeBroadcaster*)
 {
-    headerPanel.presetBox.setPresetName (presetManager.getCurrentPresetName());
+    const auto presetName = presetManager.getCurrentPresetName();
+    headerPanel.presetBox.setPresetName (presetName.isEmpty() ? "No Preset Selected" : presetName + (presetManager.isPresetModified() ? "*" : ""));
 }
 
 void GuitarToolsAudioProcessorEditor::updateMainPanelDarkening()

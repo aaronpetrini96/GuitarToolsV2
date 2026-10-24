@@ -261,6 +261,7 @@ void GuitarToolsAudioProcessor::getStateInformation (juce::MemoryBlock& destData
 {
     auto state = treeState.copyState();
     state.setProperty("CurrentPresetName", presetManager.getCurrentPresetName(), nullptr);
+    state.setProperty("PresetModified", presetManager.isPresetModified(), nullptr);
     state.setProperty("UIScale", uiScale, nullptr);
     state.setProperty("ShowTooltips", showTooltips, nullptr);
 
@@ -280,10 +281,11 @@ void GuitarToolsAudioProcessor::setStateInformation (const void* data, int sizeI
             uiScale = static_cast<float>(*uiScaleProp);
         if (auto* showTooltipsProp = state.getPropertyPointer("ShowTooltips"))
             showTooltips = static_cast<bool>(*showTooltipsProp);
+        const auto presetModified = static_cast<bool>(state.getProperty("PresetModified", false));
 
         state.removeAllProperties (nullptr);
         treeState.replaceState(state);
-        undoManager.clearUndoHistory();
+        presetManager.setPresetModified (presetModified);
     }
 }
 

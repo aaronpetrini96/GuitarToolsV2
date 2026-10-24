@@ -9,6 +9,18 @@ static const juce::StringArray rootPresetFileNames {"Default.xml"};
 PresetManager::PresetManager (juce::AudioProcessorValueTreeState& treeStateToUse, juce::UndoManager& undoManagerToUse)
     : treeState (treeStateToUse), undoManager (undoManagerToUse)
 {
+    treeState.state.addListener (this);
+}
+
+PresetManager::~PresetManager()
+{
+    treeState.state.removeListener (this);
+}
+
+void PresetManager::valueTreePropertyChanged (juce::ValueTree& parameterTree, const juce::Identifier&)
+{
+    if (! nonPresetParameterIDs.contains (parameterTree.getProperty ("id").toString()) && ! presetModified.exchange (true))
+        sendChangeMessage();
 }
 
 void PresetManager::savePreset(const juce::String& presetName)
@@ -29,6 +41,7 @@ void PresetManager::savePreset(const juce::String& presetName)
         xml->writeTo (presetFile);
     }
 
+    presetModified = false;
     setCurrentPresetName (legalPresetName);
 }
 
@@ -68,7 +81,7 @@ void PresetManager::loadPresetFile(const juce::File& presetFile)
     const auto currentState = treeState.copyState();
 
     undoManager.beginNewTransaction();
-    undoManager.perform (new PresetChangeAction (*this, currentState, getCurrentPresetName(),
+    undoManager.perform (new PresetChangeAction (*this, currentState, getCurrentPresetName(), isPresetModified(),
                                                  presetState, presetFile.getFileNameWithoutExtension()));
 }
 
@@ -157,7 +170,18 @@ void PresetManager::setCurrentPresetName (const juce::String& presetName)
     sendChangeMessage();
 }
 
-void PresetManager::applyPreset (const juce::ValueTree& presetState, const juce::String& presetName)
+void PresetManager::setPresetModified (const bool isModified)
+{
+    presetModified = isModified;
+    sendChangeMessage();
+}
+
+bool PresetManager::isPresetModified() const
+{
+    return presetModified;
+}
+
+void PresetManager::applyPreset (const juce::ValueTree& presetState, const juce::String& presetName, const bool isModified)
 {
     auto newState = presetState.createCopy();
     const auto currentState = treeState.copyState();
@@ -167,6 +191,7 @@ void PresetManager::applyPreset (const juce::ValueTree& presetState, const juce:
         newState.appendChild (currentState.getChildWithProperty ("id", nonPresetParameterID).createCopy(), nullptr);
     }
     treeState.replaceState (newState);
+    presetModified = isModified;
     setCurrentPresetName (presetName);
 }
 

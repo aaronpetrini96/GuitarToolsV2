@@ -4,6 +4,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <utility>
 
 class PresetManager : public juce::ChangeBroadcaster,
                       private juce::ValueTree::Listener
@@ -44,24 +45,30 @@ private:
 
     void valueTreePropertyChanged (juce::ValueTree& parameterTree, const juce::Identifier& property) override;
 
-    void applyPreset (const juce::ValueTree& presetState, const juce::String& presetName);
+    void applyPreset (const juce::ValueTree& presetState, const juce::String& presetName, bool isModified = false);
 
     class PresetChangeAction : public juce::UndoableAction
     {
     public:
         PresetChangeAction (PresetManager& presetManagerToUse,
-                            const juce::ValueTree& oldPresetState, const juce::String& oldPresetName,
-                            const juce::ValueTree& newPresetState, const juce::String& newPresetName)
-            : presetManager (presetManagerToUse), oldState (oldPresetState), newState (newPresetState), oldName (oldPresetName), newName (newPresetName)
+                            juce::ValueTree oldPresetState, juce::String oldPresetName, bool oldPresetModified,
+                            juce::ValueTree newPresetState, juce::String newPresetName)
+            : presetManager (presetManagerToUse),
+              oldState (std::move (oldPresetState)),
+              newState (std::move (newPresetState)),
+              oldName (std::move (oldPresetName)),
+              newName (std::move (newPresetName)),
+              oldModified (oldPresetModified)
         {
         }
 
         bool perform() override { presetManager.applyPreset (newState, newName); return true; }
-        bool undo() override    { presetManager.applyPreset (oldState, oldName); return true; }
+        bool undo() override    { presetManager.applyPreset (oldState, oldName, oldModified); return true; }
 
     private:
         PresetManager& presetManager;
         juce::ValueTree oldState, newState;
         juce::String oldName, newName;
+        bool oldModified;
     };
 };

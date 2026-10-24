@@ -52,6 +52,11 @@ public:
             {
                 isConfirmingOverwrite = true;
                 confirmButton.setButtonText ("Overwrite");
+                nameEditor.setVisible (false);
+                nameLabel.setVisible (false);
+                messageLabel.setText ("Overwrite \"" + presetName + "\"?", juce::dontSendNotification);
+                messageLabel.setVisible (true);
+                grabKeyboardFocus();
                 return;
             }
 

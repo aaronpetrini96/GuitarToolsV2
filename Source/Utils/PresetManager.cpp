@@ -81,7 +81,7 @@ void PresetManager::loadPresetFile(const juce::File& presetFile)
     const auto currentState = treeState.copyState();
 
     undoManager.beginNewTransaction();
-    undoManager.perform (new PresetChangeAction (*this, currentState, getCurrentPresetName(),
+    undoManager.perform (new PresetChangeAction (*this, currentState, getCurrentPresetName(), isPresetModified(),
                                                  presetState, presetFile.getFileNameWithoutExtension()));
 }
 
@@ -181,7 +181,7 @@ bool PresetManager::isPresetModified() const
     return presetModified;
 }
 
-void PresetManager::applyPreset (const juce::ValueTree& presetState, const juce::String& presetName)
+void PresetManager::applyPreset (const juce::ValueTree& presetState, const juce::String& presetName, const bool isModified)
 {
     auto newState = presetState.createCopy();
     const auto currentState = treeState.copyState();
@@ -191,7 +191,7 @@ void PresetManager::applyPreset (const juce::ValueTree& presetState, const juce:
         newState.appendChild (currentState.getChildWithProperty ("id", nonPresetParameterID).createCopy(), nullptr);
     }
     treeState.replaceState (newState);
-    presetModified = false;
+    presetModified = isModified;
     setCurrentPresetName (presetName);
 }
 

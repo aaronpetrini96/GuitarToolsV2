@@ -283,7 +283,6 @@ void GuitarToolsAudioProcessor::setStateInformation (const void* data, int sizeI
 
         state.removeAllProperties (nullptr);
         treeState.replaceState(state);
-        undoManager.clearUndoHistory();
     }
 }
 

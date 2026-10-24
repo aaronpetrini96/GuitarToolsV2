@@ -4,17 +4,19 @@ A guitar-focused mixing processor built with C++ and JUCE. It combines tone-rang
 
 ## Sections
 
-- **Tone Range**: low cut and high cut filters with 12, 24, 36 or 48 dB/oct slopes. Slope changes glide smoothly instead of clicking.
-- **Clean-Up**: Kill Reso cuts a narrow harsh resonance, Clear Mud reduces low-mid buildup, and Tame Lows compresses only the low band to even out the low end. Each has a MAX switch for a stronger setting.
-- **Color**: Depth (low shelf) and Presence (high shelf), each with four modes that set where the shelf works.
-- **Levels**: input and output gain with peak meters, plus Match Loudness, which keeps the output level equal to the input for honest A/B comparisons.
+- **Tone Range**: *Low Cut* and *High Cut* filters with 12, 24, 36 or 48 dB/oct slopes.
+- **Clean-Up**: *Kill Reso* cuts a narrow harsh resonance, *Clear Mud* reduces low-mid buildup, and *Tame Lows* compresses only the low band to even out the low end. Each has a *MAX* switch for a stronger setting.
+- **Color**: *Depth* (low shelf) and *Presence* (high shelf), each with four modes that set where the shelf works.
+- **Levels**: input and output gain with peak meters, plus *Match Loudness*, which keeps the output level equal to the input for honest A/B comparisons.
 
-Also included: a preset browser with factory and user presets, undo/redo, a Low Tuning mode for drop-tuned guitars, a resizable interface, an optional tooltip strip and a click-free global bypass.
+Also included: a preset browser with factory and user presets, undo/redo, a *Low Tuning* mode that makes the plugin work in lower frequency areas, a resizable interface, an optional tooltip strip and a global bypass.
 
 ## Formats
 
 - macOS: AU and VST3
 - Windows: VST3
+
+The Windows installer is not code-signed. If Windows shows "Windows protected your PC", click *More info*, then *Run anyway*.
 
 ## Building
 

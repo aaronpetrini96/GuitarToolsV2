@@ -40,17 +40,6 @@ HeaderPanel::~HeaderPanel()
     undoManager.removeChangeListener (this);
 }
 
-bool HeaderPanel::isBypassed() const
-{
-    return bypassButton.getToggleState();
-}
-
-void HeaderPanel::changeListenerCallback (juce::ChangeBroadcaster*)
-{
-    undoButton.setEnabled (undoManager.canUndo());
-    redoButton.setEnabled (undoManager.canRedo());
-}
-
 void HeaderPanel::paint (juce::Graphics& g)
 {
     g.fillAll(GTColors::almostBlack);
@@ -63,31 +52,27 @@ void HeaderPanel::resized()
     const auto boundsF = getLocalBounds().toFloat();
     const auto boundsFWidth = boundsF.getWidth();
     const auto boundsFHeight = boundsF.getHeight();
+    const auto iconSize = boundsFHeight * 0.6f;
+    const auto iconGap = boundsFWidth * 0.0125f;
 
-    const auto logoH = boundsFHeight * 0.75f;
+    const auto logoH = boundsFHeight * 0.7f;
     const auto logoW = logoH * (float) guitarToolsLogo.getWidth() / (float) guitarToolsLogo.getHeight();
-    logoBounds = boundsF.withSize (logoW, logoH).withCentre ({boundsFWidth * logoCentreXPOW, boundsF.getCentreY()});
+    logoBounds = boundsF.withSize (logoW, logoH).withCentre ({boundsFWidth * GTSideSectionPOW * 0.5f, boundsF.getCentreY()});
 
-    const auto presetBoxHeight = boundsFHeight * 0.6f;
-    const auto presetBoxWidth = boundsFWidth * 0.45f;
-    presetBoxBounds = boundsF.withSizeKeepingCentre (presetBoxWidth, presetBoxHeight);
+    const auto presetBoxWidth = boundsFWidth * 0.335f;
+    const auto presetBoxBounds = boundsF.withSizeKeepingCentre (presetBoxWidth, iconSize);
     presetBox.setBounds (presetBoxBounds.toNearestInt());
 
-    const auto iconButtonSize = boundsFHeight * 0.6f;
-    const auto iconGap = boundsFWidth * 0.0125f;
-    const auto iconButtonBounds = boundsF.withSizeKeepingCentre (iconButtonSize, iconButtonSize);
-
-    const auto saveButtonBounds = presetBoxBounds.withSizeKeepingCentre (iconButtonSize, iconButtonSize).withRightX (presetBoxBounds.getX() + presetBoxWidth * 0.975f);
+    const auto iconButtonBounds = boundsF.withSizeKeepingCentre (iconSize, iconSize);
+    const auto saveButtonBounds = iconButtonBounds.withX(presetBoxBounds.getRight() + iconGap * 2.f);
     savePresetButton.setBounds (saveButtonBounds.toNearestInt());
-
     const auto settingsButtonBounds = iconButtonBounds.withRightX (boundsFWidth - iconGap);
     settingsButton.setBounds (settingsButtonBounds.toNearestInt());
-
     const auto bypassButtonBounds = iconButtonBounds.withRightX (settingsButtonBounds.getX() - iconGap);
     bypassButton.setBounds (bypassButtonBounds.toNearestInt());
 
-    const auto undoRedoCentreX = (presetBoxBounds.getRight() + bypassButtonBounds.getX()) * 0.5f;
-    const auto undoRedoOffset = (iconButtonSize + iconGap) * 0.5f;
+    const auto undoRedoCentreX = (saveButtonBounds.getRight() + bypassButtonBounds.getX()) * 0.5f;
+    const auto undoRedoOffset = (iconSize + iconGap) * 0.5f;
     undoButton.setBounds (iconButtonBounds.withCentre ({undoRedoCentreX - undoRedoOffset, boundsF.getCentreY()}).toNearestInt());
     redoButton.setBounds (iconButtonBounds.withCentre ({undoRedoCentreX + undoRedoOffset, boundsF.getCentreY()}).toNearestInt());
 }
@@ -96,6 +81,17 @@ void HeaderPanel::mouseUp (const juce::MouseEvent& event)
 {
     if (logoBounds.contains (event.position) && onInfoClicked != nullptr)
         onInfoClicked();
+}
+
+void HeaderPanel::changeListenerCallback (juce::ChangeBroadcaster*)
+{
+    undoButton.setEnabled (undoManager.canUndo());
+    redoButton.setEnabled (undoManager.canRedo());
+}
+
+bool HeaderPanel::isBypassed() const
+{
+    return bypassButton.getToggleState();
 }
 
 void HeaderPanel::setupIconButton (juce::DrawableButton& iconButton, const void* iconData, const int iconDataSize)

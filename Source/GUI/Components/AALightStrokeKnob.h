@@ -19,7 +19,7 @@ public:
         jassert (knobImage.isValid());
         setSliderStyle (RotaryVerticalDrag);
         setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
-        setMouseDragSensitivity (400);
+        setMouseDragSensitivity (300);
         setRotaryParameters (startAngle, endAngle, true);
         setComponentID (parameter.getParameterID());
 
@@ -30,30 +30,19 @@ public:
         updateValueLabelText();
     }
 
-    void resized() override
-    {
-        const auto boundsF = getLocalBounds().toFloat();
-        const auto fontBounds = boundsF.withHeight (boundsF.getHeight() * 0.14f);
-        nameText.setFont (GTFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.8f).withExtraKerningFactor(0.03f));
-        nameText.setBounds (fontBounds.toNearestInt());
-        valueText.setFont (GTFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.7f).withExtraKerningFactor (0.03f));
-        valueText.setBounds (fontBounds.withBottomY (boundsF.getHeight()).toNearestInt());
-    }
-
     void paint (juce::Graphics& g) override
     {
         const auto boundsF = getLocalBounds().toFloat();
         //========   KNOB IMAGE  ========//
-        const auto imageBounds = boundsF.reduced (boundsF.getWidth() * knobReducePOW);
         g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
         g.setOpacity(0.9f);
-        g.drawImage (knobImage, imageBounds, juce::RectanglePlacement::centred);
+        g.drawImage (knobImage, boundsF, juce::RectanglePlacement::centred);
         const auto activeColor = GTColors::activeNeonBlue.withAlpha (0.9f);
         const auto offColor = GTColors::almostBlack.withAlpha (0.9f);
 
         //========   POINTS DRAWING  ========//
-        const auto radiusReference = imageBounds.getWidth() * 0.255f;
-        const auto centre = imageBounds.getCentre();
+        const auto radiusReference = boundsF.getWidth() * 0.255f;
+        const auto centre = boundsF.getCentre();
         const juce::PathStrokeType stroke (radiusReference * 0.075f, juce::PathStrokeType::mitered, juce::PathStrokeType::butt);
         const auto angle = startAngle + static_cast<float> (valueToProportionOfLength (getValue())) * (endAngle - startAngle);
         const auto midAngle = (startAngle + endAngle) * 0.5f;
@@ -84,6 +73,16 @@ public:
         tick.startNewSubPath (centre + tickDirection * (radiusReference * 0.4f));
         tick.lineTo (centre + tickDirection * (radiusReference * 0.65f));
         g.strokePath (tick, stroke);
+    }
+
+    void resized() override
+    {
+        const auto boundsF = getLocalBounds().toFloat();
+        const auto fontBounds = boundsF.withHeight (boundsF.getHeight() * 0.14f);
+        nameText.setFont (GTFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.8f).withExtraKerningFactor(0.03f));
+        nameText.setBounds (fontBounds.toNearestInt());
+        valueText.setFont (GTFonts::ibmPlexSansMedium (fontBounds.getHeight() * 0.7f).withExtraKerningFactor (0.03f));
+        valueText.setBounds (fontBounds.withBottomY (boundsF.getHeight()).toNearestInt());
     }
 
 private:
@@ -126,7 +125,6 @@ private:
     const float startAngle { 1.25f * juce::MathConstants<float>::pi };
     const float endAngle { 2.75f * juce::MathConstants<float>::pi };
     const int numberOfDots { 15 };
-    const float knobReducePOW { 0.f };
 
     std::unique_ptr<juce::SliderParameterAttachment> attachment;
 

@@ -23,6 +23,8 @@ public:
 
     void paintButton (juce::Graphics& g, bool, bool) override
     {
+        const auto shadowAlpha = getToggleState() ? 0.4f : 0.6f;
+        juce::DropShadow (GTColors::almostBlack.withAlpha (shadowAlpha), juce::roundToInt (imageBounds.getHeight() * 0.1f), {}).drawForPath (g, plateShadowPath);
         const auto& image = getToggleState() ? imgON : imgOFF;
         image->drawWithin (g, imageBounds, juce::RectanglePlacement::centred, 1.0f);
         paintLight (g);
@@ -30,11 +32,14 @@ public:
 
     void resized() override
     {
-        const auto boundsF = getLocalBounds().toFloat();
-        const auto lightArea = boundsF.withTop (boundsF.getBottom() - boundsF.getHeight() * 0.32f);
-        imageBounds = juce::RectanglePlacement (juce::RectanglePlacement::centred).appliedTo (imgOFF->getDrawableBounds(), boundsF.withBottom (lightArea.getY()));
-        const auto lightSize = lightArea.getHeight() * 0.9f;
-        lightBounds = lightArea.withSizeKeepingCentre (lightSize, lightSize);
+        auto boundsF = getLocalBounds().toFloat();
+        const auto imageSourceBounds = imgOFF->getDrawableBounds();
+        imageBounds = boundsF.removeFromTop (boundsF.getWidth() * imageSourceBounds.getHeight() / imageSourceBounds.getWidth());
+        const auto lightSize = boundsF.getHeight() * 0.7f;
+        lightBounds = boundsF.withSizeKeepingCentre (lightSize, lightSize);
+        const auto imageBoundsHeight = imageBounds.getHeight();
+        plateShadowPath.clear();
+        plateShadowPath.addRoundedRectangle (imageBounds.translated (0.0f, imageBoundsHeight * 0.05f), imageBoundsHeight * 0.095f);
         updateLabel();
     }
 
@@ -49,7 +54,7 @@ private:
         const auto ledColour = GTColors::activeNeonBlue;
         const auto litAmount = getToggleState() ? 1.0f : 0.0f;
         const auto ledCentre = lightBounds.getCentre();
-        const auto ledDiameter = lightBounds.getWidth() * 0.8f;
+        const auto ledDiameter = lightBounds.getHeight() * 0.8f;
         const auto ledBounds = lightBounds.withSizeKeepingCentre (ledDiameter, ledDiameter);
 
         if (litAmount > 0.0f)
@@ -82,8 +87,9 @@ private:
     }
 
     juce::Rectangle<float> imageBounds, lightBounds;
-    std::unique_ptr<juce::Drawable> imgON {juce::Drawable::createFromImageData(BinaryData::button2ONBetter_png, BinaryData::button2ONBetter_pngSize)};
-    std::unique_ptr<juce::Drawable> imgOFF {juce::Drawable::createFromImageData(BinaryData::button2OFFBetter_png, BinaryData::button2OFFBetter_pngSize)};
+    juce::Path plateShadowPath;
+    std::unique_ptr<juce::Drawable> imgON {juce::Drawable::createFromImageData(BinaryData::button2ONBorder_png, BinaryData::button2ONBorder_pngSize)};
+    std::unique_ptr<juce::Drawable> imgOFF {juce::Drawable::createFromImageData(BinaryData::button2OFFBorder_png, BinaryData::button2OFFBorder_pngSize)};
     juce::RangedAudioParameter& parameter;
     juce::String nameText{};
     AAUITools::PrintedText printedName{nameText, juce::Colours::black};

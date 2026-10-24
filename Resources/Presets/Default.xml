@@ -7,16 +7,14 @@
   <PARAM id="Presence Mode" value="0"/>
   <PARAM id="Presence Gain" value="1.5"/>
   <PARAM id="Depth Mode" value="1"/>
-  <PARAM id="Depth Gain" value="0.5"/>
-  <PARAM id="Reso Freq" value="3850"/>
+  <PARAM id="Depth Gain" value="0.0"/>
+  <PARAM id="Reso Freq" value="4000"/>
   <PARAM id="Reso Active" value="1"/>
   <PARAM id="Reso Mode Active" value="0"/>
   <PARAM id="Mud Amount" value="33"/>
   <PARAM id="Mud Active" value="0"/>
   <PARAM id="Mud Mode Active" value="0"/>
   <PARAM id="Comp Amount" value="50"/>
-  <PARAM id="Comp Active" value="1"/>
+  <PARAM id="Comp Active" value="0"/>
   <PARAM id="Comp Mode Active" value="0"/>
-  <PARAM id="Input Gain" value="0"/>
-  <PARAM id="Output Gain" value="0"/>
 </Parameters>

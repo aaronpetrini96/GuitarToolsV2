@@ -12,17 +12,8 @@ public:
         setInterceptsMouseClicks (true, true);
         setAlwaysOnTop(true);
 
-        if (const auto closeIcon = juce::Drawable::createFromImageData(BinaryData::closeXIcon_svg, BinaryData::closeXIcon_svgSize))
-        {
-            addAndMakeVisible (closeButton);
-            const auto iconNormal = closeIcon->createCopy();
-            const auto iconActive = closeIcon->createCopy();
-            const auto iconOver = closeIcon->createCopy();
-            iconOver->replaceColour (GTColors::iconSVGColor, GTColors::iconOverColor);
-            iconNormal->replaceColour (GTColors::iconSVGColor, GTColors::iconNormalColor);
-            iconActive->replaceColour (GTColors::iconSVGColor, GTColors::activeNeonBlue);
-            closeButton.setImages(iconNormal.get(), iconOver.get(),iconActive.get(), nullptr, iconActive.get());
-        }
+        addAndMakeVisible (closeButton);
+        AAUITools::setIconButtonImages (closeButton, BinaryData::closeXIcon_svg, BinaryData::closeXIcon_svgSize, GTColors::iconSVGColor, GTColors::iconNormalColor, GTColors::iconOverColor, GTColors::activeNeonBlue);
         closeButton.onClick = [this] { setVisible (false); };
     }
 

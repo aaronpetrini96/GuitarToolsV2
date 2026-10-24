@@ -11,20 +11,17 @@
 constexpr float GTOutlineThicknessPOH {0.06f};
 constexpr float GTCornerPOH {0.0f};
 constexpr float GTFontHeightPOH {0.625f};
+constexpr float GTSideSectionPOW {0.32f};
 constexpr float GTPopupTitleRowRatio {1.1f};
 constexpr int GTPresetNameMaxLength {24};
 
 namespace  GTColors
 {
-    inline const juce::Colour transparent { juce::Colours::transparentBlack };
     inline const juce::Colour activeNeonBlue { 64, 196, 255 };
     inline const juce::Colour almostBlack {5, 5, 5};
 
     inline const juce::Colour sectionTitleText {215, 215, 215};
     inline const juce::Colour almostWhiteText {190, 190, 190};
-
-    inline const juce::Colour popupBackground {5, 7, 14};
-    inline const juce::Colour popupOutlineColor {40, 50, 70};
 
     inline const juce::Colour iconSVGColor {100, 100, 100};
     inline const juce::Colour iconNormalColor {200, 200, 200};
@@ -34,8 +31,8 @@ namespace  GTColors
     inline const juce::Colour presetBoxOutlineColor {70, 85, 115};
 }
 
-inline const juce::Colour GTPopupBackgroundColor {GTColors::popupBackground};
-inline const juce::Colour GTPopupOutlineColor {GTColors::popupOutlineColor};
+inline const juce::Colour GTPopupBackgroundColor {5, 7, 14};
+inline const juce::Colour GTPopupOutlineColor {40, 50, 70};
 inline const juce::Colour GTPopupTextColor {GTColors::sectionTitleText};
 inline const juce::Colour GTPopupSelectedTextColor {GTColors::activeNeonBlue};
 

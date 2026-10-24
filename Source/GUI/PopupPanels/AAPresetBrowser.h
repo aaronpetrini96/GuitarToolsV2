@@ -14,8 +14,7 @@
 class AAPresetBrowser : public juce::Component
 {
 public:
-    explicit AAPresetBrowser (PresetManager& manager)
-        : presetManager (manager)
+    explicit AAPresetBrowser (PresetManager& manager) : presetManager (manager)
     {
         setAlwaysOnTop (true);
         setLookAndFeel (&presetBrowserLAF);
@@ -39,6 +38,60 @@ public:
     {
         setLookAndFeel (nullptr);
     }
+
+    void paint (juce::Graphics& g) override
+    {
+        const auto boundsF = getLocalBounds().toFloat();
+        g.setColour (GTPopupBackgroundColor);
+        g.fillRoundedRectangle (boundsF, boundsF.getHeight() * GTCornerPOH);
+    }
+
+    void resized() override
+    {
+        const auto boundsF = getLocalBounds().toFloat();
+        const auto outlineThickness = boundsF.getHeight() / getNumRows() * GTOutlineThicknessPOH;
+        const auto rowHeight = (boundsF.getHeight() - outlineThickness) / getNumRows();
+        const auto tabHeight = rowHeight * GTPopupTitleRowRatio;
+        const auto tabWidth = boundsF.getWidth() * 0.5f;
+
+        defaultTabButton.setBounds (boundsF.withSize (tabWidth, tabHeight).toNearestInt());
+        userTabButton.setBounds (boundsF.withHeight (tabHeight).withLeft (tabWidth).toNearestInt());
+
+        const auto listBounds = boundsF.withTop (tabHeight).withTrimmedBottom (outlineThickness);
+        viewport.setBounds (listBounds.toNearestInt());
+
+        const auto rowWidth = boundsF.getWidth();
+        rowsHolder.setSize (juce::roundToInt (rowWidth), juce::roundToInt (rowHeight * (float) rows.size()));
+
+        for (int rowIndex = 0; rowIndex < rows.size(); ++rowIndex)
+        {
+            const auto rowBounds = juce::Rectangle<float> (0.0f, rowHeight * (float) rowIndex, rowWidth, rowHeight);
+            rows[rowIndex]->setBounds (rowBounds.toNearestInt());
+        }
+    }
+
+    void paintOverChildren (juce::Graphics& g) override
+    {
+        const auto boundsF = getLocalBounds().toFloat();
+        const auto boundsFHeight = boundsF.getHeight();
+        const auto outlineThickness = boundsFHeight / getNumRows() * GTOutlineThicknessPOH;
+        g.setColour (GTPopupOutlineColor);
+        g.drawRoundedRectangle (boundsF.reduced (outlineThickness * 0.5f), boundsFHeight * GTCornerPOH, outlineThickness);
+    }
+
+    void mouseDown (const juce::MouseEvent& e) override
+    {
+        isRowRightClicked = e.mods.isPopupMenu();
+    }
+
+    void showUserPresets()
+    {
+        setPresetType (PresetManager::PresetType::user);
+    }
+
+    float getNumRows() const { return (float) rows.size() + GTPopupTitleRowRatio; }
+
+
 
     void refresh()
     {
@@ -89,52 +142,6 @@ public:
             onRowsChanged();
     }
 
-    void showUserPresets()
-    {
-        setPresetType (PresetManager::PresetType::user);
-    }
-
-    float getNumRows() const { return (float) rows.size() + GTPopupTitleRowRatio; }
-
-    void paint (juce::Graphics& g) override
-    {
-        presetBrowserLAF.drawMenuListBackground (g, getLocalBounds().toFloat(), getNumRows());
-    }
-
-    void paintOverChildren (juce::Graphics& g) override
-    {
-        presetBrowserLAF.drawMenuListOutline (g, getLocalBounds().toFloat());
-    }
-
-    void mouseDown (const juce::MouseEvent& e) override
-    {
-        isRowRightClicked = e.mods.isPopupMenu();
-    }
-
-    void resized() override
-    {
-        const auto boundsF = getLocalBounds().toFloat();
-        const auto outlineThickness = boundsF.getHeight() / getNumRows() * GTOutlineThicknessPOH;
-        const auto rowHeight = (boundsF.getHeight() - outlineThickness) / getNumRows();
-        const auto tabHeight = rowHeight * GTPopupTitleRowRatio;
-        const auto tabWidth = boundsF.getWidth() * 0.5f;
-
-        defaultTabButton.setBounds (boundsF.withSize (tabWidth, tabHeight).toNearestInt());
-        userTabButton.setBounds (boundsF.withHeight (tabHeight).withLeft (tabWidth).toNearestInt());
-
-        const auto listBounds = boundsF.withTop (tabHeight).withTrimmedBottom (outlineThickness);
-        viewport.setBounds (listBounds.toNearestInt());
-
-        const auto rowWidth = boundsF.getWidth();
-        rowsHolder.setSize (juce::roundToInt (rowWidth), juce::roundToInt (rowHeight * (float) rows.size()));
-
-        for (int rowIndex = 0; rowIndex < rows.size(); ++rowIndex)
-        {
-            const auto rowBounds = juce::Rectangle<float> (0.0f, rowHeight * (float) rowIndex, rowWidth, rowHeight);
-            rows[rowIndex]->setBounds (rowBounds.toNearestInt());
-        }
-    }
-
 
     std::function<void (const juce::File& presetFile)> onDeleteRequested;
     std::function<void (const juce::File& presetFile)> onRenameRequested;
@@ -154,7 +161,7 @@ private:
     PresetManager::PresetType selectedPresetType {PresetManager::PresetType::factory};
     juce::Array<juce::File> presetFiles;
 
-    juce::TextButton defaultTabButton {"Factory"}, userTabButton {"User Presets"};
+    juce::TextButton defaultTabButton {"Factory"}, userTabButton {"User"};
     juce::Component rowsHolder;
     juce::OwnedArray<juce::TextButton> rows;
     juce::Viewport viewport;

@@ -7,9 +7,22 @@
 #include "../../GTLook.h"
 #include "../../Utils/AAParamUtils.h"
 #include "PluginProcessor.h"
-
 #include "GUI/Components/AAFaderSSL.h"
-#include "GUI/LAF/ValuePopupLAF.h"
+
+class ValuePopupLAF : public juce::LookAndFeel_V4
+{
+public:
+    void drawLabel (juce::Graphics& g, juce::Label& label) override
+    {
+        const auto boundsF = label.getLocalBounds().toFloat();
+        const auto boundsFHeight = boundsF.getHeight();
+        AAUITools::drawOutlinedRoundedRectangle (g, boundsF, boundsFHeight * GTCornerPOH, boundsFHeight * GTOutlineThicknessPOH, GTPopupBackgroundColor, GTPopupOutlineColor);
+        g.setColour (GTPopupTextColor);
+        g.setFont (GTFonts::montserratSemiBold (boundsFHeight * GTFontHeightPOH));
+        g.drawText (label.getText(), boundsF, juce::Justification::centred, false);
+    }
+};
+
 
 class FadersPlatePanel : public juce::Component
 {
@@ -94,10 +107,10 @@ public:
     }
 
     AAVerticalSSLFader resoFreqFader, mudAmountFader, compAmountFader;
-    float faderSpacing {0.f};
+
 private:
     const juce::RectanglePlacement imgPlacement {juce::RectanglePlacement::fillDestination};
-
+    float faderSpacing {0.f};
     float screwSize{0.f};
     juce::Rectangle<float> faderBounds;
     juce::Image screw {juce::ImageCache::getFromMemory(BinaryData::screwDirty_png, BinaryData::screwDirty_pngSize)};

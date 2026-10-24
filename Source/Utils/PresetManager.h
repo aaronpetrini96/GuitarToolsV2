@@ -2,12 +2,15 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
+#include <atomic>
 #include <mutex>
 
-class PresetManager : public juce::ChangeBroadcaster
+class PresetManager : public juce::ChangeBroadcaster,
+                      private juce::ValueTree::Listener
 {
 public:
     PresetManager (juce::AudioProcessorValueTreeState& treeStateToUse, juce::UndoManager& undoManagerToUse);
+    ~PresetManager() override;
 
     enum class PresetType
     {
@@ -26,6 +29,8 @@ public:
     juce::String getCurrentPresetName() const;
     void setCurrentPresetName (const juce::String& presetName);
     void loadDefaultPreset();
+    void setPresetModified(bool isModified);
+    bool isPresetModified() const;
 
     static juce::File getPresetFolder();
     static void installFactoryPresets();
@@ -35,6 +40,9 @@ private:
     juce::UndoManager& undoManager;
     juce::String currentPresetName;
     mutable std::mutex currentPresetNameMutex;
+    std::atomic<bool> presetModified {false};
+
+    void valueTreePropertyChanged (juce::ValueTree& parameterTree, const juce::Identifier& property) override;
 
     void applyPreset (const juce::ValueTree& presetState, const juce::String& presetName);
 

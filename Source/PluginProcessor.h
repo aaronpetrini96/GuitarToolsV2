@@ -65,7 +65,7 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
     //==============================================================================
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
-    AAUndoManager undoManager { 100000, 100 };
+    AAUndoManager undoManager;
     juce::AudioProcessorValueTreeState treeState {*this, nullptr, "Parameters", createParameterLayout()};
     PresetManager presetManager {treeState, undoManager};
 

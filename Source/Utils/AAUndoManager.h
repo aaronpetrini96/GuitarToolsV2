@@ -8,12 +8,14 @@
 
 class AAUndoManager : public juce::UndoManager,
                       private juce::AudioProcessorParameter::Listener
-
 {
 public:
-    using juce::UndoManager::UndoManager;
+    explicit AAUndoManager (const int maxNumberOfUnitsToKeep = 100000, const int minimumTransactionsToKeep = 100)
+        : juce::UndoManager (maxNumberOfUnitsToKeep, minimumTransactionsToKeep)
+    {
+    }
 
-    void trackParameters(juce::AudioProcessor& processor)
+    void trackParameters(const juce::AudioProcessor& processor)
     {
         trackedParameters = processor.getParameters();
         for (auto* parameter : trackedParameters)

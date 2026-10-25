@@ -496,8 +496,10 @@ void GuitarToolsAudioProcessor::updateSmootherFromParams(int numSamplesToSkip, S
 void GuitarToolsAudioProcessor::updateGainState()
 {
     inputGain.setGainDecibels(inputGainParam->get());
-    const auto selectedOutputGainDb = loudnessMatchActiveParam->get() ? levelMatch.getGainDb() : outputGainParam->get();
-    outputGain.setGainDecibels(selectedOutputGainDb);
+    if (loudnessMatchActiveParam->get())
+        outputGain.setGainDecibels(levelMatch.getGainDb() + inputGainParam->get());
+    else
+        outputGain.setGainDecibels(outputGainParam->get());
 }
 
 // This creates new instances of the plugin..

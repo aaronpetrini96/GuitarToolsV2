@@ -112,7 +112,7 @@ namespace ParamTooltips
     inline juce::String getShowTooltipsTooltip() { return "Show control descriptions at the bottom"; }
     inline juce::String getDefaultUISizeTooltip() { return "Save current UI size as the new default for the plugin"; }
     inline juce::String getInfoTooltip() { return "View plugin information"; }
-    inline juce::String getContactTooltip() { return "Send an email for feedback or support"; }
+    inline juce::String getContactTooltip() { return "Report a bug or share feedback"; }
 
 //    ========== GUI ===========
     inline juce::String getResizeUITooltip() { return "Change the window size"; }

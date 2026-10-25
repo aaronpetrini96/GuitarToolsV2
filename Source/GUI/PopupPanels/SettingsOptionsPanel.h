@@ -30,8 +30,6 @@ public:
                               juce::Drawable::createFromImageData (BinaryData::infoLetterIcon_svg, BinaryData::infoLetterIcon_svgSize)});
         settingsOptions.add ({"Report an Issue", [] { juce::URL ("https://github.com/aaronpetrini96/GuitarToolsV2/issues").launchInDefaultBrowser(); }, true, false, false, ParamTooltips::getContactTooltip(),
                               juce::Drawable::createFromImageData (BinaryData::atIcon_svg, BinaryData::atIcon_svgSize)});
-        // settingsOptions.add ({"Get the Manual", [] { juce::URL ("https://MANUAL_URL").launchInDefaultBrowser(); }, true, false, false, {},
-        //                       juce::Drawable::createFromImageData (BinaryData::questionMarkIcon_svg, BinaryData::questionMarkIcon_svgSize)});
         setItems (settingsOptions);
     }
 

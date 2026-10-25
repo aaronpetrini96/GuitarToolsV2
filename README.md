@@ -16,7 +16,7 @@ Also included: a preset browser with factory and user presets, undo/redo, a *Low
 - macOS: AU and VST3
 - Windows: VST3
 
-The Windows installer is not code-signed. If Windows shows "Windows protected your PC", click *More info*, then *Run anyway*.
+On Windows, unzip and copy `GuitarTools.vst3` to `C:\Program Files\Common Files\VST3`, then rescan plugins in your DAW.
 
 ## Building
 
